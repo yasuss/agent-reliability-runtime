@@ -26,3 +26,22 @@ CI runs static/unit on Windows, macOS and Ubuntu, and live DB tests on Ubuntu,
 for `codex/**` pushes and PRs targeting `main` or `codex/**`. Exact head evidence
 requires both push and stacked-PR runs. This is B10 proof; full product gates
 G3+ (retrieval, MCP, authorization, restart, evals, replay) are not claimed.
+
+B20 deterministic tests: `uv run pytest tests/unit/test_providers.py`. Mock HTTP
+fixtures prove the configurable OpenAI/vLLM request shape and auth header, normal
+text, multiple tool calls, JSON-string/object argument alternatives, optional
+usage, malformed wire shapes, finite embedding batches, explicit transport/HTTP
+errors, no hidden retries/redirects and credential-free diagnostics/repr. Bad
+NaN/Infinity/null fixtures use raw response bytes so the actual parser sees them.
+
+Live acceptance is explicit and excluded from ordinary tests/CI:
+`uv run python scripts/probe_providers.py`. It requires local Ollama at
+`http://127.0.0.1:11434` (optional `--base-url` must remain loopback), records version,
+model artifact digests and exact checkout SHA, and calls both project adapters.
+It requires nonempty usable chat text from `qwen3:4b`, then two equal-size finite
+vectors from `qwen3-embedding:0.6b`, reporting the observed dimension and vector
+hash without writing vector DB columns. The fixed prompts contain fictional data.
+Run after all behavior-affecting changes on the exact final candidate. No cloud
+fallback or live vLLM claim is made; vLLM compatibility is a deterministic common
+wire-contract proof. Repeat full bootstrap/verification in a fresh checkout and
+new disposable DB volume before the implementation push.

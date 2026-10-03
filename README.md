@@ -1,8 +1,9 @@
 # Agent Reliability Runtime
 
-A local-first reliability reference implementation. **B10 contracts and persistence:**
-strict domain records, 11 project-owned PostgreSQL tables and fictional demo reset
-exist. Provider adapters, policy/tool execution, retrieval, the agent runtime,
+A local-first reliability reference implementation. **B20 provider boundary:**
+strict domain records, 11 project-owned PostgreSQL tables, fictional demo reset,
+generic OpenAI-compatible chat and native Ollama embeddings exist.
+Policy/tool execution, retrieval, the agent runtime,
 memory API and accepted replay gallery remain later tasks. The locked design is
 in [docs/project](docs/project/README.md).
 
@@ -16,6 +17,7 @@ python scripts/bootstrap.py
 uv run python scripts/verify.py --scope static-unit
 uv run alembic upgrade head
 uv run python scripts/reset_demo.py --confirm-development-reset
+uv run python scripts/probe_providers.py
 uv run uvicorn agent_reliability_runtime.api:app --host 127.0.0.1
 npm --prefix web run dev
 ```
@@ -52,8 +54,13 @@ removes its 11 project tables and their data; rehearse it only in a disposable D
 
 Target support is Windows 11, macOS and Linux. Local execution so far is on
 Windows 10 Pro; that does not prove Windows 11. CI separately verifies its actual
-Windows/macOS/Ubuntu runners; full DB integration runs on Ubuntu. No full agent,
-Ollama or cross-platform model compatibility is claimed by B10.
+Windows/macOS/Ubuntu runners; full DB integration runs on Ubuntu. No full agent or
+cross-platform model compatibility is claimed. The explicit provider probe checks
+local `qwen3:4b` chat and `qwen3-embedding:0.6b` embeddings. It requires a running
+Ollama server with those models; use `ollama pull qwen3:4b` and
+`ollama pull qwen3-embedding:0.6b` to provision them. It is separate from bootstrap
+and CI and never downloads models automatically. Live acceptance so far is on
+Windows 10 Pro only; other local OS/model combinations are EXPECTED, not TESTED.
 
 TLS-intercepting environments may need `UV_SYSTEM_CERTS=true` and
 `NODE_OPTIONS=--use-system-ca`. Certificate verification stays enabled.

@@ -33,3 +33,35 @@ document's current digest. Re-ingestion/replacement and vector/search columns
 remain B30 work. Effect uniqueness is enforced on `(tool_name, idempotency_key)`;
 same-key replay and digest reconciliation remain B50 work. Foreign keys do not
 cascade-delete retained evidence.
+
+B20 adds separate `ChatProvider.complete(ChatRequest)` and
+`EmbeddingProvider.embed(EmbeddingRequest)` protocols in `providers/contracts.py`.
+`OpenAICompatibleChatProvider` posts the common non-streaming chat subset to a
+configurable base URL ending in `/v1`; `OllamaEmbeddingProvider` posts batches to
+the native `/api/embed` endpoint with `truncate=false`. `httpx==0.28.1` moved from
+dev-only to runtime; no vendor SDK or retry framework was added.
+
+Configure `HTTPProviderConfig` with explicit provider/model identity, base URL,
+finite positive timeout and optional Pydantic `SecretStr` API key. Keys are
+excluded from configuration repr. Embedded credentials, query strings and
+fragments in URLs are rejected. Clients close after each call, verify TLS,
+ignore environment proxy/credential configuration, do not follow redirects and
+never retry automatically. Timeout applies to connect/read/write/pool operations;
+it is not a wall-clock deadline for the entire inference.
+
+Requests include messages, JSON-object tool schemas, bounded model settings and
+local caller trace context. B80 owns trace forwarding/emission. Parsed tool calls
+are untrusted data and are never executed. JSON-string and object arguments are
+accepted, including multiple calls and absent call IDs; history sent back to the
+server requires IDs for assistant tool calls. Optional usage is preserved without
+inventing missing token counts. Result identity preserves the server's reported
+model, allowing compatible server aliases. Raw provider metadata/reasoning is
+discarded; neutral metadata stays empty. Embedding count, uniform nonzero dimension
+and finite numeric values are checked; no dimension is hard-coded or stored in DB.
+
+Errors are explicit: `ProviderConfigurationError` before I/O,
+`ProviderTransportError` for HTTPX transport/timeouts, `ProviderHTTPError` for
+non-2xx status (bounded status-only diagnostic), and `ProviderProtocolError` for
+invalid JSON/shape. Errors never retain bodies, headers or raw vendor exceptions
+as visible traceback causes. There is no authorization or automatic redaction
+of normal model text; callers must not send secrets or treat responses as authority.
