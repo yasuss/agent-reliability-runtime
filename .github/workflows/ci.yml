@@ -1,9 +1,9 @@
-name: B00 verification
+name: Repository verification
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'codex/**']
   push:
-    branches: [codex/b00-repository-foundation]
+    branches: ['codex/**']
 permissions:
   contents: read
 jobs:

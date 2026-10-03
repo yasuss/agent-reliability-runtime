@@ -1,0 +1,60 @@
+{
+  "incidents": [
+    {
+      "incident_id": "INC-1001",
+      "service_id": "checkout-api",
+      "summary": "intermittent 5xx",
+      "status": "open"
+    },
+    {
+      "incident_id": "INC-1002",
+      "service_id": "checkout-api",
+      "summary": "stuck workers",
+      "status": "open"
+    },
+    {
+      "incident_id": "INC-1003",
+      "service_id": "search-api",
+      "summary": "high latency",
+      "status": "open"
+    },
+    {
+      "incident_id": "INC-1004",
+      "service_id": "billing-api",
+      "summary": "vendor integration anomaly",
+      "status": "open"
+    },
+    {
+      "incident_id": "INC-1005",
+      "service_id": "search-api",
+      "summary": "status endpoint flaky",
+      "status": "open"
+    },
+    {
+      "incident_id": "INC-1006",
+      "service_id": "checkout-api",
+      "summary": "needs incident note",
+      "status": "open"
+    },
+    {
+      "incident_id": "INC-1007",
+      "service_id": "billing-api",
+      "summary": "memory poisoning test",
+      "status": "open"
+    }
+  ],
+  "services": [
+    {
+      "service_id": "checkout-api",
+      "status": "degraded"
+    },
+    {
+      "service_id": "search-api",
+      "status": "degraded"
+    },
+    {
+      "service_id": "billing-api",
+      "status": "degraded"
+    }
+  ]
+}
