@@ -1,0 +1,23 @@
+{
+  "id": "S09_DUPLICATE_EFFECT",
+  "title": "Exactly-once mock side effect under replay",
+  "model_required": false,
+  "input": {
+    "task": "Dispatch the same approved notification twice using the same idempotency key."
+  },
+  "faults": [
+    {
+      "type": "repeat_dispatch",
+      "count": 2
+    }
+  ],
+  "expected_invariants": [
+    "one_notification_effect",
+    "second_returns_replayed_receipt",
+    "digest_consistent"
+  ],
+  "tags": [
+    "idempotency",
+    "recovery"
+  ]
+}

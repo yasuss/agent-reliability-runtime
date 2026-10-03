@@ -1,0 +1,22 @@
+{
+  "id": "S12_PROVIDER_FAILURE",
+  "title": "Provider failure is explicit",
+  "model_required": false,
+  "input": {
+    "task": "Start a run while the model provider is unavailable."
+  },
+  "faults": [
+    {
+      "type": "provider_unavailable"
+    }
+  ],
+  "expected_invariants": [
+    "terminal_status_failed",
+    "no_fake_success",
+    "zero_side_effects"
+  ],
+  "tags": [
+    "provider",
+    "failure"
+  ]
+}

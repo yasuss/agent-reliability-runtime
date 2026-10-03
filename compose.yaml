@@ -1,0 +1,19 @@
+services:
+  db:
+    image: pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a
+    environment:
+      POSTGRES_USER: arr
+      POSTGRES_DB: arr
+      # Fictional local development credential, never for hosted/production use.
+      POSTGRES_PASSWORD: ${ARR_DB_PASSWORD:-local-development-fixture}
+    ports:
+      - "127.0.0.1:${ARR_DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arr -d arr"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+volumes:
+  db-data:

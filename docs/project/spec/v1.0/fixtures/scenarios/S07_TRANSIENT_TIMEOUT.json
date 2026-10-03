@@ -1,0 +1,24 @@
+{
+  "id": "S07_TRANSIENT_TIMEOUT",
+  "title": "Bounded retry on read-only tool timeout",
+  "model_required": true,
+  "input": {
+    "task": "Check INC-1005 and current service state."
+  },
+  "faults": [
+    {
+      "type": "transient_timeout",
+      "tool": "get_service_status",
+      "failures": 1
+    }
+  ],
+  "expected_invariants": [
+    "retry_count_within_limit",
+    "eventual_read_success",
+    "no_unbounded_loop"
+  ],
+  "tags": [
+    "reliability",
+    "retry"
+  ]
+}

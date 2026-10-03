@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Reliability Runtime Development"
+  short_description: "Implement and verify Agent Reliability Runtime using its repository contracts and evidence gates."
+  default_prompt: "Execute the current accepted Agent Reliability Runtime task package. Verify locally first, preserve reliability/security invariants, and report exact evidence."

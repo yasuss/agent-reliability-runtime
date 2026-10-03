@@ -1,0 +1,24 @@
+{
+  "id": "S08_PROCESS_KILL_RESUME",
+  "title": "Fresh-process resume from checkpoint",
+  "model_required": true,
+  "input": {
+    "task": "Add the approved incident note to INC-1006."
+  },
+  "faults": [
+    {
+      "type": "process_kill",
+      "point": "after_approval_before_tool_result"
+    }
+  ],
+  "expected_invariants": [
+    "fresh_process_resume",
+    "same_run_identity",
+    "one_effect_total",
+    "status_completed"
+  ],
+  "tags": [
+    "durability",
+    "restart"
+  ]
+}

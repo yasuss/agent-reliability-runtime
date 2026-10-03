@@ -1,0 +1,35 @@
+[project]
+name = "agent-reliability-runtime"
+version = "0.1.0"
+description = "Local-first agent reliability reference implementation: foundation only"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi==0.142.2", "pydantic==2.13.4", "uvicorn==0.54.0",
+  "langgraph==1.2.12", "langgraph-checkpoint-postgres==3.1.2", "mcp==2.2.0",
+  "opentelemetry-api==1.45.0", "opentelemetry-sdk==1.45.0",
+  "sqlalchemy==2.0.54", "alembic==1.20.0", "psycopg[binary]==3.3.6",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "ruff==0.16.10", "mypy==2.4.0", "httpx==0.28.1"]
+
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py312"
+extend-exclude = ["docs/project/spec", ".agents"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--strict-markers"
+markers = ["integration: requires an explicitly configured disposable PostgreSQL database"]

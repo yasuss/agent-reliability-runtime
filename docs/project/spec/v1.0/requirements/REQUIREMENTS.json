@@ -1,0 +1,135 @@
+{
+  "contract_version": "1.0",
+  "requirements": [
+    {
+      "id": "ARR-001",
+      "requirement": "The final project is a local-first reference runtime for reliable tool-using AI agents, not a generic chatbot or framework clone.",
+      "acceptance": "G0/G14"
+    },
+    {
+      "id": "ARR-002",
+      "requirement": "Use one LangGraph stateful agent topology with bounded execution.",
+      "acceptance": "G5"
+    },
+    {
+      "id": "ARR-003",
+      "requirement": "Python 3.12 + FastAPI/Pydantic is the backend application surface.",
+      "acceptance": "G1/G2"
+    },
+    {
+      "id": "ARR-004",
+      "requirement": "Ollama qwen3:4b is the mandatory real local chat acceptance path.",
+      "acceptance": "B20/G8"
+    },
+    {
+      "id": "ARR-005",
+      "requirement": "Ollama qwen3-embedding:0.6b is the default local embedding path.",
+      "acceptance": "B20/G3"
+    },
+    {
+      "id": "ARR-006",
+      "requirement": "A generic OpenAI-compatible chat provider supports configurable vLLM without graph changes.",
+      "acceptance": "B20"
+    },
+    {
+      "id": "ARR-007",
+      "requirement": "PostgreSQL + pgvector + PostgreSQL FTS implement hybrid RAG.",
+      "acceptance": "B30/G3"
+    },
+    {
+      "id": "ARR-008",
+      "requirement": "RAG evidence is source-identified and final citations may only reference retrieved evidence.",
+      "acceptance": "G3/G8"
+    },
+    {
+      "id": "ARR-009",
+      "requirement": "Use the official MCP Python SDK and exactly five OpsDesk tools defined by the runtime contract.",
+      "acceptance": "G4"
+    },
+    {
+      "id": "ARR-010",
+      "requirement": "Trusted policy is authoritative; MCP annotations/model/RAG/tool output/memory cannot grant permissions.",
+      "acceptance": "G4/G7"
+    },
+    {
+      "id": "ARR-011",
+      "requirement": "Every side-effecting action requires exact action-bound approval.",
+      "acceptance": "G4/G6"
+    },
+    {
+      "id": "ARR-012",
+      "requirement": "Action argument drift invalidates an approval.",
+      "acceptance": "G6"
+    },
+    {
+      "id": "ARR-013",
+      "requirement": "Side effects use idempotency keys and durable effect receipts to prevent duplicates.",
+      "acceptance": "G6"
+    },
+    {
+      "id": "ARR-014",
+      "requirement": "Durability is proven through a real fresh-process restart using Postgres checkpoints.",
+      "acceptance": "G5"
+    },
+    {
+      "id": "ARR-015",
+      "requirement": "Long-term memory is distinct from thread state and cannot authorize actions.",
+      "acceptance": "B70/G7"
+    },
+    {
+      "id": "ARR-016",
+      "requirement": "OpenTelemetry is mandatory; proprietary observability services are optional.",
+      "acceptance": "G9"
+    },
+    {
+      "id": "ARR-017",
+      "requirement": "Hard security/reliability evals use deterministic/environment oracles rather than LLM-as-judge.",
+      "acceptance": "G7/G12"
+    },
+    {
+      "id": "ARR-018",
+      "requirement": "All mandatory S01-S12 scenarios are executable and retain evidence.",
+      "acceptance": "B100"
+    },
+    {
+      "id": "ARR-019",
+      "requirement": "Default model reliability is evaluated as five behavior cases times three retained runs with locked thresholds.",
+      "acceptance": "G8"
+    },
+    {
+      "id": "ARR-020",
+      "requirement": "Public demo is static React/Vite on Vercel using recorded accepted replays and no live backend.",
+      "acceptance": "G10"
+    },
+    {
+      "id": "ARR-021",
+      "requirement": "Public demo has no arbitrary prompt/chat input.",
+      "acceptance": "G10"
+    },
+    {
+      "id": "ARR-022",
+      "requirement": "Target portability is Windows/macOS/Linux with TESTED vs EXPECTED status preserved.",
+      "acceptance": "G11"
+    },
+    {
+      "id": "ARR-023",
+      "requirement": "No paid/cloud provider is required for installation, acceptance or public demo.",
+      "acceptance": "G0/G1"
+    },
+    {
+      "id": "ARR-024",
+      "requirement": "Scope exclusions in 01_SCOPE_AND_NON_GOALS.md are enforced unless contract is versioned.",
+      "acceptance": "G0"
+    },
+    {
+      "id": "ARR-025",
+      "requirement": "Exact final replays/acceptance receipts are bound to final git SHA and regenerated after affected changes.",
+      "acceptance": "G13"
+    },
+    {
+      "id": "ARR-026",
+      "requirement": "Merge/release requires focused manual user verification and explicit user approval.",
+      "acceptance": "G14"
+    }
+  ]
+}

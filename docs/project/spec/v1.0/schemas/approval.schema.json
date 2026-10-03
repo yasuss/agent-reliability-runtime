@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "approval.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "approval_id",
+    "run_id",
+    "action_id",
+    "tool_name",
+    "normalized_args",
+    "action_digest",
+    "policy_version",
+    "risk_class",
+    "status"
+  ],
+  "properties": {
+    "approval_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "action_id": {
+      "type": "string"
+    },
+    "tool_name": {
+      "type": "string"
+    },
+    "normalized_args": {
+      "type": "object"
+    },
+    "action_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "policy_version": {
+      "type": "string"
+    },
+    "risk_class": {
+      "enum": [
+        "SIDE_EFFECT"
+      ]
+    },
+    "status": {
+      "enum": [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "EXPIRED",
+        "CONSUMED"
+      ]
+    }
+  }
+}

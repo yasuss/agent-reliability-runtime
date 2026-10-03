@@ -1,0 +1,21 @@
+{
+  "id": "S11_STEP_BUDGET",
+  "title": "Runaway reasoning terminates",
+  "model_required": false,
+  "input": {
+    "task": "Force a repeated no-progress decision loop."
+  },
+  "faults": [
+    {
+      "type": "stub_model_loop"
+    }
+  ],
+  "expected_invariants": [
+    "terminal_status_budget_exceeded",
+    "model_steps_not_above_hard_cap"
+  ],
+  "tags": [
+    "budget",
+    "reliability"
+  ]
+}
