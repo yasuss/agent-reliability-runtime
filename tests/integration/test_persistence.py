@@ -86,7 +86,9 @@ def test_schema_exact_tables_types_constraints_and_metadata(
 ) -> None:
     engine, _ = isolated_db
     inspector = inspect(engine)
-    assert set(inspector.get_table_names()) == TABLE_NAMES | {"alembic_version"}
+    assert set(inspector.get_table_names(schema=inspector.default_schema_name)) == (
+        TABLE_NAMES | {"alembic_version"}
+    )
     with engine.connect() as c:
         assert c.scalar(text("SHOW server_version")).startswith("18.")
         assert (
@@ -123,8 +125,15 @@ def test_migration_roundtrip_b00_and_reupgrade(
     isolated_db: tuple[Engine, Config],
 ) -> None:
     engine, cfg = isolated_db
+    inspector = inspect(engine)
+    name = inspector.default_schema_name
+    public_tables = set(inspector.get_table_names(schema="public"))
+    with engine.connect() as c:
+        public_version = c.scalar(
+            text("SELECT version_num FROM public.alembic_version")
+        )
     command.downgrade(cfg, "0001_foundation")
-    assert set(inspect(engine).get_table_names()) == {"alembic_version"}
+    assert set(inspect(engine).get_table_names(schema=name)) == {"alembic_version"}
     with engine.connect() as c:
         assert (
             c.scalar(text("SELECT version_num FROM alembic_version"))
@@ -136,8 +145,14 @@ def test_migration_roundtrip_b00_and_reupgrade(
         )
     command.upgrade(cfg, "head")
     command.upgrade(cfg, "head")
-    assert set(inspect(engine).get_table_names()) == TABLE_NAMES | {"alembic_version"}
+    assert set(inspect(engine).get_table_names(schema=name)) == (
+        TABLE_NAMES | {"alembic_version"}
+    )
+    assert set(inspect(engine).get_table_names(schema="public")) == public_tables
     with engine.connect() as c:
+        assert c.scalar(text("SELECT version_num FROM public.alembic_version")) == (
+            public_version
+        )
         assert compare_metadata(MigrationContext.configure(c), schema.metadata) == []
 
 
