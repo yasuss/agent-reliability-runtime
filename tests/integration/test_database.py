@@ -21,7 +21,7 @@ def test_foundation_database() -> None:
             )
             assert (
                 connection.scalar(text("SELECT version_num FROM alembic_version"))
-                == "0002_domain"
+                == "0003_retrieval"
             )
     finally:
         engine.dispose()

@@ -1,18 +1,21 @@
 """SQLAlchemy Core metadata. JSONB updates use explicit value replacement."""
 
+from pgvector.sqlalchemy import VECTOR
 from sqlalchemy import (
     CheckConstraint,
     Column,
+    Computed,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     MetaData,
     Table,
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 
 from agent_reliability_runtime.contracts.domain import (
     ApprovalStatus,
@@ -160,6 +163,12 @@ knowledge_chunks = Table(
     Column("document_digest", Text, nullable=False),
     Column("ordinal", Integer, nullable=False),
     Column("content", Text, nullable=False),
+    Column("embedding", VECTOR(1024)),
+    Column(
+        "search_vector",
+        TSVECTOR,
+        Computed("to_tsvector('english'::regconfig, content)", persisted=True),
+    ),
     ForeignKeyConstraint(
         ["document_id", "document_digest"],
         ["knowledge_documents.document_id", "knowledge_documents.content_digest"],
@@ -169,6 +178,7 @@ knowledge_chunks = Table(
         "document_id", "document_digest", "ordinal", name="uq_knowledge_chunks_ordinal"
     ),
     CheckConstraint("ordinal >= 0", name="ck_knowledge_chunks_ordinal"),
+    Index("ix_knowledge_chunks_search_vector", "search_vector", postgresql_using="gin"),
 )
 
 demo_services = Table(

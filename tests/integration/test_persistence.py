@@ -1,11 +1,7 @@
 """Real PostgreSQL oracles; every test uses an isolated disposable schema."""
 
-import os
-from collections.abc import Iterator
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 import pytest
 from alembic import command
@@ -16,13 +12,11 @@ from sqlalchemy import (
     Connection,
     DateTime,
     Engine,
-    create_engine,
     inspect,
     select,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 
 from agent_reliability_runtime.contracts.domain import (
@@ -63,30 +57,6 @@ TABLE_NAMES = {
     "demo_notifications",
     "demo_incident_notes",
 }
-
-
-@pytest.fixture
-def isolated_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[Engine, Config]]:
-    raw_url = os.environ.get("ARR_TEST_DATABASE_URL")
-    if not raw_url:
-        pytest.fail("ARR_TEST_DATABASE_URL must explicitly select a disposable test DB")
-    name = "test_b10_" + uuid4().hex
-    admin = create_engine(raw_url)
-    with admin.begin() as connection:
-        connection.execute(text(f'CREATE SCHEMA "{name}"'))
-    url = make_url(raw_url).update_query_dict({"options": f"-csearch_path={name}"})
-    monkeypatch.setenv("ARR_DATABASE_URL", url.render_as_string(hide_password=False))
-    cfg = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
-    engine = create_engine(url)
-    try:
-        command.upgrade(cfg, "head")
-        yield engine, cfg
-    finally:
-        engine.dispose()
-        with admin.begin() as connection:
-            # Only this test's fresh random schema; never public or other state.
-            connection.execute(text(f'DROP SCHEMA "{name}" CASCADE'))
-        admin.dispose()
 
 
 def run_record(run_id: str = "run-1") -> Run:

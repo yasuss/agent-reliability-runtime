@@ -79,3 +79,6 @@ No license/publication choice is made. No merge or release is implied.
 
 Persistence details and bounded verification are documented in
 [Development](docs/project/DEVELOPMENT.md) and [Verification](docs/project/VERIFICATION.md).
+
+B30 ingestion, hybrid retrieval, citation validation and the separate exact-head
+local embedding proof are documented in [Retrieval](docs/project/B30_RETRIEVAL.md).
