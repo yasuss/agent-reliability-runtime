@@ -47,6 +47,7 @@ class ChatMessage(Record):
 class ModelSettings(Record):
     temperature: Annotated[float, Field(ge=0, le=2)] | None = None
     max_tokens: Annotated[int, Field(gt=0, strict=True)] | None = None
+    seed: Counter | None = None
 
 
 class ChatRequest(Record):

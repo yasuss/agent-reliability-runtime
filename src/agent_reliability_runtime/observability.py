@@ -169,6 +169,7 @@ PAYLOADS = {
     "approval.waiting": "approval_id action_digest status",
     "approval.resumed": "approval_id action_digest status",
     "tool.completed": "tool_name risk_class receipt_id result_digest replayed success",
+    "tool.retry": "tool_name attempt action_id action_digest",
     "recovery.resumed": "kind checkpoint_id",
     "run.finalized": (
         "status terminal_reason model_steps tool_steps sanitized_final_text"

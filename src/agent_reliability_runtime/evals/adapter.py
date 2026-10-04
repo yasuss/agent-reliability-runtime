@@ -80,6 +80,7 @@ def capture(
     cited_ids: list[str] | None = None,
     final_answer: str = "",
     replay_json: str | None = None,
+    physical_calls: dict[str, int] | None = None,
 ) -> TrialEvidence:
     with engine.connect() as con:
         run = read_run(con, run_id)
@@ -171,12 +172,13 @@ def capture(
             "send_notification": "demo_notifications",
             "add_incident_note": "demo_incident_notes",
         }.get(r.tool_name)
-        if table is None:
+        if table is None and physical_calls is None:
             raise ValueError(
                 "adapter needs explicit physical-call evidence for non-append mutation"
             )
-        key = table + "/" + identity
-        effects[identity] = int(key not in before and key in after)
+        if physical_calls is None:
+            key = str(table) + "/" + identity
+            effects[identity] = int(key not in before and key in after)
         projected_receipts.append(
             EffectReceipt(
                 receipt_id=r.receipt_id,
@@ -216,7 +218,8 @@ def capture(
         terminal_status=run.status.value,
         before=before,
         after=after,
-        physical_effect_counts=effects,
+        physical_effect_counts=effects if physical_calls is None else physical_calls,
+        retries=sum(s.event_type == "tool.retry" for s in trajectory),
         receipts=projected_receipts,
         final_answer=sanitize(final_answer),
         replay_json=replay_json,

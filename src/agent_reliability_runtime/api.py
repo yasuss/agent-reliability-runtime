@@ -1,7 +1,8 @@
 """Local scoped memory list/delete and liveness; no enterprise auth claim."""
 
-from collections.abc import Iterator
-from typing import Annotated
+from collections.abc import Callable, Iterator
+from contextlib import AbstractAsyncContextManager
+from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict
@@ -12,12 +13,20 @@ from agent_reliability_runtime.contracts.domain import (
     AuditEvent,
     Identifier,
     Memory,
+    Record,
     Run,
 )
 from agent_reliability_runtime.database import database_url
 from agent_reliability_runtime.memory import MemoryStore
 from agent_reliability_runtime.observability import AuditTrail, read_run
 from agent_reliability_runtime.persistence import schema
+from agent_reliability_runtime.policy import Approvals, PolicyError
+from agent_reliability_runtime.runtime.local import RunRequest, local_runtime
+from agent_reliability_runtime.runtime.service import DurableRuntime
+
+
+class ApprovalDecision(Record):
+    decision: Literal["APPROVE", "REJECT"]
 
 
 class Health(BaseModel):
@@ -25,7 +34,13 @@ class Health(BaseModel):
     status: str
 
 
-def create_app(engine: Engine | None = None) -> FastAPI:
+def create_app(
+    engine: Engine | None = None,
+    *,
+    runtime_factory: Callable[
+        [Engine], AbstractAsyncContextManager[DurableRuntime]
+    ] = local_runtime,
+) -> FastAPI:
     application = FastAPI(title="Agent Reliability Runtime")
 
     def store() -> Iterator[MemoryStore]:
@@ -36,6 +51,57 @@ def create_app(engine: Engine | None = None) -> FastAPI:
         finally:
             if owned:
                 selected.dispose()
+
+    @application.post("/api/v1/runs", response_model=Run)
+    async def post_run(
+        body: RunRequest, memories: Annotated[MemoryStore, Depends(store)]
+    ) -> Run:
+        run = body.run()
+        async with runtime_factory(memories.engine) as runtime:
+            await runtime.start(run)
+        with memories.engine.connect() as con:
+            persisted = read_run(con, run.run_id)
+        assert persisted is not None
+        return persisted
+
+    @application.post(
+        "/api/v1/runs/{run_id}/approvals/{approval_id}", response_model=Run
+    )
+    async def post_approval(
+        run_id: Identifier,
+        approval_id: Identifier,
+        body: ApprovalDecision,
+        memories: Annotated[MemoryStore, Depends(store)],
+    ) -> Run:
+        try:
+            approval = Approvals(memories.engine).read(approval_id)
+        except PolicyError:
+            raise HTTPException(status_code=404, detail="Approval not found") from None
+        if approval.run_id != run_id:
+            raise HTTPException(status_code=404, detail="Approval not found")
+        unavailable = False
+        async with runtime_factory(memories.engine) as runtime:
+            try:
+                snapshot = await runtime.inspect(run_id)
+                if (
+                    not snapshot.interrupts
+                    or snapshot.values.get("approval_id") != approval_id
+                ):
+                    raise PolicyError("matching interrupted approval required")
+                runtime.context.gateway.approvals.decide(
+                    approval_id, approved=body.decision == "APPROVE"
+                )
+                await runtime.resume(run_id, "continue")
+            except PolicyError:
+                unavailable = True
+        if unavailable:
+            raise HTTPException(
+                status_code=409, detail="Approval decision unavailable"
+            ) from None
+        with memories.engine.connect() as con:
+            persisted = read_run(con, run_id)
+        assert persisted is not None
+        return persisted
 
     @application.get("/healthz", response_model=Health)
     def health() -> Health:

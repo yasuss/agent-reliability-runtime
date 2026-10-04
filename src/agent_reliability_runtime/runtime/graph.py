@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from sqlalchemy import Engine, select
 
 from agent_reliability_runtime.contracts.domain import ApprovalStatus, Run, RunStatus
-from agent_reliability_runtime.mcp.client import validate_model_view
+from agent_reliability_runtime.mcp.client import OpsDeskError, validate_model_view
 from agent_reliability_runtime.memory import MemoryStore
 from agent_reliability_runtime.observability import AuditTrail, Telemetry, sanitize
 from agent_reliability_runtime.persistence import schema
@@ -39,10 +39,12 @@ from agent_reliability_runtime.providers.contracts import (
     ChatRequest,
     ChatResult,
     EmbeddingProvider,
+    ModelSettings,
     ToolCall,
     ToolDefinition,
 )
 from agent_reliability_runtime.providers.http import ProviderError
+from agent_reliability_runtime.retrieval.citations import validate_citations
 from agent_reliability_runtime.retrieval.service import retrieve
 
 
@@ -75,6 +77,7 @@ class Context:
     embeddings: EmbeddingProvider
     tools: tuple[ToolDefinition, ...]
     gateway: Gateway
+    model_settings: ModelSettings = dataclass_field(default_factory=ModelSettings)
     telemetry: Telemetry = dataclass_field(default_factory=Telemetry)
     clock: Callable[[], datetime] = lambda: datetime.now(UTC)
     key_factory: Callable[[], str] = lambda: uuid4().hex
@@ -82,6 +85,7 @@ class Context:
 
     def __post_init__(self) -> None:
         validate_model_view(self.tools)
+        ModelSettings.model_validate(self.model_settings.model_dump())
 
 
 def persist(
@@ -321,6 +325,7 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     request = ChatRequest(
         messages=tuple(messages),
         tools=runtime.context.tools,
+        settings=runtime.context.model_settings,
     )
     try:
         with runtime.context.telemetry.span(
@@ -385,6 +390,12 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
             "route": "validate_action",
         }
     if result.text is not None:
+        try:
+            validate_citations(
+                result.text, {e["evidence_id"] for e in state["evidence"]}
+            )
+        except ValueError:
+            return update | failure("citation outside retrieved evidence")
         return update | {
             "status": RunStatus.COMPLETED.value,
             "final_text": result.text,
@@ -469,8 +480,31 @@ async def await_approval(state: State, runtime: Runtime[Context]) -> dict[str, A
 @observed("agent.tool.call", "tool.completed")
 async def execute_tool(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     try:
-        action = Action.model_validate(state["action"])
-        result = await runtime.context.gateway.execute(action, state["approval_id"])
+        action = validate_action(Action.model_validate(state["action"]))
+        for attempt in range(1, 3):
+            try:
+                result = await runtime.context.gateway.execute(
+                    action, state["approval_id"]
+                )
+                break
+            except OpsDeskError:
+                if action.risk_class != "READ_ONLY":
+                    # Retain the checkpoint for B50 receipt reconciliation on
+                    # continuation; an ambiguous write never enters this loop.
+                    raise
+                if attempt == 2:
+                    return failure("bounded OpsDesk transport failure")
+                audit(
+                    runtime.context,
+                    state,
+                    "tool.retry",
+                    {
+                        "tool_name": action.tool_name,
+                        "attempt": attempt + 1,
+                        "action_id": action.action_id,
+                        "action_digest": action.action_digest,
+                    },
+                )
     except (PolicyError, ValidationError):
         return failure("exact approved action validation failed")
     raw = result.model_dump(mode="json")

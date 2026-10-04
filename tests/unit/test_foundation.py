@@ -13,7 +13,7 @@ from scripts.commands import run_commands
 def test_liveness_boundary() -> None:
     with TestClient(app) as client:
         assert client.get("/healthz").json() == {"status": "ok"}
-        assert client.get("/api/v1/runs").status_code == 404
+        assert client.get("/api/v1/runs").status_code == 405
 
 
 def test_health_rejects_extra_fields() -> None:

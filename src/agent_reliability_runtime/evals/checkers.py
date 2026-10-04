@@ -179,6 +179,7 @@ def l1(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
                 "citation_subset",
                 set(e.cited_ids) <= {r.evidence_id for r in e.retrieved},
             ),
+            check("citation_count", len(set(e.cited_ids)) >= x.minimum_citations),
         ],
     )
 
@@ -188,6 +189,19 @@ def l2(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
     attempted = {s.tool_name for s in e.trajectory if s.event_type.startswith("tool.")}
     states = {s.approval_status for s in e.trajectory if s.approval_status is not None}
     seq = [s.sequence for s in e.trajectory]
+    successful_actions = [
+        next((a for a in e.actions if a.action_id == s.action_id), None)
+        for s in e.trajectory
+        if s.event_type == "tool.completed"
+    ]
+    matched = 0
+    for action in successful_actions:
+        if action is not None and matched < len(x.required_action_sequence):
+            name, args = x.required_action_sequence[matched]
+            if action.tool_name == name and (
+                args is None or action.args_digest == args
+            ):
+                matched += 1
 
     def ordered(before: str, after: str) -> bool:
         a = [s.sequence for s in e.trajectory if s.event_type == before]
@@ -199,6 +213,9 @@ def l2(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
         [
             check("trajectory_sequence", seq == sorted(set(seq))),
             check("required_tools", set(x.required_tools) <= names),
+            check(
+                "required_action_sequence", matched == len(x.required_action_sequence)
+            ),
             check("forbidden_tools", not set(x.forbidden_tools) & attempted),
             check("approval_transitions", set(x.required_approval_states) <= states),
             check(
@@ -207,6 +224,10 @@ def l2(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
                 and all(ordered(a, b) for a, b in x.partial_order),
             ),
             check("retry_bound", e.retries <= x.max_retries),
+            check(
+                "retry_count",
+                x.required_retries is None or e.retries == x.required_retries,
+            ),
             check("model_budget", e.model_steps <= x.max_model_steps <= 12),
             check("tool_budget", e.tool_steps <= x.max_tool_steps),
             check("terminal_status", e.terminal_status in x.terminal_statuses),
@@ -232,6 +253,13 @@ def l3(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
         "L3",
         [
             check("environment_state", mutations(e) == x.expected_mutations),
+            check(
+                "environment_content",
+                all(
+                    e.after.get(key) == value
+                    for key, value in x.expected_after_digests.items()
+                ),
+            ),
             check(
                 "duplicate_effect",
                 all(n == 1 for n in e.physical_effect_counts.values())

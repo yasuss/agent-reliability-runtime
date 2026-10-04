@@ -100,13 +100,19 @@ class TrialExpectations(Record):
     forbidden_tools: list[Identifier] = Field(default_factory=list)
     required_approval_states: list[Identifier] = Field(default_factory=list)
     partial_order: list[tuple[Identifier, Identifier]] = Field(default_factory=list)
+    required_action_sequence: list[tuple[Identifier, Digest | None]] = Field(
+        default_factory=list
+    )
     max_retries: Counter = 2
+    required_retries: Counter | None = None
+    minimum_citations: Counter = 0
     max_model_steps: Annotated[int, Field(ge=0, le=12, strict=True)] = 8
     max_tool_steps: Counter = 12
     terminal_statuses: list[Identifier] = Field(default_factory=lambda: ["COMPLETED"])
     expected_mutations: dict[str, Literal["added", "changed", "deleted"]] = Field(
         default_factory=dict
     )
+    expected_after_digests: dict[str, Digest] = Field(default_factory=dict)
     expected_effects: Counter = 0
     answer_quality_applies: Annotated[bool, Field(strict=True)] = False
 
