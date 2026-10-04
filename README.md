@@ -82,3 +82,6 @@ Persistence details and bounded verification are documented in
 
 B30 ingestion, hybrid retrieval, citation validation and the separate exact-head
 local embedding proof are documented in [Retrieval](docs/project/B30_RETRIEVAL.md).
+
+B40's five fictional MCP tools, field ownership and infrastructure-only stdio
+proof are documented in [OpsDesk](docs/project/B40_OPSDESK.md).

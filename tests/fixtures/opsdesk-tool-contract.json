@@ -1,0 +1,118 @@
+{
+  "version": "1.0",
+  "server": {
+    "name": "OpsDesk",
+    "canonical_transport": "stdio",
+    "sdk": "official MCP Python SDK",
+    "exact_tool_count": 5,
+    "resources": "none",
+    "prompts": "none",
+    "state": "fictional PostgreSQL demo_* tables only for tool behavior"
+  },
+  "runtime_owned_arguments": {
+    "add_incident_note": [
+      "idempotency_key"
+    ],
+    "restart_service": [
+      "idempotency_key"
+    ],
+    "send_notification": [
+      "idempotency_key"
+    ]
+  },
+  "tools": [
+    {
+      "name": "get_incident",
+      "class": "READ_ONLY",
+      "wire_args": [
+        "incident_id"
+      ],
+      "model_args": [
+        "incident_id"
+      ],
+      "output": [
+        "incident_id",
+        "service_id",
+        "summary",
+        "status"
+      ]
+    },
+    {
+      "name": "get_service_status",
+      "class": "READ_ONLY",
+      "wire_args": [
+        "service_id"
+      ],
+      "model_args": [
+        "service_id"
+      ],
+      "output": [
+        "service_id",
+        "status"
+      ]
+    },
+    {
+      "name": "add_incident_note",
+      "class": "SIDE_EFFECT",
+      "wire_args": [
+        "incident_id",
+        "note",
+        "idempotency_key"
+      ],
+      "model_args": [
+        "incident_id",
+        "note"
+      ],
+      "output": [
+        "note_id",
+        "incident_id",
+        "note",
+        "created_at"
+      ]
+    },
+    {
+      "name": "restart_service",
+      "class": "SIDE_EFFECT",
+      "wire_args": [
+        "service_id",
+        "reason",
+        "idempotency_key"
+      ],
+      "model_args": [
+        "service_id",
+        "reason"
+      ],
+      "output": [
+        "service_id",
+        "previous_status",
+        "status",
+        "reason"
+      ]
+    },
+    {
+      "name": "send_notification",
+      "class": "SIDE_EFFECT",
+      "wire_args": [
+        "channel",
+        "message",
+        "idempotency_key"
+      ],
+      "model_args": [
+        "channel",
+        "message"
+      ],
+      "output": [
+        "notification_id",
+        "channel",
+        "message",
+        "created_at"
+      ]
+    }
+  ],
+  "annotation_rule": "MCP annotations are advisory metadata only. No risk/authorization decision may derive from readOnlyHint, destructiveHint, idempotentHint, openWorldHint, title or description.",
+  "model_schema_rule": "The model-visible tool schema must omit runtime-owned idempotency_key. The wire MCP schema must require it. B50 will mint it in trusted runtime code before an approved call.",
+  "raw_side_effect_rule": "B40 proves raw fictional-state mutation only. Raw side-effect calls are infrastructure/test surface and are not authorization-complete. They must not be connected to the graph before B50.",
+  "raw_duplicate_rule": "For note/notification rows, derive deterministic row identity from tool name + idempotency_key so a direct duplicate raw dispatch fails closed instead of creating a second row. Do not claim B50 replay/receipt semantics in B40.",
+  "restart_rule": "A successful raw restart of a known fictional service changes demo_services.status to 'healthy' and returns previous_status plus final status. B50 later supplies approval/effect-receipt semantics.",
+  "filesystem_rule": "No tool accepts filesystem paths or URLs and the server performs no arbitrary host filesystem/network access."
+}

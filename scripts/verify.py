@@ -17,7 +17,7 @@ def main() -> int:
             ["uv", "sync", "--locked"],
             ["uv", "run", "ruff", "format", "--check", "."],
             ["uv", "run", "ruff", "check", "."],
-            ["uv", "run", "mypy", "src", "tests"],
+            ["uv", "run", "mypy", "src", "mcp_server", "tests"],
             ["uv", "run", "pytest", "tests/unit"],
             ["npm", "--prefix", "web", "ci"],
             ["npm", "--prefix", "web", "run", "lint"],
