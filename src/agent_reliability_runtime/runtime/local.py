@@ -19,6 +19,7 @@ from agent_reliability_runtime.contracts.domain import (
 from agent_reliability_runtime.evals.scenarios import load_scenarios
 from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
 from agent_reliability_runtime.policy import VERSION, Gateway
+from agent_reliability_runtime.providers.contracts import ModelSettings
 from agent_reliability_runtime.providers.http import (
     HTTPProviderConfig,
     OllamaEmbeddingProvider,
@@ -92,6 +93,7 @@ async def local_runtime(engine: Engine) -> AsyncIterator[DurableRuntime]:
             ),
             tools=client.model_tools,
             gateway=Gateway(engine, client),
+            model_settings=ModelSettings(max_tokens=8192),
         )
         async with open_runtime(context, engine.url) as runtime:
             yield runtime

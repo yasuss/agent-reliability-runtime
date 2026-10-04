@@ -370,6 +370,10 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
             **failure("provider protocol failure"),
         }
     update: dict[str, Any] = {"model_steps": state["model_steps"] + 1}
+    if result.finish_reason == "length":
+        return update | failure("model output truncated")
+    if not result.tool_calls and (result.text is None or not result.text.strip()):
+        return update | failure("empty model output")
     if (
         result.provider_id != state["provider_id"]
         or result.model_id != state["model_id"]
@@ -402,13 +406,7 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
             "terminal_reason": None,
             "route": "finalize",
         }
-    observation = ChatMessage(
-        role="user", content="No progress. Return one tool action or a final answer."
-    )
-    return update | {
-        "messages": [*state["messages"], observation.model_dump(mode="json")],
-        "route": "decide",
-    }
+    return update | failure("empty model output")
 
 
 @observed("agent.action.validate", "action.validated")

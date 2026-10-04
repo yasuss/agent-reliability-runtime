@@ -76,7 +76,8 @@ with objective L4 NOT_APPLICABLE. Execution and finalization are distinct so hum
 review does not require another model invocation.
 
 Frozen order is S01/S02/S05/S06/S10, each seeds 101/202/303, temperature 0.2 and
-max_tokens 2048. Both accepted model digests, current Ollama version, exact source
+max_tokens 8192 for the R4 campaign. R4 trial IDs include `-r4-`; historical
+2048-token failed trials remain separate immutable evidence. Both accepted model digests, current Ollama version, exact source
 SHA, scenario/lock identities and config are checked before every trial. Any drift
 stops execution. STARTED is written before execution and never replaced. A pending
 review blocks the next trial; completed verdicts cannot be rewritten by the CLI.
@@ -100,3 +101,26 @@ only after deterministic and G8 PASS. No merge or B110 work is authorized.
 No dependency, lock, migration or locked-spec change is required. Current API
 research is recorded in the task package and the official
 [Ollama compatibility documentation](https://github.com/ollama/ollama/blob/main/docs/api/openai-compatibility.mdx).
+
+## B100R4 completion truth and pre-campaign challengers
+
+The canonical local qwen3 runtime configures max_tokens 8192. Generic provider
+defaults and separately configured models retain their own settings. Thinking
+control is omitted; the existing OpenAI-compatible adapter and model remain.
+Any `length` result fails before action validation, including a structured call.
+A no-tool None/empty/whitespace result fails instead of completing or looping.
+Nonempty stop answers and normal structured calls preserve their existing paths.
+Plain function syntax stays text. The generic system instruction requires actual
+structured calls, runtime-owned approval/idempotency, continued task completion,
+untrusted-data boundaries and canonical citations without scenario-specific data.
+
+S11 and B60 budget fixtures now repeat valid read-only status calls without ever
+finishing the task. Their BudgetExceeded oracle and exact 8/12 decision limits
+remain; empty output is separately calibrated as Failed. Locked definitions and
+B90 checkers are unchanged. This fixture adaptation reconciles the new empty
+completion contract with the existing semantic-budget proof.
+
+Before committing/freezing, the final candidate must pass the exact R3 six-call
+regression, three disposable citation probes and three disposable multi-turn
+read/restart/final probes bounded to four model turns. A challenger failure stops
+the task before campaign, without tuning or publication.

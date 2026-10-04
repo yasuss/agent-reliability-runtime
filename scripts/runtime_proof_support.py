@@ -43,7 +43,15 @@ class ScriptedProvider:
         text: str | None = None
         observations = [m for m in request.messages if m.role == "tool"]
         if self.mode == "loop":
-            pass
+            # A valid read repeats without completing the task. Empty output is
+            # a protocol failure, not a semantic-budget loop (B100R4).
+            calls = (
+                ToolCall(
+                    call_id=f"loop-{self.calls}",
+                    name="get_service_status",
+                    arguments={"service_id": "checkout-api"},
+                ),
+            )
         elif self.mode == "read_then_side" and len(observations) == 1:
             calls = (
                 ToolCall(

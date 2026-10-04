@@ -219,7 +219,7 @@ def test_semantic_budget(
                     and state["model_steps"] == provider.calls == budget
                 )
                 assert counts(engine, "b60-run")["run"]["model_steps"] == budget
-                assert state["tool_steps"] == (budget if mode == "read_loop" else 0)
+                assert state["tool_steps"] == budget
 
     run_async(exercise())
 

@@ -43,7 +43,7 @@ CHAT_DIGEST = "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
 EMBED_DIGEST = "ac6da0dfba84a81fdbfbaf330198c33cd77c4cdfc53e8bc50eb581914a15621d"
 OLLAMA = "http://127.0.0.1:11434"
 POPULATION: tuple[dict[str, Any], ...] = tuple(
-    {"trial_id": f"{case}-seed-{seed}", "scenario_id": case, "seed": seed}
+    {"trial_id": f"{case}-r4-seed-{seed}", "scenario_id": case, "seed": seed}
     for case in CASES
     for seed in SEEDS
 )
@@ -57,7 +57,7 @@ def write_once(path: Path, value: Any) -> None:
             return {
                 k: safe_settings(v)
                 for k, v in obj.items()
-                if not (k == "max_tokens" and type(v) is int and 0 < v <= 2048)
+                if not (k == "max_tokens" and type(v) is int and 0 < v <= 8192)
             }
         if isinstance(obj, list):
             return [safe_settings(v) for v in obj]
@@ -108,7 +108,7 @@ def configuration() -> dict[str, Any]:
         "provider_id": "ollama-local",
         "endpoint": OLLAMA + "/v1",
         "temperature": 0.2,
-        "max_tokens": 2048,
+        "max_tokens": 8192,
         "population": list(POPULATION),
         "l4_reviewer": "Codex B100 operator",
     }
@@ -236,7 +236,7 @@ async def start_next(engine: Engine, directory: Path) -> dict[str, Any]:
             ),
             embeddings=local_embeddings(),
             settings=ModelSettings(
-                temperature=0.2, max_tokens=2048, seed=trial["seed"]
+                temperature=0.2, max_tokens=8192, seed=trial["seed"]
             ),
         )
         if expected.answer_quality_applies:

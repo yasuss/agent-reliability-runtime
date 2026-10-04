@@ -187,7 +187,14 @@ class ScriptedScenarioProvider:
         if code == "S11":
             return ChatResult(
                 text=None,
-                finish_reason="stop",
+                tool_calls=(
+                    ToolCall(
+                        call_id=f"fixture-loop-{len(observations)}",
+                        name="get_service_status",
+                        arguments={"service_id": "checkout-api"},
+                    ),
+                ),
+                finish_reason="tool_calls",
                 provider_id="fixture",
                 model_id="fixture",
             )
