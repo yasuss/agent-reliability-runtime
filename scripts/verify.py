@@ -30,6 +30,7 @@ def main() -> int:
             ["docker", "compose", "config", "--quiet"],
             ["docker", "compose", "up", "-d", "db", "--wait", "--wait-timeout", "90"],
             ["uv", "run", "alembic", "upgrade", "head"],
+            ["uv", "run", "python", "scripts/setup_checkpoints.py"],
             ["uv", "run", "pytest", "tests/integration"],
         ]
     commands.append(["uv", "run", "python", "scripts/secret_scan.py"])

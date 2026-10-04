@@ -24,6 +24,7 @@ if __name__ == "__main__":
                     "90",
                 ],
                 ["uv", "run", "alembic", "upgrade", "head"],
+                ["uv", "run", "python", "scripts/setup_checkpoints.py"],
             ]
         )
     except (subprocess.CalledProcessError, FileNotFoundError) as error:

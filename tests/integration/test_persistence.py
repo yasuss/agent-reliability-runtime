@@ -81,6 +81,26 @@ def expect_constraint(connection: Connection, statement: Any, name: str) -> None
     assert getattr(getattr(caught.value.orig, "diag"), "constraint_name") == name
 
 
+def owned_metadata_differences(connection: Connection) -> list[Any]:
+    # Default reflection includes pg_table_is_visible across search_path. Public
+    # framework tables are outside this test's owned schema; unknown tables inside
+    # the owned schema must still be compared and rejected, never allowlisted away.
+    inspector = inspect(connection)
+    owned = set(inspector.get_table_names(schema=inspector.default_schema_name))
+    differences: list[Any] = compare_metadata(
+        MigrationContext.configure(
+            connection,
+            opts={
+                "include_name": lambda name, kind, parents: (
+                    kind != "table" or name in owned
+                ),
+            },
+        ),
+        schema.metadata,
+    )
+    return differences
+
+
 def test_schema_exact_tables_types_constraints_and_metadata(
     isolated_db: tuple[Engine, Config],
 ) -> None:
@@ -95,7 +115,7 @@ def test_schema_exact_tables_types_constraints_and_metadata(
             c.scalar(text("SELECT extversion FROM pg_extension WHERE extname='vector'"))
             == "0.8.6"
         )
-        assert compare_metadata(MigrationContext.configure(c), schema.metadata) == []
+        assert owned_metadata_differences(c) == []
     for table in TABLE_NAMES:
         for column in inspector.get_columns(table):
             if column["name"] in {
@@ -153,7 +173,7 @@ def test_migration_roundtrip_b00_and_reupgrade(
         assert c.scalar(text("SELECT version_num FROM public.alembic_version")) == (
             public_version
         )
-        assert compare_metadata(MigrationContext.configure(c), schema.metadata) == []
+        assert owned_metadata_differences(c) == []
 
 
 def test_effect_uniqueness_real_db_rejection_and_valid_alternates(
@@ -524,3 +544,21 @@ def test_reset_twice_exact_fixture_preserves_every_non_demo_table(
         c.execute(schema.demo_services.update().values(status="fixture drift"))
     with pytest.raises(AssertionError):
         assert_reset_oracle(snapshot(engine, demo_names), before, before)
+
+
+def test_schema_comparison_detects_unknown_owned_extra(
+    isolated_db: tuple[Engine, Config],
+) -> None:
+    engine, _ = isolated_db
+    with engine.begin() as connection:
+        assert owned_metadata_differences(connection) == []
+        connection.execute(
+            text("CREATE TABLE unexpected_owned_fixture (value INTEGER)")
+        )
+        differences = owned_metadata_differences(connection)
+        assert any(
+            item[0] == "remove_table" and item[1].name == "unexpected_owned_fixture"
+            for item in differences
+        )
+        connection.execute(text("DROP TABLE unexpected_owned_fixture"))
+        assert owned_metadata_differences(connection) == []

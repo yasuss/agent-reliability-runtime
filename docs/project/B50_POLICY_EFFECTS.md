@@ -65,3 +65,7 @@ state. No Ollama/model call is needed for B50. Primary semantics were checked
 against installed MCP 2.3.0 and the official
 [SDK client](https://py.sdk.modelcontextprotocol.io/client/) and
 [PostgreSQL transaction lock documentation](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS).
+
+B60 now composes this gateway into the [durable graph](B60_DURABLE_RUNTIME.md)
+and adds replay-safe deterministic approval ensure; explicit create retains B50
+semantics. No approval/effect gate is weakened.

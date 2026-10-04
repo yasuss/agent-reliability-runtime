@@ -5,6 +5,8 @@ non-authorizing and must never be connected directly to a graph.
 """
 
 import asyncio
+import hashlib
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from types import MappingProxyType
@@ -12,7 +14,7 @@ from typing import Any, Literal, Protocol
 from uuid import uuid4
 
 from pydantic import JsonValue
-from sqlalchemy import Connection, Engine, select
+from sqlalchemy import Connection, Engine, select, text
 
 from agent_reliability_runtime.contracts.domain import (
     Approval,
@@ -177,6 +179,48 @@ class Approvals:
     def read(self, approval_id: str) -> Approval:
         with self.engine.begin() as con:
             return load_approval(con, approval_id)
+
+    def ensure(self, action: Action, *, expires_at: datetime | None = None) -> Approval:
+        """Replay-safe graph primitive; preserve existing lifecycle and timestamps."""
+        action = validate_action(action)
+        if action.risk_class != "SIDE_EFFECT":
+            raise PolicyError("read action needs no approval")
+        identity = hashlib.sha256(
+            json.dumps(["approval", action.action_id], separators=(",", ":")).encode()
+        ).hexdigest()
+        proposed = Approval(
+            approval_id=identity,
+            **action.model_dump(exclude={"risk_class"}),
+            risk_class="SIDE_EFFECT",
+            status=ApprovalStatus.PENDING,
+            created_at=self.clock(),
+            expires_at=expires_at,
+        )
+        with self.engine.begin() as con:
+            load_run(con, action.run_id)
+            con.execute(
+                text("SELECT pg_advisory_xact_lock(:key)"),
+                {"key": int.from_bytes(bytes.fromhex(identity)[:8], signed=True)},
+            )
+            row = (
+                con.execute(
+                    select(schema.approvals)
+                    .where(schema.approvals.c.approval_id == identity)
+                    .with_for_update()
+                )
+                .mappings()
+                .one_or_none()
+            )
+            if row is None:
+                insert_snapshot(con, proposed)
+                return proposed
+            existing = Approval.model_validate(dict(row))
+            lifecycle = {"status", "created_at", "decided_at"}
+            if existing.model_dump(exclude=lifecycle) != proposed.model_dump(
+                exclude=lifecycle
+            ):
+                raise PolicyError("approval identity conflict")
+            return existing
 
     def decide(self, approval_id: str, *, approved: bool) -> Approval:
         with self.engine.begin() as con:
