@@ -1,5 +1,8 @@
 # Agent Reliability Runtime
 
+B70 scoped memory, local list/delete API and checkpoint deletion proof:
+[governed memory](docs/project/B70_GOVERNED_MEMORY.md).
+
 A local-first reliability reference implementation. **B20 provider boundary:**
 strict domain records, 11 project-owned PostgreSQL tables, fictional demo reset,
 generic OpenAI-compatible chat and native Ollama embeddings exist.

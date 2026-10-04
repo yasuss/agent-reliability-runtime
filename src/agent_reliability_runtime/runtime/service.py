@@ -69,7 +69,7 @@ class DurableRuntime:
                 ),
             ],
             "evidence": [],
-            "memory_context": [],
+            "memory_ids": [],
             "proposed_call": None,
             "action": None,
             "approval_id": None,

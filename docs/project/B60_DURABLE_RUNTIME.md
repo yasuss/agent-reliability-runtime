@@ -1,5 +1,9 @@
 # B60 durable LangGraph runtime
 
+The B70 implementation replaces the original empty memory placeholder with
+ID-only scoped memory resolution; see [B70](B70_GOVERNED_MEMORY.md). The B60
+approval/receipt/process durability boundaries described below remain unchanged.
+
 One production `StateGraph` uses the accepted provider, B30 retrieval, B40 model
 catalog and B50 Gateway. There is no raw MCP execution in the graph. B70 memory is
 an explicit empty `load_memory` placeholder; no governed memory or observability

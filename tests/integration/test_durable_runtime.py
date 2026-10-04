@@ -71,7 +71,7 @@ def test_read_happy_path_and_strict_checkpoint_reopen(
                     and state["model_steps"] == 2
                     and state["tool_steps"] == 1
                 )
-                assert state["memory_context"] == [] and state["evidence"]
+                assert state["memory_ids"] == [] and state["evidence"]
                 assert provider.calls == 2
                 assert counts(engine, "b60-run")["notifications"] == 0
                 assert not counts(engine, "b60-run")["approvals"]
