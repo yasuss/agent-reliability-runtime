@@ -1,5 +1,9 @@
 # B80 safe traces, durable audit and replay mechanics
 
+B90 intentionally strengthens the temporary structural receipt rule below to the
+exact eval-trial-v1 gate/SHA/scenario/lock profile before scenario export. See
+[B90 harness](B90_EVAL_HARNESS.md); locked schemas and content-safety rules remain.
+
 Manual OTel API/SDK 1.45.0 instrumentation accepts a standard injected tracer.
 No import sets a global provider or requires an exporter/collector/vendor sink.
 Default runtime telemetry works with the standard no-op tracer. Tests use an

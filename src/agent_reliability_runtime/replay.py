@@ -39,7 +39,13 @@ def validate(value: Any, schema: dict[str, Any]) -> None:
     if set(schema) - KEYWORDS:
         raise ValueError("unsupported locked schema keyword")
     kind = schema.get("type")
-    types = {"object": dict, "array": list, "string": str, "integer": int}
+    types = {
+        "object": dict,
+        "array": list,
+        "string": str,
+        "integer": int,
+        "boolean": bool,
+    }
     if kind and (kind not in types or type(value) is not types[kind]):
         raise ValueError("schema type mismatch")
     if "const" in schema and value != schema["const"]:
@@ -75,21 +81,16 @@ def validate(value: Any, schema: dict[str, Any]) -> None:
 
 
 def locked_validate(value: Any, name: str) -> None:
-    if name not in {"replay", "acceptance_receipt"}:
+    if name not in {"replay", "acceptance_receipt", "scenario"}:
         raise ValueError("unknown locked schema")
     validate(value, json.loads((SCHEMAS / (name + ".schema.json")).read_text()))
 
 
 def accepted_receipt(receipt: dict[str, Any], source_sha: str) -> str:
-    locked_validate(receipt, "acceptance_receipt")
-    gates = list(receipt["gates"].values())
-    if (
-        receipt["git_sha"] != source_sha
-        or not gates
-        or "PASS" not in gates
-        or not set(gates) <= {"PASS", "NOT_APPLICABLE"}
-    ):
-        raise ValueError("receipt is not accepted for source SHA")
+    # Lazy import avoids a schema-validator/receipt-profile import cycle.
+    from agent_reliability_runtime.evals.receipts import validate_receipt
+
+    validate_receipt(receipt, source_sha)
     return hashlib.sha256(canonical(receipt)).hexdigest()
 
 

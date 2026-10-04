@@ -19,6 +19,8 @@ from sqlalchemy import Engine, create_engine, select, text
 
 from agent_reliability_runtime.api import create_app
 from agent_reliability_runtime.demo_state.reset import reset_demo
+from agent_reliability_runtime.evals.receipts import GATES
+from agent_reliability_runtime.evals.scenarios import load_scenarios, lockfile_digests
 from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
 from agent_reliability_runtime.memory import MemoryStore
 from agent_reliability_runtime.observability import (
@@ -341,10 +343,10 @@ def test_exact_spans_audit_correlation_and_replay(
     evidence = {
         "schema_version": "1.0",
         "git_sha": "a" * 40,
-        "scenario_set_digest": "b" * 64,
-        "lockfile_digests": {"uv": "c" * 64},
-        "gates": {"fixture": "PASS"},
-        "created_at": "fixture",
+        "scenario_set_digest": load_scenarios()[1],
+        "lockfile_digests": lockfile_digests(),
+        "gates": {gate: "PASS" for gate in GATES},
+        "created_at": "2026-10-04T00:00:00Z",
     }
     first = tmp_path / "first.json"
     second = tmp_path / "second.json"
@@ -380,7 +382,7 @@ def test_exact_spans_audit_correlation_and_replay(
     export_replay(
         engine,
         "b60-run",
-        evidence | {"created_at": "alternate"},
+        evidence | {"created_at": "2026-10-04T00:00:01Z"},
         "a" * 40,
         changed_receipt,
     )

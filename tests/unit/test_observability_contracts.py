@@ -6,6 +6,8 @@ from typing import Any
 
 import pytest
 
+from agent_reliability_runtime.evals.receipts import GATES
+from agent_reliability_runtime.evals.scenarios import load_scenarios, lockfile_digests
 from agent_reliability_runtime.observability import canonical, public_safe, sanitize
 from agent_reliability_runtime.replay import (
     accepted_receipt,
@@ -18,10 +20,10 @@ def receipt() -> dict[str, Any]:
     return {
         "schema_version": "1.0",
         "git_sha": "a" * 40,
-        "scenario_set_digest": "b" * 64,
-        "lockfile_digests": {"uv": "c" * 64},
-        "gates": {"fixture": "PASS", "other": "NOT_APPLICABLE"},
-        "created_at": "fixture",
+        "scenario_set_digest": load_scenarios()[1],
+        "lockfile_digests": lockfile_digests(),
+        "gates": {gate: "PASS" for gate in GATES},
+        "created_at": "2026-10-04T00:00:00Z",
     }
 
 

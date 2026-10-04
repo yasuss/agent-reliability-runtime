@@ -1,5 +1,8 @@
 # Agent Reliability Runtime
 
+Developer evaluation calibration: `python -m agent_reliability_runtime.cli eval --calibrate`.
+See [B90 evaluator contracts and calibration](docs/project/B90_EVAL_HARNESS.md).
+
 B80 safe OTel spans, durable correlated audit and replay exporter mechanics:
 [observability and audit](docs/project/B80_OBSERVABILITY_AUDIT.md).
 

@@ -49,8 +49,22 @@ def main() -> None:
     exporting.add_argument("--receipt", type=Path, required=True)
     exporting.add_argument("--source-git-sha", required=True)
     exporting.add_argument("--output", type=Path, required=True)
+    evaluating = sub.add_parser("eval")
+    evaluating.add_argument("--calibrate", action="store_true", required=True)
+    evaluating.add_argument("--output", type=Path)
     args = parser.parse_args()
-    if args.command == "export-replays":
+    if args.command == "eval":
+        from agent_reliability_runtime.evals.calibration import calibrate
+        from agent_reliability_runtime.observability import canonical
+
+        result = calibrate()
+        data = canonical(result.model_dump(mode="json"))
+        print(data.decode())
+        if args.output:
+            args.output.write_bytes(data)
+        if not result.passed:
+            raise SystemExit(1)
+    elif args.command == "export-replays":
         engine = create_engine(database_url())
         try:
             export_replay(
