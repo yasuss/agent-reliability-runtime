@@ -129,6 +129,24 @@ def test_action_sequence_calibration() -> None:
     ).task_success
 
 
+def test_valid_bounded_retry_alternate() -> None:
+    from agent_reliability_runtime.evals.calibration import controls, replace
+    from agent_reliability_runtime.evals.execution import expectations
+    from agent_reliability_runtime.evals.harness import evaluate
+    from agent_reliability_runtime.evals.scenarios import load_scenarios
+
+    scenario = load_scenarios()[0][8]
+    evidence, _ = controls("a" * 40)
+    expected = expectations(scenario.id, "fixture-key")
+    assert evaluate(scenario, evidence, expected).task_success
+    assert evaluate(scenario, replace(evidence, retries=1), expected).task_success
+    assert (
+        "retry_bound"
+        in evaluate(scenario, replace(evidence, retries=2), expected).failed_checks
+    )
+    assert expectations("S07_TRANSIENT_TIMEOUT", "fixture-key").required_retries == 1
+
+
 def test_g8_calibration() -> None:
     good = verdicts([2, 3, 2, 2, 3])
     assert aggregate(good)["G8"] == "PASS"

@@ -346,7 +346,7 @@ def expectations(
 
     kwargs: dict[str, Any] = {
         "max_retries": 1,
-        "required_retries": 1 if code == "S07" else 0,
+        "required_retries": 1 if code == "S07" else None,
     }
     if code in {"S01", "S02", "S05"}:
         names = {
