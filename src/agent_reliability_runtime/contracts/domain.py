@@ -168,11 +168,26 @@ class Approval(Record):
 def transition_approval(
     approval: Approval, status: ApprovalStatus, *, at: datetime
 ) -> Approval:
-    if approval.status in {ApprovalStatus.REJECTED, ApprovalStatus.EXPIRED}:
-        if status != approval.status:
-            raise ValueError("rejected/expired approval cannot be resurrected")
+    allowed = {
+        ApprovalStatus.PENDING: {
+            ApprovalStatus.APPROVED,
+            ApprovalStatus.REJECTED,
+            ApprovalStatus.EXPIRED,
+        },
+        ApprovalStatus.APPROVED: {ApprovalStatus.CONSUMED, ApprovalStatus.EXPIRED},
+    }
+    if status not in allowed.get(approval.status, set()):
+        raise ValueError(
+            "illegal approval transition; terminal approval cannot be resurrected"
+        )
     return Approval.model_validate(
-        {**approval.model_dump(), "status": status, "decided_at": at}
+        {
+            **approval.model_dump(),
+            "status": status,
+            "decided_at": approval.decided_at
+            if status == ApprovalStatus.CONSUMED
+            else at,
+        }
     )
 
 

@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from alembic.config import Config
 from mcp import Client
+from mcp.types import RequestParamsMeta
 from sqlalchemy import Engine
 
 from agent_reliability_runtime.contracts.domain import Record
@@ -31,12 +32,19 @@ def test_in_process_fictional_state_and_sentinels(
         async with Client(create_server(engine, clock=lambda: NOW)) as client:
             catalog((await client.list_tools()).tools)
 
-            async def raw(name: str, args: dict[str, Any]) -> Record:
-                return validated_result(name, await client.call_tool(name, args))
+            async def raw(
+                name: str,
+                args: dict[str, Any],
+                *,
+                meta: RequestParamsMeta | None = None,
+            ) -> Record:
+                return validated_result(
+                    name, await client.call_tool(name, args, meta=meta)
+                )
 
             proof = await state_proof(engine, raw)
-            assert proof["note"]["created_at"] == "2026-10-04T00:00:00Z"
-            assert proof["duplicate_raw_rejected"] == 2
+            assert proof["note"]["applied_at"] == "2026-10-04T00:00:00Z"
+            assert proof["duplicate_receipts_replayed"] == 2
 
     asyncio.run(exercise())
 

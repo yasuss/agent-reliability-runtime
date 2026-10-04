@@ -1,6 +1,20 @@
 """Project-owned argument/result shapes and field ownership, never authorization."""
 
-from agent_reliability_runtime.contracts.domain import Identifier, Record, Timestamp
+from pydantic import StrictBool
+
+from agent_reliability_runtime.contracts.domain import (
+    EffectReceipt,
+    Identifier,
+    Record,
+    Timestamp,
+)
+
+RUN_META = "agent-reliability-runtime/run-id"
+DIGEST_META = "agent-reliability-runtime/action-digest"
+
+
+class ReceiptEnvelope(EffectReceipt):
+    replayed: StrictBool
 
 
 class IncidentArgs(Record):
@@ -65,9 +79,9 @@ INPUTS: dict[str, type[Record]] = {
 OUTPUTS: dict[str, type[Record]] = {
     "get_incident": Incident,
     "get_service_status": Service,
-    "add_incident_note": Note,
-    "restart_service": Restart,
-    "send_notification": Notification,
+    "add_incident_note": ReceiptEnvelope,
+    "restart_service": ReceiptEnvelope,
+    "send_notification": ReceiptEnvelope,
 }
 RUNTIME_FIELDS = {
     "add_incident_note": {"idempotency_key"},

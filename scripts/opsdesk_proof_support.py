@@ -133,8 +133,26 @@ def seed_sentinels(engine: Engine) -> None:
 
 
 async def state_proof(
-    engine: Engine, call: Callable[[str, dict[str, Any]], Awaitable[Record]]
+    engine: Engine, call: Callable[..., Awaitable[Record]]
 ) -> dict[str, Any]:
+    raw = call
+
+    async def bound_call(name: str, args: dict[str, Any]) -> Record:
+        from agent_reliability_runtime.mcp.contracts import (
+            DIGEST_META,
+            RUN_META,
+            RUNTIME_FIELDS,
+        )
+
+        meta = None
+        if name in RUNTIME_FIELDS:
+            meta = {
+                RUN_META: "sentinel",
+                DIGEST_META: action_digest("sentinel", name, args, "sentinel"),
+            }
+        return await raw(name, args, meta=meta)
+
+    call = bound_call
     reset_demo(engine, confirm_development_reset=True)
     seed_sentinels(engine)
     before = snapshot(engine, NON_DEMO)
@@ -201,16 +219,16 @@ async def state_proof(
     )
     notification = await call("send_notification", notification_args)
     duplicates = 0
-    for name, args in (
-        ("add_incident_note", note_args),
-        ("send_notification", notification_args),
+    for name, args, original in (
+        ("add_incident_note", note_args, note),
+        ("send_notification", notification_args, notification),
     ):
-        try:
-            await call(name, args)
-        except OpsDeskError:
-            duplicates += 1
-        else:
-            raise AssertionError("duplicate raw mutation accepted as replay")
+        replay = await call(name, args)
+        assert replay.model_dump()["replayed"] is True
+        assert replay.model_dump(exclude={"replayed"}) == original.model_dump(
+            exclude={"replayed"}
+        )
+        duplicates += 1
     after_demo = snapshot(engine, DEMO)
     assert after_demo["demo_incidents"] == unchanged_demo["demo_incidents"]
     expected_services = [
@@ -218,15 +236,24 @@ async def state_proof(
         for row in unchanged_demo["demo_services"]
     ]
     assert after_demo["demo_services"] == expected_services
-    assert after_demo["demo_incident_notes"] == [note.model_dump()]
-    assert after_demo["demo_notifications"] == [notification.model_dump()]
-    assert restarted.model_dump() == {
-        "service_id": "checkout-api",
-        "previous_status": "degraded",
-        "status": "healthy",
-        "reason": "controlled fictional restart",
-    }
+    note_rows = after_demo["demo_incident_notes"]
+    notification_rows = after_demo["demo_notifications"]
+    assert len(note_rows) == len(notification_rows) == 1
+    assert note_rows[0]["note"] == note_args["note"]
+    assert note_rows[0]["incident_id"] == note_args["incident_id"]
+    assert notification_rows[0]["channel"] == notification_args["channel"]
+    assert notification_rows[0]["message"] == notification_args["message"]
     after = snapshot(engine, NON_DEMO)
+    intended_receipts = [
+        r for r in after["effect_receipts"] if r["receipt_id"] != "sentinel"
+    ]
+    assert len(intended_receipts) == 3
+    for receipt in (note, restarted, notification):
+        assert receipt.model_dump()["replayed"] is False
+        assert receipt.model_dump(exclude={"replayed"}) in intended_receipts
+    after["effect_receipts"] = [
+        r for r in after["effect_receipts"] if r["receipt_id"] == "sentinel"
+    ]
     assert after == before
     assert inspect(engine).get_table_names() == tables_before
     return {
@@ -236,10 +263,11 @@ async def state_proof(
         "restart": restarted.model_dump(mode="json"),
         "notification": notification.model_dump(mode="json"),
         "invalid_unknown_rejected": bad_count,
-        "duplicate_raw_rejected": duplicates,
+        "duplicate_receipts_replayed": duplicates,
         "non_demo_counts": {name: len(rows) for name, rows in before.items()},
         "non_demo_before_digest": digest(before),
         "non_demo_after_digest": digest(after),
         "only_intended_demo_changes": True,
+        "intended_effect_receipts": len(intended_receipts),
         "schema_unchanged": True,
     }

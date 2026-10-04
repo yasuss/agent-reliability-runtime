@@ -1,18 +1,28 @@
-"""Stdio infrastructure client. B50 must supply a trusted execution boundary."""
+"""Stdio infrastructure; production execution enters through policy.Gateway."""
 
 import copy
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from mcp import Client, StdioServerParameters
-from mcp.types import CallToolResult, Tool
+from mcp.types import CallToolResult, RequestParamsMeta, Tool
 from pydantic import ValidationError
 
 from agent_reliability_runtime.contracts.domain import Record
-from agent_reliability_runtime.mcp.contracts import INPUTS, OUTPUTS, RUNTIME_FIELDS
+from agent_reliability_runtime.mcp.contracts import (
+    DIGEST_META,
+    INPUTS,
+    OUTPUTS,
+    RUN_META,
+    RUNTIME_FIELDS,
+    ReceiptEnvelope,
+)
 from agent_reliability_runtime.providers.contracts import ToolDefinition
+
+if TYPE_CHECKING:
+    from agent_reliability_runtime.policy import Action
 
 
 class OpsDeskError(Exception):
@@ -134,7 +144,27 @@ class OpsDeskMCPClient:
         return validated_result(name, await self._client.call_tool(name, arguments))
 
     async def raw_wire_call_for_testing(
-        self, name: str, arguments: dict[str, Any]
+        self,
+        name: str,
+        arguments: dict[str, Any],
+        *,
+        meta: dict[str, Any] | None = None,
     ) -> Record:
         """Unsafe infrastructure/test-only surface; never connect to a graph."""
-        return validated_result(name, await self._client.call_tool(name, arguments))
+        return validated_result(
+            name,
+            await self._client.call_tool(
+                name,
+                arguments,
+                meta=cast(RequestParamsMeta, meta) if meta is not None else None,
+            ),
+        )
+
+    async def _dispatch_effect(self, action: "Action") -> ReceiptEnvelope:
+        """Internal transport hook for Gateway; does not authorize by itself."""
+        result = await self.raw_wire_call_for_testing(
+            action.tool_name,
+            action.normalized_args,
+            meta={RUN_META: action.run_id, DIGEST_META: action.action_digest},
+        )
+        return ReceiptEnvelope.model_validate(result.model_dump())

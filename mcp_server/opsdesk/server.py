@@ -1,7 +1,5 @@
 """Exactly five typed OpsDesk tools, backed only by fictional demo tables."""
 
-import hashlib
-import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
@@ -11,7 +9,7 @@ from mcp.server.mcpserver.context import Context
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import CallToolResult, InputRequiredResult, Tool, ToolAnnotations
 from pydantic import ValidationError
-from sqlalchemy import Engine, select
+from sqlalchemy import Connection, Engine, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from agent_reliability_runtime.contracts.domain import Identifier
@@ -20,6 +18,7 @@ from agent_reliability_runtime.mcp.contracts import (
     Incident,
     Note,
     Notification,
+    ReceiptEnvelope,
     Restart,
     Service,
 )
@@ -35,12 +34,7 @@ from agent_reliability_runtime.persistence.schema import (
 from agent_reliability_runtime.persistence.schema import (
     demo_services as services,
 )
-
-
-def row_id(tool: str, key: str) -> str:
-    return hashlib.sha256(
-        json.dumps([tool, key], separators=(",", ":")).encode()
-    ).hexdigest()
+from mcp_server.opsdesk.effects import apply_effect, row_id
 
 
 class OpsDeskServer(MCPServer[None]):
@@ -121,8 +115,11 @@ def create_server(
 
     @server.tool(annotations=writes)
     def add_incident_note(
-        incident_id: Identifier, note: Identifier, idempotency_key: Identifier
-    ) -> Note:
+        incident_id: Identifier,
+        note: Identifier,
+        idempotency_key: Identifier,
+        ctx: Context[None, Any],
+    ) -> ReceiptEnvelope:
         """Raw fictional note insertion; infrastructure only, no authorization."""
         try:
             value = Note(
@@ -131,7 +128,8 @@ def create_server(
                 note=note,
                 created_at=clock(),
             )
-            with engine.begin() as con:
+
+            def mutate(con: Connection) -> Note:
                 if (
                     con.scalar(
                         select(incidents.c.incident_id).where(
@@ -142,18 +140,26 @@ def create_server(
                 ):
                     raise ToolError("fictional incident not found")
                 con.execute(notes.insert(), value.model_dump())
-            return value
+                return value
+
+            return apply_effect(
+                engine, "add_incident_note", idempotency_key, ctx, mutate, clock()
+            )
         except (SQLAlchemyError, ValidationError):
             pass
         raise ToolError("fictional note rejected or data unavailable")
 
     @server.tool(annotations=writes)
     def restart_service(
-        service_id: Identifier, reason: Identifier, idempotency_key: Identifier
-    ) -> Restart:
-        """Raw fictional restart; infrastructure only, no approval/receipt guarantee."""
+        service_id: Identifier,
+        reason: Identifier,
+        idempotency_key: Identifier,
+        ctx: Context[None, Any],
+    ) -> ReceiptEnvelope:
+        """Atomic fictional restart; metadata does not authorize."""
         try:
-            with engine.begin() as con:
+
+            def mutate(con: Connection) -> Restart:
                 previous = con.scalar(
                     select(services.c.status)
                     .where(services.c.service_id == service_id)
@@ -172,15 +178,22 @@ def create_server(
                     .where(services.c.service_id == service_id)
                     .values(status="healthy")
                 )
-            return value
+                return value
+
+            return apply_effect(
+                engine, "restart_service", idempotency_key, ctx, mutate, clock()
+            )
         except (SQLAlchemyError, ValidationError):
             pass
         raise ToolError("fictional restart data unavailable")
 
     @server.tool(annotations=writes)
     def send_notification(
-        channel: Identifier, message: Identifier, idempotency_key: Identifier
-    ) -> Notification:
+        channel: Identifier,
+        message: Identifier,
+        idempotency_key: Identifier,
+        ctx: Context[None, Any],
+    ) -> ReceiptEnvelope:
         """Raw fictional notification insertion; no external dispatch."""
         try:
             value = Notification(
@@ -189,9 +202,14 @@ def create_server(
                 message=message,
                 created_at=clock(),
             )
-            with engine.begin() as con:
+
+            def mutate(con: Connection) -> Notification:
                 con.execute(notifications.insert(), value.model_dump())
-            return value
+                return value
+
+            return apply_effect(
+                engine, "send_notification", idempotency_key, ctx, mutate, clock()
+            )
         except (SQLAlchemyError, ValidationError):
             pass
         raise ToolError("fictional notification rejected or data unavailable")

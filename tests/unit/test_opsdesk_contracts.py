@@ -192,7 +192,20 @@ def test_tool_fields_match_independent_locked_fixture() -> None:
     for item in contract["tools"]:
         name = item["name"]
         assert set(wire[name].input_schema["properties"]) == set(item["wire_args"])
-        assert set(OUTPUTS[name].model_fields) == set(item["output"])
+        expected_output = set(item["output"])
+        if name in {"add_incident_note", "restart_service", "send_notification"}:
+            # B50 explicitly supersedes only the three structured write outputs.
+            expected_output = {
+                "receipt_id",
+                "run_id",
+                "tool_name",
+                "idempotency_key",
+                "action_digest",
+                "result_digest",
+                "applied_at",
+                "replayed",
+            }
+        assert set(OUTPUTS[name].model_fields) == expected_output
         parameters = projected[name].parameters["properties"]
         assert isinstance(parameters, dict)
         assert set(parameters) == set(item["model_args"])

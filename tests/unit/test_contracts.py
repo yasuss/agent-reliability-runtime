@@ -261,7 +261,11 @@ def test_approval_contract_immutability_and_no_resurrection() -> None:
     approval = Approval.model_validate(approval_values())
     with pytest.raises(ValidationError, match="frozen_instance"):
         approval.action_digest = "b" * 64
-    for status in ApprovalStatus:
+    for status in (
+        ApprovalStatus.APPROVED,
+        ApprovalStatus.REJECTED,
+        ApprovalStatus.EXPIRED,
+    ):
         changed = transition_approval(approval, status, at=NOW)
         assert changed.action_digest == approval.action_digest
         if status in {ApprovalStatus.REJECTED, ApprovalStatus.EXPIRED}:

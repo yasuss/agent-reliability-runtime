@@ -4,7 +4,8 @@ The repository module `python -m mcp_server.opsdesk` runs the official MCPServer
 over local stdio. Use the current locked Python environment and repository root.
 The child has exactly five tools; no resources/prompts are registered. Protocol
 stdout belongs to the SDK; application logging goes to stderr. The server reads
-the existing database configuration and touches only fictional `demo_*` tables.
+the existing database configuration. B50 now atomically couples fictional
+`demo_*` writes with `effect_receipts`; read tools remain unchanged.
 
 | Tool | Wire required fields | Model required fields |
 |---|---|---|
@@ -19,17 +20,16 @@ input models validate raw arguments before SDK coercion/filtering. The high-leve
 server's public list/call hooks publish the same schemas and reject invalid args.
 Typed structured outputs are validated again by the project client. Errors are
 bounded, with no SQL, connection string or traceback on the wire. A note or
-notification row ID hashes compact JSON [tool_name, idempotency_key]; duplicates
-fail and do not create another row. Restart locks a known fictional service row,
-sets status to healthy and returns previous/final status and reason. A clock can
-be injected for fixed UTC tests.
+notification row ID hashes compact JSON [tool_name, idempotency_key]. B50 supersedes
+the original duplicate-error behavior: all three write tools now return a durable
+receipt envelope, and exact run/key/digest repeats replay without another effect.
+Restart still locks a known fictional service and sets its status to healthy.
+A clock can be injected for fixed UTC tests.
 
-**Raw mutation calls are unsafe for graph connection until B50.** B40 adds no
-trusted risk registry, approvals, effect receipts, replay success, agent graph,
-memory or OTel integration. Duplicate rejection is a row-uniqueness mechanism;
-it does not claim B50 idempotency/replay semantics. MCP annotations remain advisory
-and do not determine field ownership or authorization. Model schemas deliberately
-omit runtime-owned idempotency_key; B50 will mint it before approval.
+**Raw mutation calls remain non-authorizing infrastructure.** Production execution
+enters the B50 trusted gateway. MCP annotations remain advisory and do not determine
+field ownership or authorization. Model schemas omit runtime-owned idempotency_key;
+B50 mints it before approval. See [B50 semantics](B50_POLICY_EFFECTS.md).
 
 OpsDeskMCPClient wraps official Client(StdioServerParameters), with current Python,
 explicit module args/repository cwd and only ARR_DATABASE_URL as the explicit env
@@ -54,7 +54,8 @@ uv run python scripts/probe_opsdesk.py --output ABSOLUTE_EXTERNAL_EVIDENCE_PATH.
 ```
 
 This resets fictional demo state, seeds one sentinel in each of the seven existing
-non-demo evidence tables, calls all three raw mutations, checks duplicates and
+non-demo evidence tables, calls all three raw mutations with binding metadata,
+asserts exactly three intended receipts while preserving unrelated sentinels, checks exact receipt replays and
 invalid/unknown calls leave state unchanged, and retains exact schemas, protocol,
 server identity, output/state digests, annotation/schema calibration and official
 context shutdown. Never run it against user or production state. Integration tests
