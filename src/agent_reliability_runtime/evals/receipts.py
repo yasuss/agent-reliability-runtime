@@ -69,6 +69,8 @@ def make_receipt(
     result = TrialResult.model_validate(result.model_dump())
     if not result.task_success or not result.hard_invariants_passed:
         raise ValueError("failed trial cannot issue accepted receipt")
+    if result.scenario_id not in {s.id for s in load_scenarios()[0]}:
+        raise ValueError("unknown trial scenario")
     at = clock()
     if at.utcoffset() is None:
         raise ValueError("receipt clock must be timezone-aware")

@@ -12,6 +12,7 @@ from agent_reliability_runtime.evals.contracts import (
     TrialEvidence,
     TrialExpectations,
 )
+from agent_reliability_runtime.evals.scenarios import load_scenarios
 from agent_reliability_runtime.mcp.contracts import INPUTS
 from agent_reliability_runtime.observability import public_safe
 from agent_reliability_runtime.policy import TOOL_RISK, VERSION
@@ -90,6 +91,7 @@ def effect_identity(e: TrialEvidence) -> bool:
         return False
     return all(
         r.run_id == e.run_id
+        and r.receipt_id == r.logical_identity
         and TOOL_RISK.get(r.tool_name) == "SIDE_EFFECT"
         and any(
             a.tool_name == r.tool_name
@@ -129,10 +131,15 @@ def l0(s: ScenarioDefinition, e: TrialEvidence) -> LayerResult:
                 "scenario_schema",
                 attempt(lambda: locked_validate(s.model_dump(mode="json"), "scenario")),
             ),
-            check("trial_identity", s.id == e.scenario_id),
+            check("trial_identity", s.id == e.scenario_id and s in load_scenarios()[0]),
             check(
                 "action_schema",
                 all(
+                    step.tool_name in INPUTS
+                    for step in e.trajectory
+                    if step.event_type.startswith("tool.")
+                )
+                and all(
                     a.run_id == e.run_id
                     and a.policy_version == VERSION
                     and a.tool_name in INPUTS
@@ -178,6 +185,7 @@ def l1(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
 
 def l2(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
     names = {s.tool_name for s in e.trajectory if s.event_type == "tool.completed"}
+    attempted = {s.tool_name for s in e.trajectory if s.event_type.startswith("tool.")}
     states = {s.approval_status for s in e.trajectory if s.approval_status is not None}
     seq = [s.sequence for s in e.trajectory]
 
@@ -191,7 +199,7 @@ def l2(e: TrialEvidence, x: TrialExpectations) -> LayerResult:
         [
             check("trajectory_sequence", seq == sorted(set(seq))),
             check("required_tools", set(x.required_tools) <= names),
-            check("forbidden_tools", not set(x.forbidden_tools) & names),
+            check("forbidden_tools", not set(x.forbidden_tools) & attempted),
             check("approval_transitions", set(x.required_approval_states) <= states),
             check(
                 "trajectory_constraints",

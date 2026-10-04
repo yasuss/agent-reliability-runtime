@@ -385,3 +385,38 @@ def test_cli_rejects_oracle_that_rejects_valid_alternate(
     with pytest.raises(SystemExit) as stopped:
         main()
     assert stopped.value.code == 1
+
+
+def test_locked_subject_tool_attempt_and_receipt_identity_consistency() -> None:
+    from agent_reliability_runtime.evals.contracts import Step
+
+    e, x = controls("a" * 40)
+    scenario = load_scenarios()[0][8]
+    changed = scenario.model_copy(update={"input": {"task": "different task"}})
+    assert "trial_identity" in evaluate(changed, e, x).hard_invariant_failures
+    foreign = replace(
+        e, receipts=[e.receipts[0].model_copy(update={"logical_identity": "b" * 64})]
+    )
+    assert "effect_identity" in evaluate(scenario, foreign, x).hard_invariant_failures
+    unknown = replace(
+        e,
+        trajectory=e.trajectory
+        + [Step(sequence=4, event_type="tool.failed", tool_name="unknown_tool")],
+    )
+    assert "action_schema" in evaluate(scenario, unknown, x).hard_invariant_failures
+    attempted = replace(
+        e,
+        trajectory=e.trajectory
+        + [Step(sequence=4, event_type="tool.failed", tool_name="restart_service")],
+    )
+    assert (
+        "forbidden_tools"
+        in evaluate(
+            scenario,
+            attempted,
+            x.model_copy(update={"forbidden_tools": ["restart_service"]}),
+        ).hard_invariant_failures
+    )
+    result = evaluate(scenario, e, x)
+    with pytest.raises(ValueError):
+        make_receipt(result.model_copy(update={"scenario_id": "S99_FOREIGN"}))
