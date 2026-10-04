@@ -17,6 +17,7 @@ from agent_reliability_runtime.contracts.domain import (
     MemoryTrust,
     Run,
 )
+from agent_reliability_runtime.observability import AuditTrail, Telemetry, memory_anchor
 from agent_reliability_runtime.persistence import schema
 from agent_reliability_runtime.persistence.records import insert_snapshot
 from agent_reliability_runtime.policy import TOOL_RISK
@@ -43,8 +44,10 @@ class MemoryStore:
         *,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         id_factory: Callable[[], str] = lambda: uuid4().hex,
+        telemetry: Telemetry | None = None,
     ) -> None:
         self.engine, self.clock, self.id_factory = engine, clock, id_factory
+        self.telemetry = telemetry or Telemetry()
 
     def list(self, workspace_id: str, user_id: str) -> list[Memory]:
         return self.resolve(workspace_id, user_id, None)
@@ -70,16 +73,40 @@ class MemoryStore:
         return rows[0] if rows else None
 
     def delete(self, workspace_id: str, user_id: str, memory_id: str) -> bool:
-        with self.engine.begin() as con:
-            return (
+        with self.telemetry.span(
+            "agent.memory.write", **{"arr.memory.operation": "delete"}
+        ) as span:
+            with self.engine.begin() as con:
+                row = (
+                    con.execute(
+                        select(schema.memories)
+                        .where(
+                            scope(workspace_id, user_id),
+                            schema.memories.c.memory_id == identifier(memory_id),
+                        )
+                        .with_for_update()
+                    )
+                    .mappings()
+                    .one_or_none()
+                )
+                if row is None:
+                    return False
+                memory = Memory.model_validate(dict(row))
+                anchor = memory_anchor(con, workspace_id, user_id)
+                span.set_attribute("arr.run.id", anchor)
+                AuditTrail(self.engine).append_in(
+                    con,
+                    anchor,
+                    "memory.deleted",
+                    memory.model_dump(exclude={"content"}),
+                )
                 con.execute(
                     delete(schema.memories).where(
                         scope(workspace_id, user_id),
-                        schema.memories.c.memory_id == identifier(memory_id),
+                        schema.memories.c.memory_id == memory_id,
                     )
-                ).rowcount
-                == 1
-            )
+                )
+                return True
 
     def user_explicit(
         self,
@@ -188,7 +215,18 @@ class MemoryStore:
             source_run_id=source_run_id,
             source_tool_name=source_tool_name,
         )
-        with self.engine.begin() as con:
-            self._source(con, memory)
-            insert_snapshot(con, memory)
+        with self.telemetry.span(
+            "agent.memory.write", **{"arr.memory.operation": "create"}
+        ) as span:
+            with self.engine.begin() as con:
+                self._source(con, memory)
+                insert_snapshot(con, memory)
+                anchor = memory_anchor(con, workspace_id, user_id)
+                span.set_attribute("arr.run.id", anchor)
+                AuditTrail(self.engine).append_in(
+                    con,
+                    anchor,
+                    "memory.created",
+                    memory.model_dump(exclude={"content"}),
+                )
         return memory

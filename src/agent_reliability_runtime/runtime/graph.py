@@ -1,10 +1,13 @@
 """Exactly one primitive-state LangGraph; all tool execution uses B50 Gateway."""
 
 import asyncio
+import inspect
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import UTC, datetime
+from functools import wraps
 from typing import Any, TypedDict
 from uuid import uuid4
 
@@ -19,6 +22,7 @@ from sqlalchemy import Engine, select
 from agent_reliability_runtime.contracts.domain import ApprovalStatus, Run, RunStatus
 from agent_reliability_runtime.mcp.client import validate_model_view
 from agent_reliability_runtime.memory import MemoryStore
+from agent_reliability_runtime.observability import AuditTrail, Telemetry, sanitize
 from agent_reliability_runtime.persistence import schema
 from agent_reliability_runtime.persistence.records import set_run_status
 from agent_reliability_runtime.policy import (
@@ -71,6 +75,7 @@ class Context:
     embeddings: EmbeddingProvider
     tools: tuple[ToolDefinition, ...]
     gateway: Gateway
+    telemetry: Telemetry = dataclass_field(default_factory=Telemetry)
     clock: Callable[[], datetime] = lambda: datetime.now(UTC)
     key_factory: Callable[[], str] = lambda: uuid4().hex
     fault_hook: Callable[[State, dict[str, Any]], Awaitable[None]] | None = None
@@ -97,6 +102,117 @@ def failure(reason: str) -> dict[str, Any]:
         "terminal_reason": reason,
         "route": "finalize",
     }
+
+
+def audit(context: Context, state: State, event: str, payload: dict[str, Any]) -> None:
+    AuditTrail(context.engine).append(state["run_id"], event, payload)
+
+
+def observed(
+    name: str, event: str
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def decorate(fn: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(fn)
+        async def wrapped(state: State, runtime: Runtime[Context]) -> Any:
+            with runtime.context.telemetry.span(
+                name, **{"arr.run.id": state["run_id"]}
+            ) as span:
+                outcome = fn(state, runtime)
+                if inspect.isawaitable(outcome):
+                    outcome = await outcome
+                merged = dict(state) | outcome
+                payload: dict[str, Any] = {}
+                action = merged.get("action") or {}
+                if action:
+                    span.set_attribute("arr.tool.name", action["tool_name"])
+                    span.set_attribute("arr.tool.risk_class", action["risk_class"])
+                    span.set_attribute(
+                        "arr.approval.required", action["risk_class"] == "SIDE_EFFECT"
+                    )
+                if event == "memory.read":
+                    payload = {
+                        "operation": "load",
+                        "count": len(merged["memory_ids"]),
+                        "memory_ids": merged["memory_ids"],
+                    }
+                elif event == "retrieval.completed":
+                    evidence = merged["evidence"]
+                    payload = {
+                        "result_count": len(evidence),
+                        "evidence_ids": [e["chunk_id"] for e in evidence],
+                        "source_paths": [e["source_path"] for e in evidence],
+                    }
+                    span.set_attribute("arr.retrieval.result_count", len(evidence))
+                elif event == "action.validated":
+                    if not outcome.get("action"):
+                        return outcome
+                    payload = action
+                elif event == "policy.evaluated":
+                    payload = {
+                        "tool_name": action.get("tool_name"),
+                        "risk_class": action.get("risk_class"),
+                        "approval_required": action.get("risk_class") == "SIDE_EFFECT",
+                    }
+                elif event == "tool.completed":
+                    result = outcome.get("result")
+                    if not result:
+                        return outcome
+                    payload = {
+                        "tool_name": action["tool_name"],
+                        "risk_class": action["risk_class"],
+                        "success": True,
+                        **{
+                            k: result[k]
+                            for k in ("receipt_id", "result_digest", "replayed")
+                            if k in result
+                        },
+                    }
+                    span.set_attribute("gen_ai.operation.name", "execute_tool")
+                    span.set_attribute("gen_ai.tool.name", action["tool_name"])
+                    span.set_attribute(
+                        "arr.effect.replayed", result.get("replayed", False)
+                    )
+                elif event == "run.finalized":
+                    payload = {
+                        k: merged[k]
+                        for k in (
+                            "status",
+                            "terminal_reason",
+                            "model_steps",
+                            "tool_steps",
+                        )
+                    }
+                    payload["sanitized_final_text"] = merged["final_text"]
+                    span.set_attribute("arr.run.status", merged["status"])
+                    span.set_attribute("arr.model.steps", merged["model_steps"])
+                    span.set_attribute("arr.tool.steps", merged["tool_steps"])
+                audit(runtime.context, state, event, payload)
+                if (
+                    event == "policy.evaluated"
+                    and outcome.get("status") == "WAITING_APPROVAL"
+                ):
+                    with runtime.context.telemetry.span(
+                        "agent.approval.wait",
+                        **{
+                            "arr.run.id": state["run_id"],
+                            "arr.approval.status": "PENDING",
+                        },
+                    ):
+                        audit(
+                            runtime.context,
+                            state,
+                            "approval.waiting",
+                            {
+                                "approval_id": outcome["approval_id"],
+                                "action_digest": action["action_digest"],
+                                "status": "PENDING",
+                            },
+                        )
+                return outcome
+
+        return wrapped
+
+    return decorate
 
 
 def prepare_run(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
@@ -141,12 +257,14 @@ def memory_scope(state: State, runtime: Runtime[Context]) -> tuple[str, str]:
     return run.workspace_id, run.user_id
 
 
+@observed("agent.memory.read", "memory.read")
 def load_memory(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     workspace_id, user_id = memory_scope(state, runtime)
     rows = MemoryStore(runtime.context.engine).list(workspace_id, user_id)
     return {"memory_ids": [row.memory_id for row in rows]}
 
 
+@observed("agent.retrieval.search", "retrieval.completed")
 async def retrieve_context(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     evidence = await retrieve(
         runtime.context.engine, runtime.context.embeddings, state["request_text"]
@@ -171,9 +289,23 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
             "route": "finalize",
         }
     workspace_id, user_id = memory_scope(state, runtime)
-    memories = MemoryStore(runtime.context.engine).resolve(
-        workspace_id, user_id, state.get("memory_ids", [])
-    )
+    with runtime.context.telemetry.span(
+        "agent.memory.read",
+        **{"arr.run.id": state["run_id"], "arr.memory.operation": "resolve"},
+    ):
+        memories = MemoryStore(runtime.context.engine).resolve(
+            workspace_id, user_id, state.get("memory_ids", [])
+        )
+        audit(
+            runtime.context,
+            state,
+            "memory.read",
+            {
+                "operation": "resolve",
+                "count": len(memories),
+                "memory_ids": [m.memory_id for m in memories],
+            },
+        )
     messages = [ChatMessage.model_validate(m) for m in state["messages"]]
     if memories:
         transient = ChatMessage(
@@ -191,9 +323,42 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
         tools=runtime.context.tools,
     )
     try:
-        result = ChatResult.model_validate(
-            (await runtime.context.provider.complete(request)).model_dump()
-        )
+        with runtime.context.telemetry.span(
+            "agent.model.call",
+            **{
+                "arr.run.id": state["run_id"],
+                "gen_ai.operation.name": "chat",
+                "gen_ai.request.model": state["model_id"],
+                "arr.provider.id": state["provider_id"],
+            },
+        ) as span:
+            result = ChatResult.model_validate(
+                (await runtime.context.provider.complete(request)).model_dump()
+            )
+            span.set_attribute("gen_ai.response.model", sanitize(result.model_id))
+            span.set_attribute(
+                "gen_ai.response.finish_reasons", [sanitize(result.finish_reason)]
+            )
+            if result.usage:
+                for field_name in ("input_tokens", "output_tokens"):
+                    amount = getattr(result.usage, field_name)
+                    if amount is not None:
+                        span.set_attribute("gen_ai.usage." + field_name, amount)
+            audit(
+                runtime.context,
+                state,
+                "model.completed",
+                {
+                    "model_step": state["model_steps"] + 1,
+                    "provider_id": result.provider_id,
+                    "model_id": result.model_id,
+                    "finish_reason": result.finish_reason,
+                    "tool_names": [c.name for c in result.tool_calls],
+                    "usage": result.usage.model_dump(mode="json")
+                    if result.usage
+                    else None,
+                },
+            )
     except (ProviderError, ValidationError):
         return {
             "model_steps": state["model_steps"] + 1,
@@ -235,6 +400,7 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     }
 
 
+@observed("agent.action.validate", "action.validated")
 def validate_model_action(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     try:
         call = ToolCall.model_validate(state["proposed_call"])
@@ -253,6 +419,7 @@ def validate_model_action(state: State, runtime: Runtime[Context]) -> dict[str, 
     }
 
 
+@observed("agent.policy.evaluate", "policy.evaluated")
 async def policy_gate(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     try:
         action = validate_action(Action.model_validate(state["action"]))
@@ -299,6 +466,7 @@ async def await_approval(state: State, runtime: Runtime[Context]) -> dict[str, A
     return {"route": "execute_tool", "status": RunStatus.RUNNING.value}
 
 
+@observed("agent.tool.call", "tool.completed")
 async def execute_tool(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     try:
         action = Action.model_validate(state["action"])
@@ -336,6 +504,7 @@ def observe_result(state: State) -> dict[str, Any]:
     }
 
 
+@observed("agent.finalize", "run.finalized")
 def finalize(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
     status = RunStatus(state["status"])
     if status not in {

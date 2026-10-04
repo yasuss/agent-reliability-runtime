@@ -1,5 +1,8 @@
 # Agent Reliability Runtime
 
+B80 safe OTel spans, durable correlated audit and replay exporter mechanics:
+[observability and audit](docs/project/B80_OBSERVABILITY_AUDIT.md).
+
 B70 scoped memory, local list/delete API and checkpoint deletion proof:
 [governed memory](docs/project/B70_GOVERNED_MEMORY.md).
 

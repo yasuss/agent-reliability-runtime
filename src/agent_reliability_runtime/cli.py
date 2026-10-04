@@ -1,4 +1,4 @@
-"""Narrow developer ingestion command; no agent, model answers or execution tools."""
+"""Developer ingestion and fail-closed sanitized replay export commands."""
 
 import argparse
 import asyncio
@@ -13,6 +13,7 @@ from agent_reliability_runtime.providers.http import (
     HTTPProviderConfig,
     OllamaEmbeddingProvider,
 )
+from agent_reliability_runtime.replay import export_replay
 from agent_reliability_runtime.retrieval.service import ingest
 from agent_reliability_runtime.retrieval.text import read_source
 
@@ -43,8 +44,26 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     ingestion = sub.add_parser("ingest")
     ingestion.add_argument("sources", nargs="+")
+    exporting = sub.add_parser("export-replays")
+    exporting.add_argument("--run-id", required=True)
+    exporting.add_argument("--receipt", type=Path, required=True)
+    exporting.add_argument("--source-git-sha", required=True)
+    exporting.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    asyncio.run(ingest_paths(Path.cwd(), args.sources))
+    if args.command == "export-replays":
+        engine = create_engine(database_url())
+        try:
+            export_replay(
+                engine,
+                args.run_id,
+                json.loads(args.receipt.read_text()),
+                args.source_git_sha,
+                args.output,
+            )
+        finally:
+            engine.dispose()
+    else:
+        asyncio.run(ingest_paths(Path.cwd(), args.sources))
 
 
 if __name__ == "__main__":

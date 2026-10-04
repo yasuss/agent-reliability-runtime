@@ -186,9 +186,24 @@ async def kill_proof(engine: Engine, directory: Path) -> dict[str, Any]:
         ("runs", "run_id"),
         ("approvals", "run_id"),
         ("effect_receipts", "run_id"),
+        ("audit_events", "run_id"),
     ]:
         unrelated[name] = [r for r in unrelated[name] if r[key] != run_id]
     assert unrelated == baseline
+    audit_rows = restarted["audit"]
+    assert [e["sequence_number"] for e in audit_rows] == list(
+        range(1, len(audit_rows) + 1)
+    )
+    assert audit_rows[-1]["event_type"] == "run.finalized"
+    assert audit_rows[-1]["payload"]["status"] == "COMPLETED"
+    recovery = [e for e in audit_rows if e["event_type"] == "recovery.resumed"]
+    assert recovery
+    matching = [s for s in restarted["spans"] if s["name"] == "agent.recovery.resume"]
+    assert len(matching) == 1 and matching[0]["attributes"]["arr.run.id"] == run_id
+    assert (recovery[-1]["trace_id"], recovery[-1]["span_id"]) == (
+        matching[0]["trace_id"],
+        matching[0]["span_id"],
+    )
     # Consequential state checker: good, deliberate duplicate, valid alternate.
     broken = copy.deepcopy(after)
     broken["notifications"] = 2

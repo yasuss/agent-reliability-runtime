@@ -8,10 +8,14 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from sqlalchemy import create_engine
 
 from agent_reliability_runtime.database import database_url
 from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
+from agent_reliability_runtime.observability import AuditTrail, Telemetry
 from agent_reliability_runtime.runtime.checkpoints import run_async
 from agent_reliability_runtime.runtime.graph import State
 from agent_reliability_runtime.runtime.service import open_runtime
@@ -21,6 +25,9 @@ from scripts.runtime_proof_support import context_for, primitive
 async def work(args: argparse.Namespace) -> None:
     engine = create_engine(database_url())
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
 
     async def stop(state: State, result: dict[str, Any]) -> None:
         temporary = args.signal.with_suffix(".tmp")
@@ -45,7 +52,10 @@ async def work(args: argparse.Namespace) -> None:
             Path.cwd(), database_url().render_as_string(hide_password=False)
         ) as client:
             context = context_for(
-                engine, client, fault_hook=stop if args.mode == "resume" else None
+                engine,
+                client,
+                fault_hook=stop if args.mode == "resume" else None,
+                telemetry=Telemetry(provider.get_tracer("b80-fresh-process-proof")),
             )
             async with open_runtime(context) as runtime:
                 before = await runtime.inspect(args.run_id)
@@ -79,9 +89,23 @@ async def work(args: argparse.Namespace) -> None:
                     "protocol": client.protocol_version,
                     "checkpointer": "AsyncPostgresSaver",
                     "durability": "sync",
+                    "spans": [
+                        {
+                            "name": s.name,
+                            "trace_id": f"{s.context.trace_id:032x}",
+                            "span_id": f"{s.context.span_id:016x}",
+                            "attributes": dict(s.attributes or {}),
+                        }
+                        for s in exporter.get_finished_spans()
+                    ],
+                    "audit": [
+                        e.model_dump(mode="json")
+                        for e in AuditTrail(engine).list(args.run_id)
+                    ],
                 }
                 args.output.write_text(json.dumps(result, indent=2), encoding="utf-8")
     finally:
+        provider.shutdown()
         engine.dispose()
 
 

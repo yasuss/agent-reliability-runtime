@@ -1,5 +1,9 @@
 # B70 governed contextual memory
 
+B80 now implements atomic memory create/delete audit through an internal scope
+anchor; see [B80](B80_OBSERVABILITY_AUDIT.md). B70 scope, trust and ID-only
+checkpoint/delete-resume invariants remain unchanged.
+
 `MemoryStore` reuses the accepted `memories` table and strict Memory snapshots.
 Every list/get/resolve/delete constrains both workspace_id and user_id. Ordering
 is created_at ASC then memory_id ASC. Missing and foreign IDs resolve to nothing;
