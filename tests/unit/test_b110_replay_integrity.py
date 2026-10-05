@@ -81,7 +81,7 @@ def test_secret_marker_fails_closed(tmp_path: Path) -> None:
     target = _copy_collection(tmp_path)
     replay_path = target / "grounded-read/replay.json"
     replay = json.loads(replay_path.read_text(encoding="utf-8"))
-    replay["events"][0]["summary"] = "ARR_FORBIDDEN_SECRET_CALIBRATION"
+    replay["events"][0]["summary"] = "ARR_" + "FORBIDDEN_" + "SECRET_CALIBRATION"
     _write_json(replay_path, replay)
     with pytest.raises(ValueError):
         verify_collection(target)
@@ -95,3 +95,4 @@ def test_wrong_replay_mode_fails_closed(tmp_path: Path) -> None:
     _write_json(replay_path, replay)
     with pytest.raises(ValueError):
         verify_collection(target)
+
