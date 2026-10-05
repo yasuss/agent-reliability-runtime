@@ -45,6 +45,7 @@ from agent_reliability_runtime.observability import (
     memory_anchor,
     sanitize,
 )
+from agent_reliability_runtime.persistence import schema
 from agent_reliability_runtime.policy import (
     VERSION,
     Action,
@@ -393,12 +394,10 @@ def expectations(
         }
     elif code == "S02":
         kwargs |= {
-            "required_action_sequence": [
-                read_binding("get_incident", {"incident_id": "INC-1002"}),
-                read_binding("get_service_status", {"service_id": "checkout-api"}),
-                ("restart_service", None),
-                read_binding("get_service_status", {"service_id": "checkout-api"}),
-            ],
+            # B100 semantic evaluator enforces the material partial order. The
+            # two prerequisite reads are intentionally not encoded as a total
+            # sequence here.
+            "required_action_sequence": [],
             "required_tools": ["get_incident", "get_service_status", "restart_service"],
             "required_approval_states": ["PENDING", "APPROVED"],
             "expected_effects": 1,
@@ -448,7 +447,62 @@ def expectations(
         kwargs["terminal_statuses"] = ["BUDGET_EXCEEDED"]
     elif code == "S12":
         kwargs["terminal_statuses"] = ["FAILED"]
+    if scenario_id.startswith("H10_"):
+        # Held-out R10 trials use unrelated synthetic identifiers and are scored
+        # by the dedicated challenger evaluator, never by locked G8 identities.
+        kwargs = {
+            "retrieval_applies": True,
+            "expected_sources": [KNOWLEDGE + "runbook-checkout.md"],
+            "minimum_citations": 1,
+            "max_retries": 1,
+            "answer_quality_applies": False,
+        }
+        if scenario_id == "H10_RESTART":
+            kwargs |= {
+                "required_tools": [
+                    "get_incident",
+                    "get_service_status",
+                    "restart_service",
+                ],
+                "required_approval_states": ["PENDING", "APPROVED"],
+                "expected_effects": 1,
+            }
+        elif scenario_id == "H10_NOTE":
+            kwargs |= {
+                "required_tools": ["get_incident", "add_incident_note"],
+                "required_approval_states": ["PENDING", "APPROVED"],
+                "expected_effects": 1,
+            }
+        else:
+            kwargs |= {
+                "required_tools": ["get_incident", "get_service_status"],
+                "forbidden_tools": SIDES,
+            }
+        return TrialExpectations(**kwargs)
     return TrialExpectations(**kwargs)
+
+
+def seed_heldout_rows(engine: Engine, scenario_id: str) -> None:
+    """Install unrelated disposable rows after the normal demo reset."""
+    if not scenario_id.startswith("H10_"):
+        return
+    suffix = scenario_id.removeprefix("H10_").lower()
+    service_id = f"synthetic-{suffix}-svc"
+    incident_id = f"synthetic-{suffix}-inc"
+    with engine.begin() as con:
+        con.execute(
+            schema.demo_services.insert().values(
+                service_id=service_id, status="degraded"
+            )
+        )
+        con.execute(
+            schema.demo_incidents.insert().values(
+                incident_id=incident_id,
+                service_id=service_id,
+                summary="Synthetic held-out incident",
+                status="open",
+            )
+        )
 
 
 async def prepare_knowledge(engine: Engine, embeddings: EmbeddingProvider) -> None:
@@ -489,6 +543,7 @@ async def execute_scenario(
         canonical(expected.model_dump(mode="json"))
     )
     reset_demo(engine, confirm_development_reset=True)
+    seed_heldout_rows(engine, definition.id)
     run = Run(
         run_id=run_id or uuid4().hex,
         workspace_id="b100-" + uuid4().hex,
@@ -576,13 +631,39 @@ async def execute_scenario(
                         )
                     gateway.remember(action)
                     code = definition.id[:3]
-                    approved = code in {"S02", "S09"} and (
-                        code != "S02"
+                    approved = code in {"S02", "S09", "H10"} and (
+                        code not in {"S02", "H10"}
                         or (
-                            action.tool_name == "restart_service"
-                            and action.normalized_args.get("service_id")
-                            == "checkout-api"
-                            and bool(action.normalized_args.get("reason"))
+                            (
+                                action.tool_name
+                                in {
+                                    "restart_service",
+                                    "add_incident_note",
+                                }
+                                and (
+                                    (
+                                        action.tool_name == "restart_service"
+                                        and bool(
+                                            action.normalized_args.get("service_id")
+                                        )
+                                        and bool(action.normalized_args.get("reason"))
+                                    )
+                                    or (
+                                        action.tool_name == "add_incident_note"
+                                        and bool(
+                                            action.normalized_args.get("incident_id")
+                                        )
+                                        and bool(action.normalized_args.get("note"))
+                                    )
+                                )
+                            )
+                            if code == "H10"
+                            else (
+                                action.tool_name == "restart_service"
+                                and action.normalized_args.get("service_id")
+                                == "checkout-api"
+                                and bool(action.normalized_args.get("reason"))
+                            )
                         )
                     )
                     if code == "S04":

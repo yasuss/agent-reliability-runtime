@@ -48,7 +48,7 @@ CHAT_DIGEST = "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
 EMBED_DIGEST = "ac6da0dfba84a81fdbfbaf330198c33cd77c4cdfc53e8bc50eb581914a15621d"
 OLLAMA = "http://127.0.0.1:11434"
 POPULATION: tuple[dict[str, Any], ...] = tuple(
-    {"trial_id": f"{case}-r9-seed-{seed}", "scenario_id": case, "seed": seed}
+    {"trial_id": f"{case}-r10-seed-{seed}", "scenario_id": case, "seed": seed}
     for case in CASES
     for seed in SEEDS
 )

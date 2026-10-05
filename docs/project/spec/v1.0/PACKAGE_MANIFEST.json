@@ -63,13 +63,13 @@
     },
     {
       "path": "12_RESEARCH_AND_DESIGN_DECISIONS.md",
-      "size": 4396,
-      "sha256": "f79805a680b7fa49db78bb194d9e70cc806bfb22b48cdc4f5ee9f742491ebfe0"
+      "size": 5376,
+      "sha256": "2d6225469deb7f4982066565cbd1cc143d03d00d6e7a482924489be75995eb6c"
     },
     {
       "path": "13_SOURCE_INDEX.md",
-      "size": 6381,
-      "sha256": "35b3a6bacd2236307f30074837b1b8c82ac8e913ac5c00673a85eb9d82a0fad4"
+      "size": 7175,
+      "sha256": "9901c4633d5a9a73b4ec028441d0338533d4e3f0c4bfb9289196487b8df4d9a6"
     },
     {
       "path": "14_ORCHESTRATOR_HANDOFF.md",
@@ -98,8 +98,8 @@
     },
     {
       "path": "fixtures/knowledge/runbook-checkout.md",
-      "size": 258,
-      "sha256": "6b047e8a31fcaad08ab05b03071ec4987d272e80542ffde54e40378bc7980b20"
+      "size": 455,
+      "sha256": "6bcc92bf772df9dfe89bc667cf53691b22382ceee3f866fce449491f5923797a"
     },
     {
       "path": "fixtures/knowledge/runbook-search.md",

@@ -49,7 +49,8 @@ class MemoryProvider:
                 model_id="fixture",
             )
         calls: tuple[ToolCall, ...] = ()
-        if not any(m.role == "tool" for m in request.messages):
+        tool_messages = [m for m in request.messages if m.role == "tool"]
+        if not tool_messages:
             assert "restart_service" in (request.messages[1].content or "")
             calls = (
                 ToolCall(
@@ -59,6 +60,16 @@ class MemoryProvider:
                         "service_id": "checkout-api",
                         "reason": "fictional memory probe",
                     },
+                ),
+            )
+        elif len(tool_messages) == 1:
+            # R10 requires the model to emit a real post-restart read before
+            # finalizing; this deterministic B70 fixture follows that contract.
+            calls = (
+                ToolCall(
+                    call_id="post-restart-status",
+                    name="get_service_status",
+                    arguments={"service_id": "checkout-api"},
                 ),
             )
         return ChatResult(
@@ -246,11 +257,17 @@ async def graph_proof(engine: Engine, mode: str) -> dict[str, Any]:
                 final["terminal_reason"],
             )
             assert final["memory_ids"] == [memory.memory_id]
-            assert len(resumed_provider.requests) == 1
-            request = resumed_provider.requests[0]
-            assert marker not in request.model_dump_json()
-            assert not any(
-                "Persistent memory data;" in (m.content or "") for m in request.messages
+            assert len(resumed_provider.requests) == 2
+            assert all(
+                marker not in request.model_dump_json()
+                for request in resumed_provider.requests
+            )
+            assert all(
+                not any(
+                    "Persistent memory data;" in (m.content or "")
+                    for m in request.messages
+                )
+                for request in resumed_provider.requests
             )
             after_scan = await checkpoint_scan(runtime, engine, ident, marker)
             after = counts(engine, ident)
@@ -266,8 +283,9 @@ async def graph_proof(engine: Engine, mode: str) -> dict[str, Any]:
                 len(after["receipts"]) == 1
                 and after["approvals"][0]["status"] == "CONSUMED"
             )
-            # Real restart mutation count is carried in the validated receipt result.
-            assert final["tool_steps"] == 1
+            # The restart plus the required postcondition read are both durable
+            # tool steps; the physical side effect remains exactly one receipt.
+            assert final["tool_steps"] == 2
     return {
         "mode": mode,
         "run_id": ident,

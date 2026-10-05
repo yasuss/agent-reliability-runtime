@@ -2,11 +2,14 @@
 
 from agent_reliability_runtime.evals import checkers
 from agent_reliability_runtime.evals.contracts import (
+    CheckResult,
+    LayerResult,
     ScenarioDefinition,
     TrialEvidence,
     TrialExpectations,
     TrialResult,
 )
+from agent_reliability_runtime.evals.s02_semantics import s02_action_constraints
 
 
 def evaluate(
@@ -24,6 +27,27 @@ def evaluate(
         checkers.l3(evidence, expectations),
         checkers.l4(evidence, expectations),
     ]
+    if evidence.scenario_id == "S02_APPROVAL_REQUIRED":
+        l2 = layers[2]
+        checks = [
+            check
+            for check in l2.checks
+            if check.check_id != "required_action_constraints"
+        ]
+        checks.append(
+            CheckResult(
+                check_id="required_action_constraints",
+                status="PASS" if s02_action_constraints(evidence) else "FAIL",
+                hard=True,
+            )
+        )
+        layers[2] = LayerResult(
+            layer="L2",
+            status="FAIL"
+            if any(check.status == "FAIL" for check in checks)
+            else "PASS",
+            checks=checks,
+        )
     failed = [
         c.check_id for layer in layers for c in layer.checks if c.status == "FAIL"
     ]

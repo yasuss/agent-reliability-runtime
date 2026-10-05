@@ -47,6 +47,11 @@ from agent_reliability_runtime.providers.contracts import (
 from agent_reliability_runtime.providers.http import ProviderError
 from agent_reliability_runtime.retrieval.citations import validate_citations
 from agent_reliability_runtime.retrieval.service import retrieve
+from agent_reliability_runtime.runtime.postconditions import (
+    VerificationObligation,
+    restart_obligation,
+    satisfies,
+)
 from agent_reliability_runtime.runtime.prompt_context import (
     UnknownCitationAlias,
     normalize_citation_aliases,
@@ -83,6 +88,7 @@ class State(TypedDict):
     terminal_reason: str | None
     final_text: str | None
     route: str
+    verification_obligation: VerificationObligation | None
 
 
 @dataclass(frozen=True)
@@ -458,6 +464,8 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
         reason = repair_reason(
             result.text, {tool.name for tool in runtime.context.tools}, evidence_ids
         )
+        if state.get("verification_obligation") is not None:
+            reason = "postcondition_verification_required"
         if reason:
             return repaired(reason)
         try:
@@ -574,9 +582,18 @@ async def execute_tool(state: State, runtime: Runtime[Context]) -> dict[str, Any
         await runtime.context.fault_hook(state, raw)
     # A logical successful gateway result counts once, including reconciliation
     # after a lost node output. No increment is saved before the fault hook.
+    obligation = state.get("verification_obligation")
+    created = (
+        restart_obligation(action.model_dump(mode="json"), state["tool_steps"] + 1)
+        if raw.get("receipt_id")
+        else None
+    )
+    if created is not None:
+        obligation = created
     return {
         "result": raw,
         "tool_steps": state["tool_steps"] + 1,
+        "verification_obligation": obligation,
         "route": "observe_result",
     }
 
@@ -591,6 +608,15 @@ def observe_result(state: State) -> dict[str, Any]:
         ),
     )
     pending = state.get("pending_calls", [])
+    obligation = state.get("verification_obligation")
+    if obligation is not None and satisfies(
+        obligation,
+        tool_name=call.name,
+        arguments=call.arguments,
+        effect_sequence=state["tool_steps"],
+        result=state["result"] or {},
+    ):
+        obligation = None
     if pending:
         try:
             queued = validate_calls(tuple(ToolCall.model_validate(c) for c in pending))
@@ -605,6 +631,7 @@ def observe_result(state: State) -> dict[str, Any]:
         "action": None,
         "approval_id": None,
         "result": None,
+        "verification_obligation": obligation,
         "route": "validate_action" if pending else "decide",
     }
 

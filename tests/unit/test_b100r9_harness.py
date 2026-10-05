@@ -20,9 +20,9 @@ from agent_reliability_runtime.evals.l4_review import (
 from agent_reliability_runtime.evals.scenarios import load_scenarios
 
 
-def test_r9_ids_and_first_four_fail_still_reach_fifteen(tmp_path: Path) -> None:
+def test_r10_ids_and_first_four_fail_still_reach_fifteen(tmp_path: Path) -> None:
     assert len(POPULATION) == 15
-    assert all("-r9-" in item["trial_id"] for item in POPULATION)
+    assert all("-r10-" in item["trial_id"] for item in POPULATION)
     for item in POPULATION[:4]:
         path = tmp_path / item["trial_id"]
         path.mkdir()

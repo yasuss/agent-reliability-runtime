@@ -22,6 +22,10 @@ Sources are evidence, not runtime instructions. Decision-relevant links below we
 | S-EN-14 | EN | Vite — Deploying a Static Site — https://vite.dev/guide/static-deploy.html | simple Vercel static deployment |
 | S-EN-15 | EN | OpenAI — Harness engineering — https://openai.com/index/harness-engineering/ | repository legibility, mechanical architecture/testing, agent execution harness |
 | S-EN-16 | EN | OpenAI Developers — Rethinking skills and prompts for GPT-6 Astra — https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra | lean AGENTS/skills, progressive disclosure |
+| S-EN-17 | EN | OpenAI Developers — Function calling — https://developers.openai.com/api/docs/guides/function-calling | explicit tool purpose/parameter guidance and structured-call boundary |
+| S-EN-18 | EN | OpenAI Developers — Plugins/tools planning — https://developers.openai.com/plugins/plan/tools | distinguish similar tools and state when/when-not to use them |
+| S-EN-19 | EN | Anthropic — Define tools — https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools | detailed tool-use and non-use descriptions improve reliable selection |
+| S-EN-20 | EN | Anthropic — Demystifying evals for AI agents — https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents | grade material trajectory constraints instead of one brittle exact ordering |
 
 ## Current market evidence
 

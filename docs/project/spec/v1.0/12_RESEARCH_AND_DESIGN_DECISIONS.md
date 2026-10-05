@@ -74,6 +74,12 @@ Research was used to decide architecture, not to maximize source count. English,
 
 **Reason:** both Ollama and vLLM expose OpenAI-compatible APIs. This demonstrates model portability without vendor zoo.
 
+## D13 — B100R10 S02 contract alignment
+
+**Decision:** treat `restart_service.reason` as the record of the reason for that restart, require a separate `add_incident_note` only when the user explicitly asks for a separate note, and enforce a durable post-restart `get_service_status` obligation without auto-executing the read. S02 prerequisite reads are checked as a semantic partial order: both must precede the approved restart, while their relative order is unconstrained; the matching status read must follow the restart.
+
+**Evidence:** B100R9 produced the same S02 contradiction in seeds 101 and 303 (the model selected the real `add_incident_note` side effect) and a missing post-restart status witness in seed 202. The fictional runbook wording was therefore ambiguous and is superseded by the clarified body above. This is an eval/domain-contract correction; B50 policy, approval, idempotency, runtime graph topology, scenario bytes and B90 contracts remain unchanged.
+
 ## D13 — Hardware-dependent vLLM validation
 
 **Decision:** vLLM live execution is optional hardware validation; contract compatibility is mandatory.

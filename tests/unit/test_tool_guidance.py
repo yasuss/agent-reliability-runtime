@@ -14,9 +14,9 @@ def test_generic_tool_guidance_and_model_ownership() -> None:
     for tool in model:
         text = tool.description
         if tool.name in {"get_incident", "get_service_status"}:
-            assert "Read-only" in text and "never changes state" in text
+            assert "read-only" in text and "never changes state" in text
         else:
-            assert "explicitly requests" in text
+            assert ("explicitly requests" in text) or ("explicitly asks" in text)
             assert "side effect" in text and "exact approval" in text
         for forbidden in ("S01", "S02", "INC-1001", "INC-1002", "checkout-api", "G8"):
             assert forbidden not in text

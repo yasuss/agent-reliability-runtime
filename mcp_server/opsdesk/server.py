@@ -77,9 +77,10 @@ def create_server(
 
     @server.tool(annotations=reads)
     def get_incident(incident_id: Identifier) -> Incident:
-        """Read details of one fictional incident for investigation or diagnosis.
+        """Inspect the current details and scope of one incident.
 
-        Read-only; never changes state.
+        Use when incident facts are needed before answering or acting. This is
+        read-only and never changes state.
         """
         try:
             with engine.connect() as con:
@@ -99,10 +100,11 @@ def create_server(
 
     @server.tool(annotations=reads)
     def get_service_status(service_id: Identifier) -> Service:
-        """Read the current status of one fictional service.
+        """Inspect the current status of one service.
 
-        Use to verify service state before answering or deciding whether an
-        explicitly requested remediation is supported. Read-only; never changes state.
+        Use before a conditional remediation when current status matters. This
+        is read-only and never changes state. After a successful restart, use it
+        to verify the resulting state before reporting completion.
         """
         try:
             with engine.connect() as con:
@@ -127,10 +129,11 @@ def create_server(
         idempotency_key: Identifier,
         ctx: Context[None, Any],
     ) -> ReceiptEnvelope:
-        """Add a note to an incident only when the user explicitly requests
-        recording or updating the incident. This is a side effect and the trusted
-        runtime requires exact approval. Do not use merely to investigate, explain
-        findings, or request approval.
+        """Persist a separate incident note only when the user explicitly asks
+        to add or update that note. This is a side effect and the trusted runtime
+        requires exact approval. It is not the restart-reason mechanism; do not
+        use it merely to record a restart reason, investigate, explain findings,
+        or request approval.
         """
         try:
             value = Note(
@@ -167,10 +170,14 @@ def create_server(
         idempotency_key: Identifier,
         ctx: Context[None, Any],
     ) -> ReceiptEnvelope:
-        """Restart a service only when the user explicitly requests remediation/restart
-        and current evidence/status support it. This is a side effect and the trusted
-        runtime requires exact approval. For investigation-only requests, explain
-        the restart/approval as a next step instead of calling this tool.
+        """Restart a service only when the user explicitly requests a supported
+        remediation and current evidence/status support it. The `reason` argument
+        is the recorded reason for this restart and is approval-bound. This is a
+        side effect and the trusted runtime requires exact approval. Do not add a
+        separate incident note unless it was separately requested. After a
+        successful restart, verify current service state with get_service_status
+        before reporting completion. For investigation-only requests, explain the
+        restart/approval as a next step instead of calling this tool.
         """
         try:
 
@@ -209,10 +216,10 @@ def create_server(
         idempotency_key: Identifier,
         ctx: Context[None, Any],
     ) -> ReceiptEnvelope:
-        """Create a fictional notification only when the user explicitly requests a
-        notification/message. This is a side effect and the trusted runtime requires
-        exact approval. Do not use it merely to summarize an investigation or to
-        request approval for another action.
+        """Create a notification only when the user explicitly requests a
+        notification or message. This is a side effect and the trusted runtime
+        requires exact approval. It is not a substitute for approval or an
+        investigation summary; do not use it merely to request another action.
         """
         try:
             value = Notification(

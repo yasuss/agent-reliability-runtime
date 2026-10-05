@@ -90,4 +90,11 @@ def correction(
                 else "\n".join(f"[evidence:{e}]" for e in sorted(evidence_ids))
             )
         )
+    if reason == "postcondition_verification_required":
+        return (
+            "Protocol correction: a previous side effect succeeded, but the "
+            "required read-only verification has not been observed. Emit the matching "
+            "verification read now, then provide a final answer only after its result. "
+            "The runtime will not execute this read for you."
+        )
     raise ValueError("unknown protocol repair reason")
