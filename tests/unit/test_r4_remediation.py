@@ -127,7 +127,7 @@ def test_local_scope_and_generic_alternate() -> None:
     assert ModelSettings().model_dump(exclude_none=True) == {}
     assert ModelSettings(max_tokens=32).max_tokens == 32
     assert configuration()["max_tokens"] == 8192
-    assert len(POPULATION) == 15 and all("-r5-" in t["trial_id"] for t in POPULATION)
+    assert len(POPULATION) == 15 and all("-r8-" in t["trial_id"] for t in POPULATION)
     for forbidden in (
         "S01",
         "S02",
