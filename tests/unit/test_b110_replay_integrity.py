@@ -95,4 +95,3 @@ def test_wrong_replay_mode_fails_closed(tmp_path: Path) -> None:
     _write_json(replay_path, replay)
     with pytest.raises(ValueError):
         verify_collection(target)
-
