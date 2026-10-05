@@ -53,6 +53,7 @@ def main() -> None:
     evaluating = sub.add_parser("eval")
     modes = evaluating.add_mutually_exclusive_group(required=True)
     modes.add_argument("--calibrate", action="store_true")
+    modes.add_argument("--calibrate-l4", action="store_true")
     modes.add_argument("--mandatory", action="store_true")
     modes.add_argument("--live-local", action="store_true")
     evaluating.add_argument("--output", type=Path)
@@ -70,7 +71,20 @@ def main() -> None:
     args = parser.parse_args()
     if args.command == "eval":
         from agent_reliability_runtime.evals.calibration import calibrate
+        from agent_reliability_runtime.evals.l4_review import (
+            load_review_input,
+            write_calibration_receipt,
+        )
         from agent_reliability_runtime.observability import canonical
+
+        if args.calibrate_l4:
+            if args.output is None:
+                parser.error("--calibrate-l4 requires --output")
+            l4_result = write_calibration_receipt(args.output)
+            print(canonical(l4_result).decode())
+            if not l4_result["passed"]:
+                raise SystemExit(1)
+            return
 
         if args.live_local:
             from agent_reliability_runtime.evals import campaign
@@ -93,10 +107,11 @@ def main() -> None:
                 await campaign.revalidate(args.output, engine)
                 if not args.trial_id or not args.review:
                     parser.error("finalize requires --trial-id and --review")
-                review = AnswerQualityReview.model_validate_json(
-                    args.review.read_bytes()
+                review_data, rationale = load_review_input(args.review)
+                review = AnswerQualityReview.model_validate(review_data)
+                return campaign.finalize(
+                    engine, args.output, args.trial_id, review, rationale
                 )
-                return campaign.finalize(engine, args.output, args.trial_id, review)
 
             try:
                 report = run_async(live_phase())

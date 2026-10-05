@@ -23,6 +23,11 @@ from agent_reliability_runtime.evals.execution import (
     head,
     prepare_knowledge,
 )
+from agent_reliability_runtime.evals.harness import evaluate
+from agent_reliability_runtime.evals.l4_review import (
+    build_review_packet,
+    calibration_receipt_exists,
+)
 from agent_reliability_runtime.evals.scenarios import (
     IDS,
     ROOT,
@@ -43,7 +48,7 @@ CHAT_DIGEST = "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
 EMBED_DIGEST = "ac6da0dfba84a81fdbfbaf330198c33cd77c4cdfc53e8bc50eb581914a15621d"
 OLLAMA = "http://127.0.0.1:11434"
 POPULATION: tuple[dict[str, Any], ...] = tuple(
-    {"trial_id": f"{case}-r8-seed-{seed}", "scenario_id": case, "seed": seed}
+    {"trial_id": f"{case}-r9-seed-{seed}", "scenario_id": case, "seed": seed}
     for case in CASES
     for seed in SEEDS
 )
@@ -109,8 +114,11 @@ def configuration() -> dict[str, Any]:
         "endpoint": OLLAMA + "/v1",
         "temperature": 0.2,
         "max_tokens": 8192,
+        "campaign_chat_timeout_seconds": 1800,
+        "embedding_timeout_seconds": 300,
         "population": list(POPULATION),
         "l4_reviewer": "Codex B100 operator",
+        "execution_then_review": True,
     }
 
 
@@ -144,6 +152,8 @@ def database_identity(engine: Engine) -> dict[str, Any]:
 async def freeze(engine: Engine, directory: Path) -> dict[str, Any]:
     directory = external(directory)
     directory.mkdir(parents=True, exist_ok=False)
+    if not calibration_receipt_exists():
+        raise ValueError("L4 calibration must pass before campaign freeze")
     identity = (
         subject()
         | await models()
@@ -195,10 +205,9 @@ def next_trial(directory: Path) -> dict[str, Any]:
     for trial in POPULATION:
         path = trial_directory(directory, trial)
         if (path / "started.json").exists():
-            if not (path / "verdict.json").exists():
-                raise ValueError(
-                    "started trial awaits finalization; it cannot be replaced"
-                )
+            # Execution and review are separate: a sealed/pending review never
+            # blocks later population members.
+            continue
         else:
             return trial
     raise ValueError("all fifteen trials already started; replacements forbidden")
@@ -231,7 +240,7 @@ async def start_next(engine: Engine, directory: Path) -> dict[str, Any]:
             run_id=run_id,
             provider=OpenAICompatibleChatProvider(
                 HTTPProviderConfig(
-                    "ollama-local", "qwen3:4b", OLLAMA + "/v1", timeout_seconds=300
+                    "ollama-local", "qwen3:4b", OLLAMA + "/v1", timeout_seconds=1800
                 )
             ),
             embeddings=local_embeddings(),
@@ -239,7 +248,28 @@ async def start_next(engine: Engine, directory: Path) -> dict[str, Any]:
                 temperature=0.2, max_tokens=8192, seed=trial["seed"]
             ),
         )
-        if expected.answer_quality_applies:
+        write_once(
+            path / "execution-sealed.json",
+            {
+                "trial_id": trial["trial_id"],
+                "state": "EXECUTION_SEALED",
+                "evidence_digest": digest(path / "evidence.json"),
+                "expectations_digest": digest(path / "expectations.json"),
+            },
+        )
+        preview = evaluate(definition, evidence, expected)
+        objective_pass = all(
+            layer.status in {"PASS", "NOT_APPLICABLE"} for layer in preview.layers[:4]
+        )
+        if expected.answer_quality_applies and objective_pass:
+            packet = build_review_packet(
+                definition=definition,
+                evidence=evidence,
+                expectations=expected,
+                objective=preview,
+                proof=json.loads((path / "proof.json").read_bytes()),
+                output=directory,
+            )
             write_once(
                 path / "awaiting-review.json",
                 {
@@ -248,6 +278,7 @@ async def start_next(engine: Engine, directory: Path) -> dict[str, Any]:
                     "final_answer": evidence.final_answer,
                     "evidence_digest": digest(path / "evidence.json"),
                     "expectations_digest": digest(path / "expectations.json"),
+                    "packet_digest": digest(Path(packet)),
                 },
             )
             return {
@@ -255,6 +286,7 @@ async def start_next(engine: Engine, directory: Path) -> dict[str, Any]:
                 "state": "AWAITING_OPERATOR_REVIEW",
                 "final_answer": evidence.final_answer,
             }
+        # Objective failure is final with L4 NOT_REVIEWED; no fabricated review.
         return finalize(engine, directory, trial["trial_id"])
     except Exception as error:
         # Every started execution failure remains a failed member of the sample.
@@ -288,6 +320,7 @@ def finalize(
     directory: Path,
     trial_id: str,
     review: AnswerQualityReview | None = None,
+    rationale: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     trial = next((t for t in POPULATION if t["trial_id"] == trial_id), None)
     if trial is None:
@@ -299,6 +332,7 @@ def finalize(
         (path / "expectations.json").read_bytes()
     )
     evidence = TrialEvidence.model_validate_json((path / "evidence.json").read_bytes())
+    definition = next(s for s in load_scenarios()[0] if s.id == trial["scenario_id"])
     frozen = json.loads((directory / "freeze.json").read_bytes())
     started = json.loads((path / "started.json").read_bytes())
     if (
@@ -310,27 +344,42 @@ def finalize(
     ):
         raise ValueError("finalized evidence subject drift")
     if expected.answer_quality_applies:
-        pending = json.loads((path / "awaiting-review.json").read_bytes())
-        if pending["evidence_digest"] != digest(path / "evidence.json") or pending[
-            "expectations_digest"
-        ] != digest(path / "expectations.json"):
-            raise ValueError("operator review subject drift")
-        if review is None or review.reviewer != "Codex B100 operator":
-            raise ValueError("exact attributable bounded operator review required")
-        if any(
-            getattr(review, key) not in {"PASS", "FAIL"}
-            for key in ("task_addressed", "evidence_grounded", "citations_useful")
-        ) or review.material_uncertainty_surfaced not in {
-            "PASS",
-            "FAIL",
-            "NOT_APPLICABLE",
-        }:
-            raise ValueError("applicable operator rubric items require a verdict")
-        write_once(path / "operator-review.json", review.model_dump(mode="json"))
-        evidence = TrialEvidence.model_validate(
-            evidence.model_dump() | {"review": review}
-        )
-    definition = next(s for s in load_scenarios()[0] if s.id == trial["scenario_id"])
+        if review is None:
+            # Objective L0-L3 failures are intentionally not reviewed.
+            preview = evaluate(definition, evidence, expected)
+            if all(
+                layer.status in {"PASS", "NOT_APPLICABLE"}
+                for layer in preview.layers[:4]
+            ):
+                raise ValueError("exact attributable bounded operator review required")
+            evidence = TrialEvidence.model_validate(
+                evidence.model_dump() | {"review": None}
+            )
+        else:
+            pending = json.loads((path / "awaiting-review.json").read_bytes())
+            if pending["evidence_digest"] != digest(path / "evidence.json") or pending[
+                "expectations_digest"
+            ] != digest(path / "expectations.json"):
+                raise ValueError("operator review subject drift")
+            if review.reviewer != "Codex B100 operator":
+                raise ValueError("exact attributable bounded operator review required")
+            if any(
+                getattr(review, key) not in {"PASS", "FAIL"}
+                for key in ("task_addressed", "evidence_grounded", "citations_useful")
+            ) or review.material_uncertainty_surfaced not in {
+                "PASS",
+                "FAIL",
+                "NOT_APPLICABLE",
+            }:
+                raise ValueError("applicable operator rubric items require a verdict")
+            write_once(path / "operator-review.json", review.model_dump(mode="json"))
+            write_once(
+                path / "operator-review-rationale.json",
+                rationale or {"reviewer": review.reviewer, "items": {}},
+            )
+            evidence = TrialEvidence.model_validate(
+                evidence.model_dump() | {"review": review}
+            )
     result = finish_trial(engine, definition, evidence, expected, path)
     verdict = {
         "trial_id": trial_id,
@@ -355,6 +404,8 @@ def finalize(
 
 
 def aggregate(verdicts: list[dict[str, Any]]) -> dict[str, Any]:
+    if len(verdicts) != len(POPULATION):
+        raise ValueError("aggregate unavailable before exact 15 final verdicts")
     if [(v["trial_id"], v["scenario_id"]) for v in verdicts] != [
         (t["trial_id"], t["scenario_id"]) for t in POPULATION
     ]:
@@ -402,10 +453,29 @@ def aggregate(verdicts: list[dict[str, Any]]) -> dict[str, Any]:
 
 async def summary(directory: Path, engine: Engine | None = None) -> dict[str, Any]:
     frozen = await revalidate(directory, engine)
-    verdicts = [
-        json.loads((trial_directory(directory, t) / "verdict.json").read_bytes())
-        for t in POPULATION
-    ]
+    verdicts = []
+    started_ids = []
+    for t in POPULATION:
+        trial_path = trial_directory(directory, t)
+        started_path = trial_path / "started.json"
+        if not started_path.exists():
+            raise ValueError("execution population incomplete before aggregate")
+        started_ids.append(json.loads(started_path.read_bytes())["trial_id"])
+        verdict_path = trial_directory(directory, t) / "verdict.json"
+        if not verdict_path.exists():
+            raise ValueError("aggregate unavailable before exact 15 final verdicts")
+        verdicts.append(json.loads(verdict_path.read_bytes()))
+    if started_ids != [t["trial_id"] for t in POPULATION]:
+        raise ValueError("execution population identity mismatch")
+    write_once(
+        directory / "execution-summary.json",
+        {
+            "population_ids": started_ids,
+            "started": len(started_ids),
+            "execution_sealed_or_failed": True,
+            "replacements": 0,
+        },
+    )
     result = aggregate(verdicts) | {
         "freeze": frozen,
         "freeze_digest": digest(directory / "freeze.json"),

@@ -171,8 +171,8 @@ def test_started_failed_trial_never_replaced(tmp_path: Path) -> None:
     path = tmp_path / trial["trial_id"]
     path.mkdir()
     write_once(path / "started.json", trial)
-    with pytest.raises(ValueError, match="awaits finalization"):
-        next_trial(tmp_path)
+    # Pending review/sealed execution never blocks the next population member.
+    assert next_trial(tmp_path) == POPULATION[1]
     write_once(path / "verdict.json", {"task_success": False})
     assert next_trial(tmp_path) == POPULATION[1]
     with pytest.raises(FileExistsError):
