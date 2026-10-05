@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": {"node": ">=24 <25"},
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "vite",
     "lint": "oxlint src",
@@ -12,7 +14,10 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
-  "dependencies": {"react": "19.2.8", "react-dom": "19.2.8"},
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
   "devDependencies": {
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
@@ -21,6 +26,11 @@
     "oxlint": "1.81.0",
     "typescript": "6.0.2",
     "vite": "8.3.2",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "@playwright/test": "1.63.0"
+  },
+  "overrides": {
+    "playwright": "1.62.0-alpha-2026-06-24",
+    "playwright-core": "1.62.0-alpha-2026-06-24"
   }
 }

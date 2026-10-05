@@ -14,7 +14,7 @@ def workflow_contract(workflow: dict[str, Any]) -> None:
     assert set(workflow["on"]["pull_request"]["branches"]) == {"main", "codex/**"}
     assert workflow["permissions"] == {"contents": "read"}
     jobs = workflow["jobs"]
-    assert set(jobs) == {"static-unit", "database"}
+    assert set(jobs) == {"static-unit", "database", "web-e2e"}
     static = jobs["static-unit"]
     assert static["strategy"] == {
         "fail-fast": "false",
@@ -36,6 +36,13 @@ def workflow_contract(workflow: dict[str, Any]) -> None:
         "docker compose down --volumes",
     ]
     assert db["steps"][-1]["if"] == "always()"
+    web = jobs["web-e2e"]
+    assert web["runs-on"] == "ubuntu-latest"
+    assert [step["run"] for step in web["steps"] if "run" in step] == [
+        "npm --prefix web ci",
+        "npx --prefix web playwright install --with-deps chromium",
+        "npm --prefix web exec -- playwright test --config web/playwright.config.ts",
+    ]
     accepted_pins = {
         "actions/checkout": "d23441a48e516b6c34aea4fa41551a30e30af803",
         "astral-sh/setup-uv": "37802adc94f370d6bfd71619e3f0bf239e1f3b78",

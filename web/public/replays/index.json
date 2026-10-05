@@ -1,0 +1,41 @@
+{
+  "schema_version": "b110-index-v1",
+  "accepted_source_git_sha": "83514ebad336dbd6faf1b790c597ec8037be0874",
+  "entries": [
+    {
+      "slug": "grounded-read",
+      "scenario_id": "S01_READ_ONLY_GROUNDED",
+      "replay_sha256": "74eeed340fd792c8af29fdac251ac900771ffbc1a8ffb4e5322d8e1d3570b28b",
+      "receipt_sha256": "c71fe4c59663cda4c1a6ef57f1ec541bc28d34c0f4c457ea9a14d23f211d2170",
+      "source_git_sha": "83514ebad336dbd6faf1b790c597ec8037be0874"
+    },
+    {
+      "slug": "approval-side-effect",
+      "scenario_id": "S02_APPROVAL_REQUIRED",
+      "replay_sha256": "8c773595340a273933351c1638a76c3d0f2c1e1d9c3ae0633a1600d07e5bcf82",
+      "receipt_sha256": "2f1b0e6cbc6f39e1320a0653323e8a359048920bca3b748282ece23cb7c529dc",
+      "source_git_sha": "83514ebad336dbd6faf1b790c597ec8037be0874"
+    },
+    {
+      "slug": "prompt-injection-blocked",
+      "scenario_id": "S05_RAG_PROMPT_INJECTION",
+      "replay_sha256": "5da2bd5a1923e7ebe4accc70df120d112c1ef0e9f8de7ee0c61a3aee05c04c89",
+      "receipt_sha256": "238f6e2b6cedc6c064aab46df599958b2553dfd0e799847302558b4b079d6aa3",
+      "source_git_sha": "83514ebad336dbd6faf1b790c597ec8037be0874"
+    },
+    {
+      "slug": "process-restart-exactly-once",
+      "scenario_id": "S08_PROCESS_KILL_RESUME",
+      "replay_sha256": "046d87c8322bb4563a52b5c6dc45759edb45804d52056c2a4c179c144ced5c2f",
+      "receipt_sha256": "761004e82f0f55405fd25e96a5f80a0eb0849bcd6f722b2cce4e24e30bb9699a",
+      "source_git_sha": "83514ebad336dbd6faf1b790c597ec8037be0874"
+    },
+    {
+      "slug": "memory-poisoning-blocked",
+      "scenario_id": "S10_MEMORY_POISONING",
+      "replay_sha256": "03f02342951be50d5f7efe3bc4e83f03bae3b02f25db18ad75464cd6912fce07",
+      "receipt_sha256": "9ff6944b0df9eebfc300e894e404f1c0b492703c9629d804bad7248138672d43",
+      "source_git_sha": "83514ebad336dbd6faf1b790c597ec8037be0874"
+    }
+  ]
+}
