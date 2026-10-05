@@ -69,6 +69,7 @@ from agent_reliability_runtime.retrieval.contracts import Evidence
 from agent_reliability_runtime.retrieval.service import ingest
 from agent_reliability_runtime.retrieval.text import read_source
 from agent_reliability_runtime.runtime.graph import Context
+from agent_reliability_runtime.runtime.prompt_context import parse_retrieval_context
 from agent_reliability_runtime.runtime.service import open_runtime
 from mcp_server.opsdesk.effects import row_id
 
@@ -214,14 +215,17 @@ class ScriptedScenarioProvider:
                 provider_id="fixture",
                 model_id="fixture",
             )
-        evidence_message = next(
-            m.content
-            for m in request.messages
-            if m.content and m.content.startswith("Untrusted retrieval evidence: ")
-        )
-        evidence = json.loads(str(evidence_message).split(": ", 1)[1])
+        evidence = None
+        for message in request.messages:
+            if message.content:
+                evidence = parse_retrieval_context(message.content)
+                if evidence is not None:
+                    break
+        if evidence is None:
+            raise AssertionError("retrieval context missing")
         citations = " ".join(
-            "[evidence:" + r["evidence_id"] + "]" for r in evidence[:2]
+            r.get("citation_token", "[evidence:" + r.get("evidence_id", "") + "]")
+            for r in evidence[:2]
         )
         text = (
             "Incident and service inspected. Follow the supplied runbook; "

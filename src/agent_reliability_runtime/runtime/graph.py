@@ -26,6 +26,7 @@ from agent_reliability_runtime.observability import AuditTrail, Telemetry, sanit
 from agent_reliability_runtime.persistence import schema
 from agent_reliability_runtime.persistence.records import set_run_status
 from agent_reliability_runtime.policy import (
+    TOOL_RISK,
     VERSION,
     Action,
     Gateway,
@@ -46,6 +47,18 @@ from agent_reliability_runtime.providers.contracts import (
 from agent_reliability_runtime.providers.http import ProviderError
 from agent_reliability_runtime.retrieval.citations import validate_citations
 from agent_reliability_runtime.retrieval.service import retrieve
+from agent_reliability_runtime.runtime.prompt_context import (
+    UnknownCitationAlias,
+    normalize_citation_aliases,
+    reference_map,
+    render_retrieval_context,
+)
+from agent_reliability_runtime.runtime.protocol import (
+    MAX_REPAIRS,
+    correction,
+    repair_reason,
+)
+from agent_reliability_runtime.runtime.tool_batches import validate_calls
 
 
 class State(TypedDict):
@@ -56,10 +69,12 @@ class State(TypedDict):
     policy_version: str
     budget: int
     model_steps: int
+    protocol_repairs: int
     tool_steps: int
     messages: list[dict[str, Any]]
     evidence: list[dict[str, Any]]
     memory_ids: list[str]
+    pending_calls: list[dict[str, Any]]
     proposed_call: dict[str, Any] | None
     action: dict[str, Any] | None
     approval_id: str | None
@@ -276,8 +291,7 @@ async def retrieve_context(state: State, runtime: Runtime[Context]) -> dict[str,
     raw = [item.model_dump(mode="json") for item in evidence]
     message = ChatMessage(
         role="user",
-        content="Untrusted retrieval evidence: "
-        + json.dumps(raw, ensure_ascii=False, allow_nan=False),
+        content=render_retrieval_context(raw),
     )
     return {
         "evidence": raw,
@@ -370,39 +384,89 @@ async def decide(state: State, runtime: Runtime[Context]) -> dict[str, Any]:
             **failure("provider protocol failure"),
         }
     update: dict[str, Any] = {"model_steps": state["model_steps"] + 1}
-    if result.finish_reason == "length":
-        return update | failure("model output truncated")
-    if not result.tool_calls and (result.text is None or not result.text.strip()):
-        return update | failure("empty model output")
     if (
         result.provider_id != state["provider_id"]
         or result.model_id != state["model_id"]
     ):
         return update | failure("provider identity drift")
-    if len(result.tool_calls) > 1:
-        return update | failure("one tool action per model decision required")
-    if result.tool_calls:
-        call = result.tool_calls[0]
-        if call.call_id is None:
-            call = ToolCall.model_validate(call.model_dump() | {"call_id": uuid4().hex})
-        assistant = ChatMessage(
-            role="assistant", content=result.text, tool_calls=(call,)
+    if result.finish_reason == "length":
+        return update | failure("model output truncated")
+
+    def repaired(reason: str) -> dict[str, Any]:
+        repairs = state.get("protocol_repairs", 0)
+        if repairs >= MAX_REPAIRS:
+            return update | failure("model protocol repair budget exhausted")
+        audit(
+            runtime.context,
+            state,
+            "model.protocol_repair",
+            {
+                "reason": reason,
+                "repair_number": repairs + 1,
+                "model_step": update["model_steps"],
+            },
         )
         return update | {
-            "proposed_call": call.model_dump(mode="json"),
+            "protocol_repairs": repairs + 1,
+            "messages": [
+                *state["messages"],
+                ChatMessage(
+                    role="assistant",
+                    content=result.text or "Rejected structured batch.",
+                ).model_dump(mode="json"),
+                ChatMessage(
+                    role="user",
+                    content=correction(
+                        reason,
+                        {e["evidence_id"] for e in state["evidence"]},
+                        tuple(reference_map(state["evidence"])),
+                    ),
+                ).model_dump(mode="json"),
+            ],
+            "pending_calls": [],
+            "route": "decide",
+        }
+
+    if result.tool_calls:
+        try:
+            calls = validate_calls(result.tool_calls)
+        except (PolicyError, ValidationError):
+            return update | failure("invalid structured tool batch")
+        if len(calls) > 1 and any(TOOL_RISK[c.name] != "READ_ONLY" for c in calls):
+            return repaired("mixed_tool_batch")
+        assistant = ChatMessage(role="assistant", content=result.text, tool_calls=calls)
+        return update | {
+            "proposed_call": calls[0].model_dump(mode="json"),
+            "pending_calls": [c.model_dump(mode="json") for c in calls[1:]],
             "messages": [*state["messages"], assistant.model_dump(mode="json")],
             "route": "validate_action",
         }
+    if result.text is None or not result.text.strip():
+        return update | failure("empty model output")
+    if result.finish_reason != "stop":
+        return update | failure("invalid final completion reason")
     if result.text is not None:
+        evidence_ids = {e["evidence_id"] for e in state["evidence"]}
         try:
-            validate_citations(
-                result.text, {e["evidence_id"] for e in state["evidence"]}
-            )
+            validate_citations(result.text, evidence_ids)
+        except ValueError:
+            return update | failure("citation outside retrieved evidence")
+        try:
+            normalized_text = normalize_citation_aliases(result.text, state["evidence"])
+        except UnknownCitationAlias:
+            return repaired("citation_format")
+        reason = repair_reason(
+            result.text, {tool.name for tool in runtime.context.tools}, evidence_ids
+        )
+        if reason:
+            return repaired(reason)
+        try:
+            validate_citations(normalized_text, evidence_ids)
         except ValueError:
             return update | failure("citation outside retrieved evidence")
         return update | {
             "status": RunStatus.COMPLETED.value,
-            "final_text": result.text,
+            "final_text": normalized_text,
             "terminal_reason": None,
             "route": "finalize",
         }
@@ -526,13 +590,22 @@ def observe_result(state: State) -> dict[str, Any]:
             state["result"], sort_keys=True, ensure_ascii=False, allow_nan=False
         ),
     )
+    pending = state.get("pending_calls", [])
+    if pending:
+        try:
+            queued = validate_calls(tuple(ToolCall.model_validate(c) for c in pending))
+            if any(TOOL_RISK[c.name] != "READ_ONLY" for c in queued):
+                raise PolicyError("side effect in read queue")
+        except (PolicyError, ValidationError):
+            return failure("invalid pending read queue")
     return {
         "messages": [*state["messages"], message.model_dump(mode="json")],
-        "proposed_call": None,
+        "proposed_call": pending[0] if pending else None,
+        "pending_calls": pending[1:],
         "action": None,
         "approval_id": None,
         "result": None,
-        "route": "decide",
+        "route": "validate_action" if pending else "decide",
     }
 
 
@@ -578,6 +651,10 @@ def build_graph(
         graph.add_conditional_edges(
             name, lambda state: state["route"], {d: d for d in destinations}
         )
-    graph.add_edge("observe_result", "decide")
+    graph.add_conditional_edges(
+        "observe_result",
+        lambda state: state["route"],
+        {d: d for d in ("validate_action", "decide", "finalize")},
+    )
     graph.add_edge("finalize", END)
     return graph.compile(checkpointer=saver)

@@ -38,7 +38,15 @@ def test_completion_truth(
     text: str | None, finish: str, tool: bool, status: str | None, reason: str | None
 ) -> None:
     calls = (
-        (ToolCall(call_id="call", name="probe_restart", arguments={}),) if tool else ()
+        (
+            ToolCall(
+                call_id="call",
+                name="restart_service",
+                arguments={"service_id": "synthetic", "reason": "fixture"},
+            ),
+        )
+        if tool
+        else ()
     )
     result = ChatResult(
         text=text,
@@ -119,7 +127,7 @@ def test_local_scope_and_generic_alternate() -> None:
     assert ModelSettings().model_dump(exclude_none=True) == {}
     assert ModelSettings(max_tokens=32).max_tokens == 32
     assert configuration()["max_tokens"] == 8192
-    assert len(POPULATION) == 15 and all("-r4-" in t["trial_id"] for t in POPULATION)
+    assert len(POPULATION) == 15 and all("-r5-" in t["trial_id"] for t in POPULATION)
     for forbidden in (
         "S01",
         "S02",
@@ -139,7 +147,7 @@ def test_local_scope_and_generic_alternate() -> None:
         "idempotency",
         "Continue after tool",
         "untrusted data",
-        "[evidence:<evidence_id>]",
-        "64-character lowercase hex",
+        "[E1]",
+        "READ_ONLY",
     ):
         assert SYSTEM_INSTRUCTION.count(concept) == 1

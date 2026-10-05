@@ -77,7 +77,10 @@ def create_server(
 
     @server.tool(annotations=reads)
     def get_incident(incident_id: Identifier) -> Incident:
-        """Read one fictional incident."""
+        """Read details of one fictional incident for investigation or diagnosis.
+
+        Read-only; never changes state.
+        """
         try:
             with engine.connect() as con:
                 row = (
@@ -96,7 +99,11 @@ def create_server(
 
     @server.tool(annotations=reads)
     def get_service_status(service_id: Identifier) -> Service:
-        """Read one fictional service."""
+        """Read the current status of one fictional service.
+
+        Use to verify service state before answering or deciding whether an
+        explicitly requested remediation is supported. Read-only; never changes state.
+        """
         try:
             with engine.connect() as con:
                 row = (
@@ -120,7 +127,11 @@ def create_server(
         idempotency_key: Identifier,
         ctx: Context[None, Any],
     ) -> ReceiptEnvelope:
-        """Raw fictional note insertion; infrastructure only, no authorization."""
+        """Add a note to an incident only when the user explicitly requests
+        recording or updating the incident. This is a side effect and the trusted
+        runtime requires exact approval. Do not use merely to investigate, explain
+        findings, or request approval.
+        """
         try:
             value = Note(
                 note_id=row_id("add_incident_note", idempotency_key),
@@ -156,7 +167,11 @@ def create_server(
         idempotency_key: Identifier,
         ctx: Context[None, Any],
     ) -> ReceiptEnvelope:
-        """Atomic fictional restart; metadata does not authorize."""
+        """Restart a service only when the user explicitly requests remediation/restart
+        and current evidence/status support it. This is a side effect and the trusted
+        runtime requires exact approval. For investigation-only requests, explain
+        the restart/approval as a next step instead of calling this tool.
+        """
         try:
 
             def mutate(con: Connection) -> Restart:
@@ -194,7 +209,11 @@ def create_server(
         idempotency_key: Identifier,
         ctx: Context[None, Any],
     ) -> ReceiptEnvelope:
-        """Raw fictional notification insertion; no external dispatch."""
+        """Create a fictional notification only when the user explicitly requests a
+        notification/message. This is a side effect and the trusted runtime requires
+        exact approval. Do not use it merely to summarize an investigation or to
+        request approval for another action.
+        """
         try:
             value = Notification(
                 notification_id=row_id("send_notification", idempotency_key),

@@ -164,6 +164,7 @@ PAYLOADS = {
     "retrieval.completed": "result_count evidence_ids source_paths",
     "memory.read": "operation count memory_ids",
     "model.completed": "model_step provider_id model_id finish_reason tool_names usage",
+    "model.protocol_repair": "reason repair_number model_step",
     "action.validated": "action_id tool_name risk_class action_digest",
     "policy.evaluated": "tool_name risk_class approval_required",
     "approval.waiting": "approval_id action_digest status",
