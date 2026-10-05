@@ -104,4 +104,4 @@ Use LangGraph PostgreSQL checkpointing for graph state. Application tables remai
 
 ## Frontend architecture
 
-The recruiter UI is a static Vite React application that imports versioned JSON replay artifacts produced by the accepted backend runs. It has no secrets and no required runtime API.
+The static evidence viewer is a Vite React application that imports versioned JSON replay artifacts produced by the accepted backend runs. It has no secrets and no required runtime API.

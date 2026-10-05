@@ -3,18 +3,18 @@
   "files": [
     {
       "path": "00_PRODUCT_CONTRACT.md",
-      "size": 3625,
-      "sha256": "72fc3e323ce4bdb58a832106dfdc1beaabcda8a2fb13e9fee27f32eb6a71306b"
+      "size": 3626,
+      "sha256": "477a25f2c555e2819e64a59144bd1d183a26360e96d6b973bdb9676e9212e1f8"
     },
     {
       "path": "01_SCOPE_AND_NON_GOALS.md",
-      "size": 2935,
-      "sha256": "aec402f0ef8a74fd74536d73bd0a3100985db81399c3a01101eb209a16116ec9"
+      "size": 2938,
+      "sha256": "ee8b48cf65fb22b2bd2c41c5f63f33f540293b90403d61e7ce4b6563cbbbbefc"
     },
     {
       "path": "02_ARCHITECTURE.md",
-      "size": 5656,
-      "sha256": "8652ddc7801d76ed2cb2266c8e0e6874d7c370243712df3ce9371fbca2d3c442"
+      "size": 5659,
+      "sha256": "50256bf21de3a800ada1b08672921d884cc50b112cc26a566fce50ad1fca6705"
     },
     {
       "path": "03_RUNTIME_CONTRACTS.md",
@@ -33,8 +33,8 @@
     },
     {
       "path": "06_OBSERVABILITY.md",
-      "size": 1970,
-      "sha256": "ffe4ae6b5f7ce53f87499b3639d22dcc2df1f424f0bbc6c5403dff3254ecd0a0"
+      "size": 1976,
+      "sha256": "4fb2f16df7b5558b06a39955eec89b7a990b5c902cb856267d560ab2cfbee009"
     },
     {
       "path": "07_EVALS_AND_SCENARIOS.md",
@@ -43,8 +43,8 @@
     },
     {
       "path": "08_DEMO_UX.md",
-      "size": 2005,
-      "sha256": "4c2c0939236b2ef9d5ed53f60a66621e2887ec2104539b13a4719c5a9e91eeb0"
+      "size": 2008,
+      "sha256": "8f04da012ea64fa324e677a79df15fc180b32aa11ab94e34bfe3c2d1f66234fe"
     },
     {
       "path": "09_TARGET_REPOSITORY_STRUCTURE.md",
@@ -53,8 +53,8 @@
     },
     {
       "path": "10_ENGINEERING_BACKLOG.md",
-      "size": 4910,
-      "sha256": "d81e394860a2a249291bfa3e021d4ae6c44d0cf0ce5ed553bdd925089b34cbbd"
+      "size": 4933,
+      "sha256": "f49433b3a8c85cb61a3cf3431fae40d9ad445d53b6b5807d30aab657c9cd7847"
     },
     {
       "path": "11_ACCEPTANCE_GATES.md",
@@ -63,13 +63,13 @@
     },
     {
       "path": "12_RESEARCH_AND_DESIGN_DECISIONS.md",
-      "size": 5376,
-      "sha256": "2d6225469deb7f4982066565cbd1cc143d03d00d6e7a482924489be75995eb6c"
+      "size": 5408,
+      "sha256": "4992fec090760ec3b160c46a022102bb5e6ed3957860d0756978885afad35ea7"
     },
     {
       "path": "13_SOURCE_INDEX.md",
-      "size": 7175,
-      "sha256": "9901c4633d5a9a73b4ec028441d0338533d4e3f0c4bfb9289196487b8df4d9a6"
+      "size": 6523,
+      "sha256": "ea38d744b09a569e4780597dc761e0eb7804cf041719659239f5da9e0bdb1b7a"
     },
     {
       "path": "14_ORCHESTRATOR_HANDOFF.md",

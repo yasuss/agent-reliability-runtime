@@ -114,7 +114,7 @@ Acceptance:
 
 ## B110 — Static evidence demo
 
-**Result:** Vite React recruiter UI renders accepted replay artifacts.
+**Result:** Static Evidence Demo viewer renders accepted replay artifacts.
 
 Acceptance:
 - five mandatory curated replays are inspectable;
@@ -123,7 +123,7 @@ Acceptance:
 - no secret or backend dependency is present;
 - production Vite build succeeds.
 
-## B120 — Staff-level documentation
+## B120 — Project Documentation & Operational Guidance
 
 **Result:** repo explains tradeoffs and evidence without overclaiming.
 

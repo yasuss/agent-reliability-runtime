@@ -43,7 +43,7 @@ Low-cardinality attributes should make these questions answerable:
 
 ## Audit vs telemetry
 
-OTel is operational telemetry. The project-owned `audit_events` stream is the durable domain audit trail used to build recruiter replays and deterministic eval assertions.
+OTel is operational telemetry. The project-owned `audit_events` stream is the durable domain audit trail used to build static evidence replays and deterministic eval assertions.
 
 A trace export must correlate to audit events through run/trace/span IDs but neither layer substitutes for the other.
 

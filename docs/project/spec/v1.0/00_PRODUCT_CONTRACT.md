@@ -12,7 +12,7 @@ Build a local-first, provider-agnostic reference implementation showing how a to
 
 ## Primary audience
 
-Technical hiring managers and senior engineers evaluating Staff / Senior Staff / Principal / Founding AI engineering capability.
+Technical and engineering reviewers evaluating reliability architecture, safety, durability, observability and inspectable evidence.
 
 ## What the finished repository must demonstrate
 
@@ -30,8 +30,8 @@ The repository must provide observable evidence of these competencies, rather th
 10. OpenTelemetry instrumentation for model, retrieval, policy, approval, tool and recovery operations.
 11. A first-class evaluation harness covering outputs, trajectories and environment state.
 12. Security/adversarial scenarios including prompt injection, malicious tool output and memory poisoning.
-13. A static recruiter-facing Vercel demo that replays evidence from real accepted local runs without pretending to execute a live LLM.
-14. Reproducible documentation and repository-level engineering discipline appropriate to Staff-level work.
+13. A static technical evidence viewer that replays evidence from real accepted local runs without pretending to execute a live LLM.
+14. Reproducible documentation and repository-level engineering discipline for production reliability work.
 
 ## Canonical reference flow
 

@@ -1,12 +1,12 @@
 # 12 — Research and Design Decisions
 
-Research was used to decide architecture, not to maximize source count. English, German, native Chinese and native Japanese lanes were checked because they contain relevant current agent-engineering practice and target-market signals.
+Research was used to decide architecture, not to maximize source count. English, German, native Chinese and native Japanese lanes were checked because they contain relevant current agent-engineering practice and production reliability lessons.
 
 ## D01 — Build a reliability runtime, not another framework
 
 **Decision:** use LangGraph for orchestration and spend project complexity on reliability boundaries.
 
-**Reason:** current high-value agent platform roles emphasize context, orchestration, policy, observability, evaluation and reliability. Native Chinese and Japanese material independently emphasizes trajectory evaluation, recovery, constraints and operational harnesses.
+**Reason:** current agent platform practice emphasizes context, orchestration, policy, observability, evaluation and reliability. Native Chinese and Japanese material independently emphasizes trajectory evaluation, recovery, constraints and operational harnesses.
 
 ## D02 — Single agent, not multi-agent
 
@@ -18,7 +18,7 @@ Research was used to decide architecture, not to maximize source count. English,
 
 **Decision:** Python 3.12 + FastAPI/Pydantic.
 
-**Reason:** strengthens a material portfolio gap while matching current AI platform roles. It also aligns with LangGraph and MCP Python ecosystems.
+**Reason:** covers a material systems-engineering concern while matching the target architecture. It also aligns with LangGraph and MCP Python ecosystems.
 
 ## D04 — LangGraph durable execution + Postgres checkpointer
 
@@ -36,7 +36,7 @@ Research was used to decide architecture, not to maximize source count. English,
 
 **Decision:** official SDK; canonical demo uses stdio.
 
-**Reason:** current MCP 2026-07-28 evolves HTTP transport and authorization substantially, but the portfolio goal is tool contract/governance, not remote MCP hosting. Stdio is the smallest faithful integration. Tool annotations are treated only as hints.
+**Reason:** current MCP 2026-07-28 evolves HTTP transport and authorization substantially, but the project goal is tool contract/governance, not remote MCP hosting. Stdio is the smallest faithful integration. Tool annotations are treated only as hints.
 
 ## D07 — Deterministic policy outside the model
 
@@ -60,7 +60,7 @@ Research was used to decide architecture, not to maximize source count. English,
 
 **Decision:** Vercel is a static evidence browser using real recorded accepted runs.
 
-**Reason:** live public chat would add cost, hosting, abuse/security and nondeterminism while distracting from the portfolio thesis. Vite supports straightforward static deployment to Vercel.
+**Reason:** live public chat would add cost, hosting, abuse/security and nondeterminism while distracting from a deterministic, inspectable evidence surface. Vite supports straightforward static deployment to Vercel.
 
 ## D11 — Qwen3:4b local default
 
@@ -80,13 +80,13 @@ Research was used to decide architecture, not to maximize source count. English,
 
 **Evidence:** B100R9 produced the same S02 contradiction in seeds 101 and 303 (the model selected the real `add_incident_note` side effect) and a missing post-restart status witness in seed 202. The fictional runbook wording was therefore ambiguous and is superseded by the clarified body above. This is an eval/domain-contract correction; B50 policy, approval, idempotency, runtime graph topology, scenario bytes and B90 contracts remain unchanged.
 
-## D13 — Hardware-dependent vLLM validation
+## D14 — Hardware-dependent vLLM validation
 
 **Decision:** vLLM live execution is optional hardware validation; contract compatibility is mandatory.
 
 **Reason:** local vLLM normally implies a suitable acceleration environment. Pretending a non-executed GPU lane passed would weaken the project's evidence quality.
 
-## D14 — Cross-platform by portable primitives
+## D15 — Cross-platform by portable primitives
 
 **Decision:** avoid Make/shell-only orchestration; use Python scripts, uv, npm and Docker Compose.
 

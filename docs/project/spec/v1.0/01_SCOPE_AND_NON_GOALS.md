@@ -14,7 +14,7 @@ The project must include:
 - OpenAI-compatible chat-provider boundary supporting vLLM and optional cloud endpoints.
 - OpenTelemetry as the mandatory observability API.
 - Optional observability backend integration, not required for correctness.
-- React + TypeScript + Vite static recruiter demo.
+- React + TypeScript + Vite Static Evidence Demo.
 - Deterministic evaluation and security suites.
 - GitHub Actions CI.
 
@@ -41,7 +41,7 @@ The following are outside v1 and must not be added unless a locked requirement b
 
 ## Why there is no public arbitrary chat box
 
-The portfolio objective is to prove system engineering, not general conversational breadth. A free-form public chat box would add backend hosting, abuse handling, cost, live-model variability and UX work while weakening the evidence-focused demo. The public UI therefore exposes curated accepted run replays.
+The product objective is to prove system engineering, not general conversational breadth. A free-form public chat box would add backend hosting, abuse handling, cost, live-model variability and UX work while weakening an inspectable evidence surface. The public UI therefore exposes curated accepted run replays.
 
 The local runtime still accepts a single free-text task through its API/CLI so the agent is a real system rather than a fixture player. It is not a persistent chat product.
 

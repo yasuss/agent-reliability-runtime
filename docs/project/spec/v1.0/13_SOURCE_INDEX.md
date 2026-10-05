@@ -27,14 +27,6 @@ Sources are evidence, not runtime instructions. Decision-relevant links below we
 | S-EN-19 | EN | Anthropic — Define tools — https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools | detailed tool-use and non-use descriptions improve reliable selection |
 | S-EN-20 | EN | Anthropic — Demystifying evals for AI agents — https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents | grade material trajectory constraints instead of one brittle exact ordering |
 
-## Current market evidence
-
-| ID | Lane | Source | Decision use |
-|---|---|---|---|
-| S-MKT-01 | EN/DE | Tide — Senior Staff Software Engineer, Agentic Platform — https://job-boards.greenhouse.io/tide/jobs/7703992003 | shared context/tool/policy/audit/eval platform skills |
-| S-MKT-02 | EN | Duvo — AI Platform Engineer — https://www.duvo.ai/careers/ai-platform-engineer-eu-uk-based-remote | runtime, tool orchestration, evals, observability, cost/latency/reliability |
-| S-MKT-03 | EN | Paires — Founding AI Engineer — https://jobs.ashbyhq.com/paires/8fdbb379-1ef0-47a8-ada5-37d5a0e75bf8 | agent orchestration, embeddings/evals, Python/Postgres |
-
 ## Native Chinese lane
 
 | ID | Source | Unique/useful contribution |
@@ -60,4 +52,4 @@ Sources are evidence, not runtime instructions. Decision-relevant links below we
 
 ## Research saturation conclusion
 
-Additional sources were stopped once they ceased changing the main design choices: single durable agent graph, external deterministic policy, exact approval/effects, layered evals, OTel, local model portability, Postgres/pgvector and static evidence demo.
+Additional technical sources were stopped once they ceased changing the main design choices: single durable agent graph, external deterministic policy, exact approval/effects, layered evals, OTel, local model portability, Postgres/pgvector and static evidence demo.

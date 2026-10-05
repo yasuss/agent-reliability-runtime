@@ -1,4 +1,4 @@
-# 08 — Recruiter Demo UX
+# 08 — Static Evidence Demo
 
 ## Objective
 
