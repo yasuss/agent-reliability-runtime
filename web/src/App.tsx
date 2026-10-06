@@ -7,7 +7,7 @@ type Entry = { slug: string; scenario_id: string; replay_sha256: string; receipt
 type Manifest = { accepted_source_git_sha: string; entries: Entry[] };
 
 const repository = 'https://github.com/yasuss/agent-reliability-runtime';
-const DOCS_SOURCE_SHA = '5df10a3867b81b42bfd4a7453ddcee2646f02699';
+const DOCS_SOURCE_SHA = '520e7abd7f0ce332e1f6907a0cfc472f9737519e';
 const trustLabels: Record<string, string> = {
   request: 'External request',
   'retrieval.completed': 'External / untrusted data',

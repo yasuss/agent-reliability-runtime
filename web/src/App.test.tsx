@@ -13,9 +13,9 @@ test('Static Evidence Demo is recorded-only and has no prompt input', () => {
 
 test('Landing binds technical documentation links to the accepted source SHA', () => {
   const html = renderToStaticMarkup(<Landing manifest={{ accepted_source_git_sha: '83514ebad336dbd6faf1b790c597ec8037be0874', entries: [] }} />);
-  expect(html).toContain('https://github.com/yasuss/agent-reliability-runtime/blob/5df10a3867b81b42bfd4a7453ddcee2646f02699/docs/project/ARCHITECTURE.md');
-  expect(html).toContain('https://github.com/yasuss/agent-reliability-runtime/blob/5df10a3867b81b42bfd4a7453ddcee2646f02699/docs/project/spec/v1.0/05_SECURITY_AND_TRUST.md');
-  expect(html).toContain('https://github.com/yasuss/agent-reliability-runtime/blob/5df10a3867b81b42bfd4a7453ddcee2646f02699/docs/project/EVALUATION_HARNESS.md');
+  expect(html).toContain('https://github.com/yasuss/agent-reliability-runtime/blob/520e7abd7f0ce332e1f6907a0cfc472f9737519e/docs/project/ARCHITECTURE.md');
+  expect(html).toContain('https://github.com/yasuss/agent-reliability-runtime/blob/520e7abd7f0ce332e1f6907a0cfc472f9737519e/docs/project/spec/v1.0/05_SECURITY_AND_TRUST.md');
+  expect(html).toContain('https://github.com/yasuss/agent-reliability-runtime/blob/520e7abd7f0ce332e1f6907a0cfc472f9737519e/docs/project/EVALUATION_HARNESS.md');
   expect(html).not.toContain('/blob/main/');
   expect(html).toContain('Backend dependency');
 });
