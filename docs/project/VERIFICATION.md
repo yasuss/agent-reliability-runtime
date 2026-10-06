@@ -1,47 +1,95 @@
 # Verification
 
-Verification source: `spec/v1.0/07_EVALS_AND_SCENARIOS.md` and `11_ACCEPTANCE_GATES.md`.
+Verification is layered from cheap structural checks to disposable database and
+provider evidence. The [PROOF_INDEX](PROOF_INDEX.json) binds public capability
+claims to tracked proof paths.
 
-B10's bounded commands, after locked install and migration, are:
+## Static/unit scope
 
 ```text
-uv run pytest tests/unit -k "contract or digest or transition"
-uv run pytest tests/integration -k "schema or effect or audit or reset or migration"
-uv run python scripts/verify.py --scope all
-uv run pytest
+uv run python scripts/verify_docs.py
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy src mcp_server tests
+uv run pytest tests/unit
+npm --prefix web ci
+npm --prefix web run lint
+npm --prefix web run typecheck
+npm --prefix web test -- --run
+npm --prefix web run build
+uv run python scripts/secret_scan.py
 ```
 
-Set `ARR_TEST_DATABASE_URL` to an explicitly disposable PostgreSQL 18 database.
-Integration tests create/drop isolated random test schemas there, apply real
-Alembic migrations, and retain pgvector 0.8.6. They prove empty DB table creation,
-B00/B10 round-trip, metadata agreement, finite CHECK failures, effect/audit
-uniqueness, exact knowledge-version FKs and immutable lifecycle operations.
-Reset proof seeds all seven non-demo tables, dirties all four demo tables and
-checks two identical resets with every non-demo row unchanged. Intentional DB
-corruption must fail the same reset oracle. Unit tests calibrate contracts,
-digest drift, fixture drift and workflow trigger/check preservation with good,
-bad and valid alternate controls. Existing B00 checks remain enabled.
+`uv run python scripts/verify.py --scope static-unit` runs the same ordered gate
+set. The documentation verifier checks canonical files, safe relative links,
+proof paths, claim IDs, support vocabulary, quickstart order, naming neutrality
+and known stale wording. Its calibration tests keep intentionally broken controls
+failing closed.
 
-CI runs static/unit on Windows, macOS and Ubuntu, and live DB tests on Ubuntu,
-for `codex/**` pushes and PRs targeting `main` or `codex/**`. Exact head evidence
-requires both push and stacked-PR runs. This is B10 proof; full product gates
-G3+ (retrieval, MCP, authorization, restart, evals, replay) are not claimed.
+## Database scope
 
-B20 deterministic tests: `uv run pytest tests/unit/test_providers.py`. Mock HTTP
-fixtures prove the configurable OpenAI/vLLM request shape and auth header, normal
-text, multiple tool calls, JSON-string/object argument alternatives, optional
-usage, malformed wire shapes, finite embedding batches, explicit transport/HTTP
-errors, no hidden retries/redirects and credential-free diagnostics/repr. Bad
-NaN/Infinity/null fixtures use raw response bytes so the actual parser sees them.
+Set `ARR_TEST_DATABASE_URL` to a disposable PostgreSQL 18/pgvector 0.8.6 database.
+The database scope validates Compose configuration, migrations, checkpoint setup,
+retrieval, memory, policy/effects, observability, run control and mandatory
+scenario evidence:
 
-Live acceptance is explicit and excluded from ordinary tests/CI:
-`uv run python scripts/probe_providers.py`. It requires local Ollama at
-`http://127.0.0.1:11434` (optional `--base-url` must remain loopback), records version,
-model artifact digests and exact checkout SHA, and calls both project adapters.
-It requires nonempty usable chat text from `qwen3:4b`, then two equal-size finite
-vectors from `qwen3-embedding:0.6b`, reporting the observed dimension and vector
-hash without writing vector DB columns. The fixed prompts contain fictional data.
-Run after all behavior-affecting changes on the exact final candidate. No cloud
-fallback or live vLLM claim is made; vLLM compatibility is a deterministic common
-wire-contract proof. Repeat full bootstrap/verification in a fresh checkout and
-new disposable DB volume before the implementation push.
+```text
+docker compose config --quiet
+docker compose up -d db --wait --wait-timeout 90
+uv run alembic upgrade head
+uv run python scripts/setup_checkpoints.py
+uv run pytest tests/integration
+```
+
+`uv run python scripts/verify.py --scope db` runs these checks. Stop the
+disposable service with `docker compose down`; use `docker compose down --volumes`
+only when the disposable database itself must be deleted.
+
+## Accepted B100 truth
+
+The final B100 R10 population is a fixed 15-member set: five locked cases and
+seeds 101/202/303. All 15 executions complete before aggregate scoring, calibrated
+L4 review is applied afterward, and the local campaign provider timeout is 1800
+seconds. The accepted context floor is 32768. The final G8 gate requires 15/15
+final verdicts, at least 12 successes overall, at least 2/3 per case and zero
+hard, unauthorized or duplicate failures.
+
+S02 accepts prerequisite incident/status reads in either order, requires the exact
+approved restart, and requires a matching post-restart status read. A durable
+verification obligation can block completion and request bounded correction; the
+verification read is never executed automatically by the runtime. The fresh
+process proof demonstrates one committed effect and one receipt without a
+duplicate restart.
+
+Historical failed iterations are evidence only and are not part of the accepted
+population or operational procedure.
+
+## Provider and live evidence
+
+The optional local probe is:
+
+```text
+uv run python scripts/probe_providers.py
+```
+
+It requires loopback Ollama and the exact `qwen3:4b` and
+`qwen3-embedding:0.6b` artifacts. It records version, model digests, dimension,
+and checkout SHA; it never downloads models or falls back to a cloud endpoint.
+The accepted local model evidence is Windows 10 Pro. Other local OS/model
+combinations retain their matrix status rather than inheriting that result.
+
+## Replay and browser evidence
+
+The Static Evidence Demo replay verifier checks five immutable replay/receipt
+pairs, schema/gates, source binding, event sequence, redaction and S08 recovery.
+The committed calibration is `tests/unit/test_b110_replay_integrity.py`.
+The static Chromium critical path is `web/e2e/static-evidence.spec.ts` and uses
+the stable Playwright 1.63.0 lockfile.
+
+## CI and exact-head binding
+
+`scripts/verify.py --scope all` is the CI entry point. Required exact-head CI
+evidence is static-unit on Ubuntu, Windows and macOS, PostgreSQL integration on
+Ubuntu and web-e2e on Ubuntu. A queued or cancelled GitHub-hosted job is an
+infrastructure limitation until it executes; it must not be represented as a
+test assertion failure. Product changes are never made to mask a runner issue.

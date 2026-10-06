@@ -18,6 +18,7 @@ def main() -> int:
             ["uv", "run", "ruff", "format", "--check", "."],
             ["uv", "run", "ruff", "check", "."],
             ["uv", "run", "mypy", "src", "mcp_server", "tests"],
+            ["uv", "run", "python", "scripts/verify_docs.py"],
             ["uv", "run", "pytest", "tests/unit"],
             ["npm", "--prefix", "web", "ci"],
             ["npm", "--prefix", "web", "run", "lint"],

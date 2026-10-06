@@ -1,100 +1,102 @@
 # Agent Reliability Runtime
 
-Developer evaluation calibration: `python -m agent_reliability_runtime.cli eval --calibrate`.
-See [B90 evaluator contracts and calibration](docs/project/B90_EVAL_HARNESS.md).
+## What it is
 
-B80 safe OTel spans, durable correlated audit and replay exporter mechanics:
-[observability and audit](docs/project/B80_OBSERVABILITY_AUDIT.md).
+Agent Reliability Runtime is a local-first reference implementation for one
+durable, tool-using LangGraph agent. It combines fictional OpsDesk state,
+retrieval, governed memory, trusted policy, exact approval, idempotent effects,
+postcondition verification, OTel/audit evidence and deterministic evaluation.
 
-B70 scoped memory, local list/delete API and checkpoint deletion proof:
-[governed memory](docs/project/B70_GOVERNED_MEMORY.md).
+## Reliability properties
 
-A local-first reliability reference implementation. **B20 provider boundary:**
-strict domain records, 11 project-owned PostgreSQL tables, fictional demo reset,
-generic OpenAI-compatible chat and native Ollama embeddings exist.
-Policy/tool execution, retrieval, the agent runtime,
-memory API and accepted replay gallery remain later tasks. The locked design is
-in [docs/project](docs/project/README.md).
+The runtime treats model, retrieval, memory and MCP content as untrusted data.
+Side effects require schema validation, trusted policy and an exact approval.
+PostgreSQL-backed checkpoints and effect receipts cover process restart and
+duplicate delivery. The accepted capability map is tied to the machine-readable
+[PROOF_INDEX](docs/project/PROOF_INDEX.json).
 
-## Development
+| Capability | Proof ID |
+| --- | --- |
+| Provider boundary | `provider-boundary` |
+| Hybrid retrieval and citations | `hybrid-retrieval-citations` |
+| Five-tool MCP boundary | `mcp-five-tools` |
+| Deterministic policy | `deterministic-policy` |
+| Exact approval | `exact-approval` |
+| Idempotent side effects | `idempotent-side-effects` |
+| Durable restart | `durable-restart` |
+| Governed memory | `governed-memory` |
+| OTel and audit | `otel-audit` |
+| Evaluation harness | `eval-harness` |
+| Adversarial scenarios | `adversarial-scenarios` |
+| Static Evidence Demo | `static-evidence-demo` |
 
-Prerequisites: Git, uv 0.12.23, Python 3.12 managed by uv, Node 24 with npm,
-and Docker Desktop/Engine with Compose and Linux containers.
+## Architecture at a glance
+
+The current flow is memory scope -> retrieval -> model -> typed actions ->
+trusted policy -> approval -> idempotent effect -> postcondition verification ->
+result -> audit/OTel/evaluation. See the [architecture](docs/project/ARCHITECTURE.md)
+for ownership and data-flow details.
+
+## Quickstart
+
+Prerequisites: Git, uv 0.12.23, Python 3.12, Node.js 24 with npm, and Docker
+Desktop/Engine with Compose and Linux containers.
 
 ```text
 python scripts/bootstrap.py
-uv run python scripts/verify.py --scope static-unit
-uv run alembic upgrade head
 uv run python scripts/reset_demo.py --confirm-development-reset
-uv run python scripts/probe_providers.py
-uv run uvicorn agent_reliability_runtime.api:app --host 127.0.0.1
-npm --prefix web run dev
+uv run python scripts/verify.py --scope all
 ```
 
-The bootstrap script installs both committed lockfiles and explicitly starts and
-migrates the development database. Reset is a separate explicit destructive step:
-it restores the locked fictional services/incidents and empties demo notes and
-notifications. It touches only the four `demo_*` tables and preserves all runtime,
-approval, effect, audit, memory and knowledge evidence. Never target production.
-`/healthz` reports process liveness only.
-The web build is static and does not call the backend.
+These commands use a disposable local PostgreSQL/pgvector database and do not
+require Ollama. Bootstrap installs locked dependencies, starts Compose and runs
+migrations/checkpoint setup. Reset restores only fictional `demo_*` state. The
+third command runs the documentation, static, frontend and database gates.
 
-Compose binds PostgreSQL to **127.0.0.1** and uses a public fictional development
-password by default. This configuration is exclusively for local development;
-never deploy it. `.env.example` lists optional overrides. Compose reads `.env`;
-Python reads environment variables, so export the same override values to both.
-No real token or credential is needed. Set `ARR_DB_PORT` if 5432 is occupied.
+## Optional live local model path
 
-For DB verification, set `ARR_TEST_DATABASE_URL` explicitly to your disposable
-development database (default:
-`postgresql+psycopg://arr:local-development-fixture@127.0.0.1:5432/arr`), then run:
+The deterministic quickstart is independent of model availability. Live local
+inference uses Ollama with exactly `qwen3:4b` for chat and
+`qwen3-embedding:0.6b` for embeddings:
 
 ```text
-uv run python scripts/verify.py --scope db
-uv run pytest
+ollama pull qwen3:4b
+ollama pull qwen3-embedding:0.6b
+uv run python scripts/probe_providers.py
 ```
 
-For a clean-state migration rehearsal, use a unique Compose project name via
-`COMPOSE_PROJECT_NAME` and a free `ARR_DB_PORT`. Bootstrap creates a fresh named
-volume. `docker compose down --volumes` **deletes that project's development DB**;
-use only with a disposable project. Downgrading B00 preserves the pgvector
-extension because it may have existed before this revision. Explicit B10 downgrade
-removes its 11 project tables and their data; rehearse it only in a disposable DB.
+The probe never downloads models automatically and accepts only a loopback Ollama
+server. Ingestion, runs, approvals and live evaluation are documented in
+[Operations](docs/project/OPERATIONS.md).
 
-Target support is Windows 11, macOS and Linux. Local execution so far is on
-Windows 10 Pro; that does not prove Windows 11. CI separately verifies its actual
-Windows/macOS/Ubuntu runners; full DB integration runs on Ubuntu. No full agent or
-cross-platform model compatibility is claimed. The explicit provider probe checks
-local `qwen3:4b` chat and `qwen3-embedding:0.6b` embeddings. It requires a running
-Ollama server with those models; use `ollama pull qwen3:4b` and
-`ollama pull qwen3-embedding:0.6b` to provision them. It is separate from bootstrap
-and CI and never downloads models automatically. Live acceptance so far is on
-Windows 10 Pro only; other local OS/model combinations are EXPECTED, not TESTED.
+## Verification
 
-TLS-intercepting environments may need `UV_SYSTEM_CERTS=true` and
-`NODE_OPTIONS=--use-system-ca`. Certificate verification stays enabled.
-On Windows ensure hardware virtualization, WSL2 and required Windows features
-are enabled, restart if requested, and start Docker Desktop before bootstrap.
+The fail-fast verifier runs Ruff, mypy, unit tests, web checks, the documentation
+truth gate and the deterministic secret scan. Database verification uses an
+explicit disposable `ARR_TEST_DATABASE_URL`; CI runs PostgreSQL integration on
+Ubuntu and static/unit gates on Ubuntu, Windows and macOS. See
+[Verification](docs/project/VERIFICATION.md) for exact scopes and evidence.
 
-## Verification and scope
+## Static Evidence Demo
 
-`scripts/verify.py` runs fail-fast checks shared with CI. Secret scanning covers
-known token/private-key patterns and a forbidden-marker control in UTF-8 source;
-it is deterministic but not an exhaustive credential detector. Its calibration
-tests include positive, negative and valid alternate inputs. Command-runner tests
-prove a failure stops later checks.
+The web app is a static recorded-replay viewer. It has no backend, live inference
+or arbitrary prompt input. Five accepted replay/receipt pairs are checked by
+`scripts/verify_b110_replays.py`; the critical Chromium path is covered by
+`web/e2e/static-evidence.spec.ts`.
 
-No license/publication choice is made. No merge or release is implied.
+## Support and limitations
 
-Persistence details and bounded verification are documented in
-[Development](docs/project/DEVELOPMENT.md) and [Verification](docs/project/VERIFICATION.md).
+See the [support matrix](docs/project/SUPPORT_MATRIX.md) for TESTED versus
+EXPECTED environments and [limitations](docs/project/LIMITATIONS.md) for claim
+boundaries. Development Compose credentials are fictional and must not be
+deployed. No license or publication decision is made.
 
-B30 ingestion, hybrid retrieval, citation validation and the separate exact-head
-local embedding proof are documented in [Retrieval](docs/project/B30_RETRIEVAL.md).
+## Documentation map
 
-B40's five fictional MCP tools, field ownership and infrastructure-only stdio
-proof are documented in [OpsDesk](docs/project/B40_OPSDESK.md).
-
-B50 trusted execution and proof: [policy, approvals and effects](docs/project/B50_POLICY_EFFECTS.md).
-
-B60 durable graph and restart proof: [runtime documentation](docs/project/B60_DURABLE_RUNTIME.md).
+- [Architecture](docs/project/ARCHITECTURE.md)
+- [Operations](docs/project/OPERATIONS.md)
+- [Verification](docs/project/VERIFICATION.md)
+- [Support Matrix](docs/project/SUPPORT_MATRIX.md)
+- [Limitations](docs/project/LIMITATIONS.md)
+- [Evidence & Proof](docs/project/EVIDENCE_AND_PROOF.md)
+- [Project truth map](docs/project/README.md)
