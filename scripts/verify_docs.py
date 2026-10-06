@@ -127,7 +127,7 @@ def _legacy_surface_errors(root: Path) -> list[str]:
         for line_number, line in enumerate(text.splitlines(), 1):
             if LEGACY_TOKEN_RE.search(line):
                 errors.append(
-                    f"legacy Static Evidence UI identifier: "`n                    f"{path.relative_to(root)}:{line_number}"
+                    f"legacy Static Evidence UI identifier: "\n                    f"{path.relative_to(root)}:{line_number}"
                 )
     return errors
 
