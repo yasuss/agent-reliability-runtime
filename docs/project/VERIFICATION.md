@@ -8,6 +8,7 @@ claims to tracked proof paths.
 
 ```text
 uv run python scripts/verify_docs.py
+uv run python docs/project/spec/v1.0/scripts/validate_spec.py
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy src mcp_server tests
@@ -21,10 +22,19 @@ uv run python scripts/secret_scan.py
 ```
 
 `uv run python scripts/verify.py --scope static-unit` runs the same ordered gate
-set. The documentation verifier checks canonical files, safe relative links,
-proof paths, claim IDs, support vocabulary, quickstart order, naming neutrality
-and known stale wording. Its calibration tests keep intentionally broken controls
-failing closed.
+set. The documentation verifier checks relative links in every current public
+`docs/project/**/*.md`, required component files, proof paths, claim IDs, support
+vocabulary, quickstart order, naming neutrality and known stale wording.
+The spec validator binds the complete payload manifest to committed HEAD Git
+blobs and validates bidirectional ARR/VC traceability. Calibration covers broken
+links, stale descriptions, missing proofs and CRLF/worktree manifest corruption.
+
+To update the spec manifest, format and stage every intended spec payload first,
+then run `python docs/project/spec/v1.0/scripts/update_manifest.py`. Stage the two
+manifest files and run `python docs/project/spec/v1.0/scripts/validate_spec.py
+--source index` before commit. Generation reads staged Git blobs, never worktree
+bytes. Default validation reads HEAD blobs, so local newline conversion cannot
+change the accepted payload. A dirty worktree is not an alternate CI authority.
 
 ## Database scope
 

@@ -1,8 +1,8 @@
 # Governed Memory
 
-observability and audit now implements atomic memory create/delete audit through an internal scope
-anchor; see [observability and audit](observability and audit_OBSERVABILITY_AUDIT.md). governed memory scope, trust and ID-only
-checkpoint/delete-resume invariants remain unchanged.
+Memory create/delete and its audit event commit atomically through an internal
+scope anchor; see [Observability and Audit](OBSERVABILITY_AND_AUDIT.md).
+The anchor stores no memory content and never runs the agent graph.
 
 `MemoryStore` reuses the accepted `memories` table and strict Memory snapshots.
 Every list/get/resolve/delete constrains both workspace_id and user_id. Ordering
@@ -25,30 +25,33 @@ is an internal trusted service boundary; automatic model writes are outside gove
 ## Local HTTP surface
 
 `create_app(engine=None)` retains exported `app` and `/healthz`. An injected Engine
-is caller-owned; the default dependency creates/disposes its Engine only for memory
-requests, so health remains independent of the database. Both routes require
+is caller-owned; the default request dependency creates/disposes its Engine when
+database-backed routes need it, so liveness remains independent of the database.
+Both memory routes require
 strict nonempty workspace_id and user_id query parameters:
 
 - GET `/api/v1/memory` returns validated ordered snapshots for that exact pair.
 - DELETE `/api/v1/memory/{memory_id}` returns 204 for physical deletion; missing or
   foreign IDs both return 404 with identical response text.
 
-No POST route, enterprise identity, authentication or permission claim is added.
+There is no public memory-creation POST route or enterprise identity/authentication
+claim. The run/approval control routes are described in
+[Reliability Acceptance](RELIABILITY_ACCEPTANCE.md).
 
 ## Runtime and deletion
 
-The one durable agent runtime graph topology is preserved. load_memory reads the durable run's scope
+In the durable graph, `load_memory` reads the durable run's scope
 and checkpoints only ordered `memory_ids`. Before every provider decision, current
 rows for those IDs are resolved against the current durable run scope. Deleted and
 foreign IDs silently drop. A transient user/data ChatMessage appears after the
 project system instruction, before task/conversation messages; its JSON snapshots
 preserve kind/provenance/trust and explicitly cannot override policy or approval.
 It is never appended to durable state.messages. No fake memory message is added
-when no rows resolve. Existing empty durable agent runtime placeholder checkpoints resolve no IDs.
+when no rows resolve. A checkpoint with no memory IDs resolves no memory rows.
 
-Memory fields do not enter evaluate/propose/Gateway. trusted execution risk classification,
+Memory fields do not enter evaluate/propose/Gateway. Trusted risk classification,
 approval bindings, runtime-owned keys and receipt reconciliation remain intact.
-Semantic budgets and durable agent runtime real process-kill recovery retain their original gates.
+Semantic budgets and real process-kill recovery retain their original gates.
 
 `scripts.probe_memory` exercises real PostgreSQL, official strict PostgresSaver,
 real OpsDesk stdio, harmless personalization, UNTRUSTED observation poisoning and
@@ -76,12 +79,11 @@ or the pinned API's correct interrupt-ID map. LangGraph 1.2.12 treats an empty d
 as an empty resume map; it does not release the interrupt. Resume values remain
 non-authorizing. No durable agent runtime framework/service upgrade is required.
 
-## Deferred obligations
+## Scope limits
 
-observability and audit owns complete audit/OTel deletion observability without retaining deleted
-content in normal runtime payloads. No partial audit schema is introduced here.
-Vector/semantic memory, TTL/scoring, autonomous writes, full eval thresholds and
-enterprise auth remain outside governed memory. Dependency locks and migrations are unchanged.
+Audit and OTel deletion evidence retain identifiers and bounded metadata without
+deleted content. Vector/semantic memory, TTL/scoring, autonomous writes and
+enterprise authentication remain outside the implemented memory service.
 
 The security boundary follows the locked project contract and
 [OWASP agent memory/context guidance](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html#3-memory--context-security).

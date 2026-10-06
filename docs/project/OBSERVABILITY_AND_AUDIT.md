@@ -1,8 +1,8 @@
 # Observability, Audit, and Replay
 
-evaluation harness intentionally strengthens the temporary structural receipt rule below to the
-exact eval-trial-v1 gate/SHA/scenario/lock profile before scenario export. See
-[evaluation harness harness](evaluation harness_EVAL_HARNESS.md); locked schemas and content-safety rules remain.
+Replay export requires the exact eval-trial-v1 receipt profile, including source
+SHA, scenario-set and lockfile digests. See the
+[Evaluation Harness](EVALUATION_HARNESS.md) for receipt construction and calibration.
 
 Manual OTel API/SDK 1.45.0 instrumentation accepts a standard injected tracer.
 No import sets a global provider or requires an exporter/collector/vendor sink.
@@ -51,7 +51,10 @@ Health and scoped memory endpoints remain. GET /api/v1/runs/{run_id} returns str
 Run or bounded 404. GET /api/v1/runs/{run_id}/events returns strict snapshots sorted
 by sequence, or 404 for unknown run. readyz checks DB, all project tables and four
 framework checkpoint tables, returning ready/200 or bounded 503. It makes no model
-or network-provider call. POST run/approval control endpoints remain later scope.
+or network-provider call. POST `/api/v1/runs` starts a bounded local run and
+POST `/api/v1/runs/{run_id}/approvals/{approval_id}` records an exact persisted
+decision before graph resume. These local control routes are not a public
+demo backend or an enterprise authentication surface.
 
 ## Fail-closed replay export
 
@@ -60,9 +63,11 @@ PATH --source-git-sha SHA --output PATH`.
 
 The narrow validator reads both exact locked schema files at execution and supports
 only their actual keyword subset; it is not a general JSON Schema engine. Receipt
-must be schema-valid, exact source SHA, nonempty gates, all PASS/NOT_APPLICABLE with
-at least one PASS. FAIL/NOT_RUN reject. Canonical receipt digest is SHA-256 of
-sorted-key compact UTF-8 JSON.
+must be schema-valid and match source SHA, locked scenario-set and both lockfile
+digests. Its seven named gates cover L0–L4, HARD_INVARIANTS and TASK_SUCCESS.
+L0/L2/L3/hard/task must PASS; only legitimately inapplicable L1/L4 may be
+NOT_APPLICABLE. Weak arbitrary-PASS receipts, FAIL, NOT_RUN and NOT_REVIEWED reject.
+Canonical receipt digest is SHA-256 of sorted-key compact UTF-8 JSON.
 
 Run must exist, be terminal and have a scenario. Audit must be nonempty and
 contiguous from 1. Export synthesizes sanitized request, ordered safe audit events,
@@ -72,10 +77,11 @@ both validations pass. Manifest binds source run/SHA, receipt digest and replay
 SHA-256. Same inputs produce identical bytes; changing receipt/audit changes the
 appropriate digest. Unsafe final sentinel fixture creates neither artifact.
 
-observability and audit tests use temporary receipt/replay fixtures only. No canonical accepted public
-replays or evaluation harness/reliability acceptance eval claims are committed here. durable agent runtime OS kill/restart and governed memory
-poisoning/delete-after-checkpoint tests remain mandatory under instrumentation.
-Dependency locks, project schema/migrations and all locked spec files are unchanged.
+Exporter tests use temporary profile-valid fixtures and calibrated unsafe
+counterexamples. The [Static Evidence Demo](STATIC_EVIDENCE_DEMO.md) separately
+ships five accepted replay/receipt pairs bound to their immutable runtime source.
+Real OS kill/restart and memory poisoning/delete-after-checkpoint regressions
+remain mandatory under instrumentation.
 
 Primary sources: [manual instrumentation](https://opentelemetry.io/docs/languages/python/instrumentation/)
 and [GenAI attributes](https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/).

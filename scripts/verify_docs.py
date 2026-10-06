@@ -74,6 +74,28 @@ COMPATIBILITY_STUBS = {
     Path("docs/project/spec/v1.0/11_ACCEPTANCE_GATES.md"),
     Path("docs/project/spec/v1.0/14_ORCHESTRATOR_HANDOFF.md"),
 }
+SEMANTIC_COMPONENT_DOCS = (
+    "README",
+    "RETRIEVAL_AND_CITATIONS",
+    "OPSDESK_MCP",
+    "TRUSTED_EXECUTION",
+    "DURABLE_RUNTIME",
+    "GOVERNED_MEMORY",
+    "OBSERVABILITY_AND_AUDIT",
+    "EVALUATION_HARNESS",
+    "RELIABILITY_ACCEPTANCE",
+    "STATIC_EVIDENCE_DEMO",
+)
+MECHANICAL_PATH_RE = re.compile(
+    r"_(?:POLICY_EFFECTS|DURABLE_RUNTIME|GOVERNED_MEMORY|OBSERVABILITY_AUDIT|"
+    r"EVAL_HARNESS|MANDATORY_SCENARIOS|STATIC_EVIDENCE)\.md"
+)
+STALE_CURRENT_RE = re.compile(
+    r"(?i)(?:Multiple model tool calls fail closed|"
+    r"no governed memory (?:or observability )?completion is claimed here|"
+    r"later graph\s+connection|empty\s+`load_memory`\s+placeholder|"
+    r"POST run/approval control endpoints remain later scope)"
+)
 
 
 def _canonical_paths(root: Path) -> list[Path]:
@@ -136,7 +158,7 @@ def _legacy_surface_errors(root: Path) -> list[str]:
 def _project_facing_markdown(root: Path) -> list[Path]:
     paths = [root / "README.md"]
     project = root / "docs" / "project"
-    paths.extend(sorted(project.glob("*.md")))
+    paths.extend(sorted(project.rglob("*.md")))
     return [path for path in paths if path.exists()]
 
 
@@ -259,7 +281,12 @@ def verify_docs(root: Path) -> list[str]:
     if errors:
         return errors
 
-    markdown_paths = [path for path in paths if path.suffix == ".md"]
+    errors.extend(
+        f"missing semantic component document: docs/project/{name}.md"
+        for name in SEMANTIC_COMPONENT_DOCS
+        if not (root / f"docs/project/{name}.md").is_file()
+    )
+    markdown_paths = _project_facing_markdown(root)
     errors.extend(_relative_link_failures(root, markdown_paths))
     errors.extend(_proof_index_errors(root, root / "docs/project/PROOF_INDEX.json"))
     errors.extend(_support_matrix_errors(root / "docs/project/SUPPORT_MATRIX.md"))
@@ -272,8 +299,14 @@ def verify_docs(root: Path) -> list[str]:
             location = f"{path.relative_to(root)}:{line_number}"
             if FORBIDDEN_POSITIONING_RE.search(line):
                 errors.append(f"forbidden project-facing wording: {location}")
-            if STALE_RE.search(line):
+            if STALE_RE.search(line) or STALE_CURRENT_RE.search(line):
                 errors.append(f"stale documentation wording: {location}")
+            if MECHANICAL_PATH_RE.search(line):
+                errors.append(f"mechanical replacement path: {location}")
+        if STALE_CURRENT_RE.search(text):
+            errors.append(
+                f"stale current-component statement: {path.relative_to(root)}"
+            )
         if re.search(
             r"https?://github\.com/yasuss/agent-reliability-runtime/blob/main(?:[/)#\s]|$)",
             text,

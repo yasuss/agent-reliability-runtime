@@ -1,13 +1,11 @@
 # Durable Agent Runtime
 
-The governed memory implementation replaces the original empty memory placeholder with
-ID-only scoped memory resolution; see [governed memory](governed memory_GOVERNED_MEMORY.md). The durable agent runtime
-approval/receipt/process durability boundaries described below remain unchanged.
-
-One production `StateGraph` uses the accepted provider, retrieval and citation integrity retrieval, OpsDesk MCP boundary model
-catalog and trusted execution Gateway. There is no raw MCP execution in the graph. governed memory memory is
-an explicit empty `load_memory` placeholder; no governed memory or observability
-completion is claimed here.
+One production `StateGraph` composes typed providers, hybrid retrieval, the
+OpsDesk model catalog and the trusted execution gateway. Every tool execution
+passes policy and every side effect requires exact approval. `load_memory`
+checkpoints only scoped IDs; the provider request resolves current rows transiently.
+See [Governed Memory](GOVERNED_MEMORY.md) and
+[Observability and Audit](OBSERVABILITY_AND_AUDIT.md) for those boundaries.
 
 ```mermaid
 flowchart LR
@@ -17,15 +15,24 @@ flowchart LR
   policy_gate -->|SIDE_EFFECT| await_approval
   await_approval -->|persisted APPROVED| execute_tool
   await_approval -->|PENDING| await_approval
-  execute_tool --> observe_result --> decide
+  execute_tool --> observe_result
+  observe_result -->|queued read| validate_action
+  observe_result -->|queue empty| decide
   decide -->|answer or budget| finalize
   await_approval -->|rejected or expired| finalize
 ```
 
 Protocol/policy failures also route to FAILED finalization. Every terminal result
 persists explicit status and counters in `runs`; text alone never means success.
-Multiple model tool calls fail closed, with zero dispatch. Observations/evidence
-are primitive untrusted data and cannot change the trusted registry.
+Multiple structured READ_ONLY calls are validated as a bounded queue and execute
+serially through the same action/policy path. A batch containing any SIDE_EFFECT
+is rejected with zero dispatch and a bounded correction. Textual pseudo-tool
+requests can trigger a new model decision but never become executable actions.
+Observations and evidence are primitive untrusted data and cannot change the
+trusted registry. A pending post-restart verification obligation blocks final
+completion until the model emits a genuine structured `get_service_status` for
+the same service and observes the required status. The runtime does not synthesize
+that read. Queue, repair count and obligation survive checkpoint recovery.
 
 ## Checkpoint setup and strict state
 
@@ -50,7 +57,7 @@ checkpoints, checkpoint_blobs and checkpoint_writes are not project Alembic tabl
 no project migration or dependency change is added. On Windows the portable
 `run_async` entry point uses SelectorEventLoop for psycopg async compatibility.
 An embedding provider is passed through context, and retrieval always calls the
-accepted retrieval and citation integrity service; DB integration uses deterministic 1024-dimensional fixtures.
+hybrid retrieval service; DB integration uses deterministic 1024-dimensional fixtures.
 
 ## Runtime surface and approval
 
@@ -64,14 +71,14 @@ the previous checkpoint for continuation; provider protocol/policy violations
 produce bounded FAILED reasons. Terminal continuations preserve terminal state.
 
 `validate_action` checkpoints runtime key/action identity before policy.
-`policy_gate` uses trusted execution deterministic approval `ensure`: SHA-256 of compact JSON
+`policy_gate` uses deterministic approval `ensure`: SHA-256 of compact JSON
 ["approval", action_id], with advisory serialization and exact-payload checks.
 Re-entry/concurrent ensure returns one existing row, preserving lifecycle and
-human timestamps; conflict fails. trusted execution `create` retains its previous explicit new
+human timestamps; conflict fails. Explicit `create` creates a new
 approval behavior. `await_approval` performs interrupt as its first consequential
-operation. The caller uses trusted execution Approvals outside the graph, then resumes the same
+operation. The local approval endpoint persists a decision through Approvals outside the graph, then resumes the same
 thread. The graph reloads the row: PENDING re-interrupts; REJECTED/EXPIRED terminate
-without effects; APPROVED reaches the exact trusted execution gateway checks.
+without effects; APPROVED reaches the exact gateway checks.
 
 ## Counters and recovery
 
@@ -99,7 +106,7 @@ uv run python -m scripts.probe_runtime --output ABSOLUTE_EXTERNAL_EVIDENCE.json
 ```
 
 The proof explicitly sets up checkpoints, seeds fictional state/unrelated
-sentinels and real retrieval and citation integrity evidence, starts the graph until approval interrupt, and
+sentinels and real retrieval evidence, starts the graph until approval interrupt, and
 persists APPROVED outside the graph. Worker A resumes with real OpsDesk stdio;
 after Gateway has committed one effect/receipt and consumed approval, the fault
 hook atomically signals the parent and blocks before execute_tool returns.

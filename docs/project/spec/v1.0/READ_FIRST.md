@@ -18,7 +18,14 @@ Read in this order:
 14. `13_SOURCE_INDEX.md`
 15. `14_ORCHESTRATOR_HANDOFF.md`
 16. `requirements/REQUIREMENTS.json`
+17. `requirements/VERIFICATION_CATALOG.json`
 
 `00_PRODUCT_CONTRACT.md` + `requirements/REQUIREMENTS.json` define what must be built. The backlog is subordinate to them.
 
 The implementation is complete only when the applicable acceptance gates pass on the actual final repository state. A green unit-test suite alone is not completion.
+
+Each ARR requirement names exact VC entries; each entry lists its verification
+methods, requirements and tracked proof paths. The spec validator checks both
+directions. Generate PACKAGE_MANIFEST from the staged Git index after formatting;
+validate the index before commit and committed HEAD afterward. Worktree newline
+conversion is not a manifest input.

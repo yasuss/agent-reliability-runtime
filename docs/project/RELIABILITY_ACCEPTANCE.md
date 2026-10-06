@@ -1,7 +1,7 @@
 # Reliability Acceptance
 
-The exact twelve scenario definitions remain locked files loaded by the evaluation harness
-evaluator. Deterministic execution uses scripted providers and a 1024-dimensional
+The evaluation loader reads exactly twelve locked scenario definitions.
+Deterministic execution uses scripted providers and a 1024-dimensional
 embedding fixture; the accepted live campaign uses the real local provider path.
 All hard security and durability oracles inspect persisted state, actual tool
 dispatch, receipts, audit events and sanitized evidence.
@@ -12,7 +12,7 @@ Expectations are recorded before execution. Effect identity comes from the
 runtime-owned idempotency key before mutation, and evaluation counts actual
 dispatch invocations. S08 kills the owned worker after effect commit and before
 the graph checkpoint, then resumes the same thread in a fresh process; its ledger
-proves one dispatch and one receipt. The independent durable agent runtime notification restart
+proves one dispatch and one receipt. The independent notification kill/restart
 regression remains mandatory.
 
 S02 permits prerequisite incident and service-status reads in either order. It
@@ -53,7 +53,7 @@ The accepted population is fixed at five cases × seeds 101/202/303, for exactly
 15 members. Every population member executes before aggregate scoring. Calibrated
 L4 review runs after execution and does not block starting another population
 member. The local campaign timeout is 1800 seconds, context is 32768, and the
-final live reliability acceptance gate requires 15 final verdicts, at least 12/15 task successes, at least
+acceptance requires 15 final verdicts, at least 12/15 task successes, at least
 2/3 per case, and zero hard, unauthorized or duplicate failures.
 
 The accepted live provider is `qwen3:4b` through the OpenAI-compatible adapter;
@@ -73,3 +73,10 @@ uv run python -m agent_reliability_runtime.cli eval --live-local --phase summary
 
 No generated campaign artifact belongs in tracked source. Historical failed
 iterations are retained separately as evidence only.
+
+The accepted runtime source is `83514ebad336dbd6faf1b790c597ec8037be0874`.
+Its accepted population achieved 15/15 task successes with zero hard,
+unauthorized or duplicate effects. Documentation-only snapshots do not replace
+that source binding or rerun the live population. See
+[Evidence & Proof](EVIDENCE_AND_PROOF.md) for current regression paths and
+[Static Evidence Demo](STATIC_EVIDENCE_DEMO.md) for the five inspected replays.

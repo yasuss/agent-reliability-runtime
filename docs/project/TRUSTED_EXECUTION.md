@@ -1,7 +1,8 @@
 # Trusted Execution, Approval, and Effects
 
-`policy.Gateway.execute` is the production tool execution surface for later graph
-connection. trusted execution adds no graph or API approval UI. Its project-owned immutable
+`policy.Gateway.execute` is the production tool execution surface used by the
+[durable graph](DURABLE_RUNTIME.md). The local run/approval API persists exact
+decisions outside the graph; resume values cannot approve actions. The immutable
 registry is exactly `opsdesk-v1`: get_incident/get_service_status READ_ONLY;
 add_incident_note/restart_service/send_notification SIDE_EFFECT. MCP annotations,
 descriptions, model text, retrieval and memory never supply risk authority.
@@ -13,7 +14,7 @@ Model callers cannot supply the key. Approval persists the exact run/action/tool
 full wire args, digest and policy version. Decisions lock/reload persisted state.
 PENDING can become APPROVED/REJECTED/EXPIRED; APPROVED can become CONSUMED/EXPIRED;
 all three terminal statuses prohibit further transitions. Consumption preserves
-the original decided_at. No dependency, lock or migration is added.
+the original decided_at.
 
 The gateway revalidates action, run policy version, persisted approval identity,
 status and expiry before dispatch. It queries the durable receipt first. Exact
@@ -40,8 +41,8 @@ the final backstop. Same run/key/digest returns the original persisted receipt;
 different run/digest fails. Unknown run/FK failure rolls back the mutation. No raw
 business result payload is retained. Write structured outputs are exactly
 receipt_id/run_id/tool_name/idempotency_key/action_digest/result_digest/applied_at/
-replayed. Read outputs are unchanged. This explicitly supersedes OpsDesk MCP boundary duplicate
-rejection and write business outputs, preserving its input/schema/annotation gates.
+replayed. Read outputs remain typed incident/service snapshots; write outputs
+are receipt envelopes rather than business-result payloads.
 
 Tests use real PostgreSQL and both official in-process and real stdio transports.
 They cover zero-dispatch gates, every lifecycle transition, action drift, expiry,
@@ -66,6 +67,7 @@ against installed MCP 2.3.0 and the official
 [SDK client](https://py.sdk.modelcontextprotocol.io/client/) and
 [PostgreSQL transaction lock documentation](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS).
 
-durable agent runtime now composes this gateway into the [durable graph](durable agent runtime_DURABLE_RUNTIME.md)
-and adds replay-safe deterministic approval ensure; explicit create retains trusted execution
-semantics. No approval/effect gate is weakened.
+The graph uses replay-safe approval `ensure` before interrupt. Re-entering that
+node returns the same exact approval without erasing its lifecycle or timestamps.
+Explicit `create` remains available for callers that intentionally create a new
+approval. Neither route relaxes action binding, expiry or receipt checks.

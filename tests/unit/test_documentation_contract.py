@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.verify_docs import REQUIRED_CLAIMS, verify_docs
+from scripts.verify_docs import REQUIRED_CLAIMS, SEMANTIC_COMPONENT_DOCS, verify_docs
 
 
 def _fixture(root: Path) -> None:
@@ -38,7 +38,7 @@ uv run python scripts/verify.py --scope all
         "VERIFICATION",
         "LIMITATIONS",
         "EVIDENCE_AND_PROOF",
-    ):
+    ) + SEMANTIC_COMPONENT_DOCS:
         (root / f"docs/project/{name}.md").write_text(
             f"# {name}\n\n[Home](../../README.md)\n", encoding="utf-8"
         )
@@ -222,3 +222,59 @@ def test_semantic_alternate_public_surface_passes(docs_fixture: Path) -> None:
         encoding="utf-8",
     )
     assert_passes(docs_fixture)
+
+
+@pytest.mark.parametrize("name", ["README", "DURABLE_RUNTIME", "nested/COMPONENT"])
+def test_every_public_markdown_link_is_checked(docs_fixture: Path, name: str) -> None:
+    path = docs_fixture / f"docs/project/{name}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("[Missing](nonexistent.md)\n", encoding="utf-8")
+    assert any("missing link" in error for error in verify_docs(docs_fixture))
+
+
+@pytest.mark.parametrize(
+    "fragment",
+    [
+        "_POLICY_EFFECTS.md",
+        "_DURABLE_RUNTIME.md",
+        "_GOVERNED_MEMORY.md",
+        "_OBSERVABILITY_AUDIT.md",
+        "_EVAL_HARNESS.md",
+        "_MANDATORY_SCENARIOS.md",
+        "_STATIC_EVIDENCE.md",
+    ],
+)
+def test_mechanical_path_fails_even_when_target_exists(
+    docs_fixture: Path, fragment: str
+) -> None:
+    path = docs_fixture / "docs/project" / ("obsolete" + fragment)
+    path.write_text("# Old\n", encoding="utf-8")
+    (docs_fixture / "docs/project/DURABLE_RUNTIME.md").write_text(
+        f"[Existing but malformed]({path.name})\n", encoding="utf-8"
+    )
+    assert any("mechanical replacement" in error for error in verify_docs(docs_fixture))
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "Multiple model tool calls fail closed.",
+        "No governed memory completion is claimed here.",
+        "This is for later graph\nconnection.",
+    ],
+)
+def test_known_current_truth_regressions_fail(
+    docs_fixture: Path, sentence: str
+) -> None:
+    (docs_fixture / "docs/project/DURABLE_RUNTIME.md").write_text(
+        sentence, encoding="utf-8"
+    )
+    assert any("stale" in error for error in verify_docs(docs_fixture))
+
+
+def test_semantic_component_required_and_valid_links(docs_fixture: Path) -> None:
+    page = docs_fixture / "docs/project/README.md"
+    page.write_text("[Runtime](DURABLE_RUNTIME.md)\n", encoding="utf-8")
+    assert_passes(docs_fixture)
+    (docs_fixture / "docs/project/DURABLE_RUNTIME.md").unlink()
+    assert any("missing semantic" in error for error in verify_docs(docs_fixture))

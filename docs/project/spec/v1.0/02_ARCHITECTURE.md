@@ -90,6 +90,8 @@ A model may choose to answer without a tool, but cannot directly invoke a tool i
 - The runtime must terminate with an explicit non-success state when the budget is exhausted.
 - No retry loop may be unbounded.
 - Transient tool retry default: maximum 2 retries after the initial attempt, with bounded backoff.
+- The accepted runtime uses a stricter execute-boundary limit: one READ_ONLY retry
+  after the initial attempt. SIDE_EFFECT calls use receipt reconciliation.
 - A side-effecting tool is never blindly retried after an ambiguous outcome; the runtime first checks the effect receipt/idempotency state.
 
 ## Persistence

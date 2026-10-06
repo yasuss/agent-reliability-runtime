@@ -19,9 +19,17 @@ locked v1 contract under `spec/v1.0/` remains authoritative for exact semantics.
 
 - [Product and scope](spec/v1.0/00_PRODUCT_CONTRACT.md)
 - [Security and trust](spec/v1.0/05_SECURITY_AND_TRUST.md)
-- [reliability acceptance mandatory scenarios](reliability acceptance_MANDATORY_SCENARIOS.md)
-- [Static Evidence Demo Static Evidence Demo](Static Evidence Demo_STATIC_EVIDENCE.md)
-- [evaluation harness contracts](evaluation harness_EVAL_HARNESS.md)
+- [Retrieval and Citation Integrity](RETRIEVAL_AND_CITATIONS.md)
+- [OpsDesk MCP Boundary](OPSDESK_MCP.md)
+- [Trusted Execution](TRUSTED_EXECUTION.md)
+- [Durable Runtime](DURABLE_RUNTIME.md)
+- [Governed Memory](GOVERNED_MEMORY.md)
+- [Observability and Audit](OBSERVABILITY_AND_AUDIT.md)
+- [Evaluation Harness](EVALUATION_HARNESS.md)
+- [Reliability Acceptance](RELIABILITY_ACCEPTANCE.md)
+- [Static Evidence Demo](STATIC_EVIDENCE_DEMO.md)
+- [Requirement traceability](spec/v1.0/requirements/REQUIREMENTS.json)
+- [Verification catalog](spec/v1.0/requirements/VERIFICATION_CATALOG.json)
 
-Stage and component documents remain useful implementation references. The
-canonical pages above are the operational starting point.
+The component pages explain the current implementation; the catalog connects
+each locked requirement to a named verification method and tracked proof.

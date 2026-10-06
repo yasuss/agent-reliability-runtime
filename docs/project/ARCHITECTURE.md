@@ -21,8 +21,8 @@ The main boundaries are:
 1. provider adapters normalize chat, tool calls and embeddings;
 2. retrieval returns evidence with canonical IDs and current-source digests;
 3. memory resolves only scoped IDs from a checkpoint and remains non-authorizing;
-4. the graph validates typed actions and sends every tool action to the trusted execution
-   trusted gateway;
+4. the graph validates typed actions and sends every tool action through the
+   trusted execution gateway;
 5. policy classifies risk, exact approval authorizes required side effects, and
    idempotency/effect receipts reconcile retries;
 6. postcondition verification records the observed result before completion;
