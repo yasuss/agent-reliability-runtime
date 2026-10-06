@@ -99,7 +99,9 @@ def _legacy_surface_errors(root: Path) -> list[str]:
     public_paths = _public_surface_paths(root)
     for path in public_paths:
         relative = path.relative_to(root)
-        if re.match(r"^B(?:00|10|20|30|40|50|60|70|80|90|100|110|120|130)(?:_|\.)", path.name):
+        if re.match(
+            r"^B(?:00|10|20|30|40|50|60|70|80|90|100|110|120|130)(?:_|\.)", path.name
+        ):
             errors.append(f"legacy public filename: {relative}")
         text = path.read_text(encoding="utf-8")
         for line_number, line in enumerate(text.splitlines(), 1):
@@ -115,14 +117,18 @@ def _legacy_surface_errors(root: Path) -> list[str]:
             except ValueError:
                 continue
             if relative not in COMPATIBILITY_STUBS:
-                errors.append(f"public link into internal history: {relative}: {raw_target}")
+                errors.append(
+                    f"public link into internal history: {relative}: {raw_target}"
+                )
     for path in (root / "web/src").rglob("*") if (root / "web/src").exists() else ():
         if not path.is_file() or path.suffix.lower() not in {".ts", ".tsx"}:
             continue
         text = path.read_text(encoding="utf-8")
         for line_number, line in enumerate(text.splitlines(), 1):
             if LEGACY_TOKEN_RE.search(line):
-                errors.append(f"legacy Static Evidence UI identifier: {path.relative_to(root)}:{line_number}")
+                errors.append(
+                    f"legacy Static Evidence UI identifier: {path.relative_to(root)}:{line_number}"
+                )
     return errors
 
 
