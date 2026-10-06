@@ -1,10 +1,10 @@
-# B40 OpsDesk infrastructure
+# OpsDesk MCP Boundary
 
 The repository module `python -m mcp_server.opsdesk` runs the official MCPServer
 over local stdio. Use the current locked Python environment and repository root.
 The child has exactly five tools; no resources/prompts are registered. Protocol
 stdout belongs to the SDK; application logging goes to stderr. The server reads
-the existing database configuration. B50 now atomically couples fictional
+the existing database configuration. trusted execution now atomically couples fictional
 `demo_*` writes with `effect_receipts`; read tools remain unchanged.
 
 | Tool | Wire required fields | Model required fields |
@@ -20,16 +20,16 @@ input models validate raw arguments before SDK coercion/filtering. The high-leve
 server's public list/call hooks publish the same schemas and reject invalid args.
 Typed structured outputs are validated again by the project client. Errors are
 bounded, with no SQL, connection string or traceback on the wire. A note or
-notification row ID hashes compact JSON [tool_name, idempotency_key]. B50 supersedes
+notification row ID hashes compact JSON [tool_name, idempotency_key]. trusted execution supersedes
 the original duplicate-error behavior: all three write tools now return a durable
 receipt envelope, and exact run/key/digest repeats replay without another effect.
 Restart still locks a known fictional service and sets its status to healthy.
 A clock can be injected for fixed UTC tests.
 
 **Raw mutation calls remain non-authorizing infrastructure.** Production execution
-enters the B50 trusted gateway. MCP annotations remain advisory and do not determine
+enters the trusted execution gateway. MCP annotations remain advisory and do not determine
 field ownership or authorization. Model schemas omit runtime-owned idempotency_key;
-B50 mints it before approval. See [B50 semantics](B50_POLICY_EFFECTS.md).
+trusted execution mints it before approval. See [trusted execution semantics](trusted execution_POLICY_EFFECTS.md).
 
 OpsDeskMCPClient wraps official Client(StdioServerParameters), with current Python,
 explicit module args/repository cwd and only ARR_DATABASE_URL as the explicit env

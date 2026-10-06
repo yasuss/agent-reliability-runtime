@@ -45,12 +45,12 @@ uv run pytest tests/integration
 disposable service with `docker compose down`; use `docker compose down --volumes`
 only when the disposable database itself must be deleted.
 
-## Accepted B100 truth
+## Accepted reliability baseline
 
-The final B100 R10 population is a fixed 15-member set: five locked cases and
+The final accepted live reliability campaign population is a fixed 15-member set: five locked cases and
 seeds 101/202/303. All 15 executions complete before aggregate scoring, calibrated
 L4 review is applied afterward, and the local campaign provider timeout is 1800
-seconds. The accepted context floor is 32768. The final G8 gate requires 15/15
+seconds. The accepted context floor is 32768. The final live reliability acceptance gate requires 15/15
 final verdicts, at least 12 successes overall, at least 2/3 per case and zero
 hard, unauthorized or duplicate failures.
 
@@ -82,7 +82,7 @@ combinations retain their matrix status rather than inheriting that result.
 
 The Static Evidence Demo replay verifier checks five immutable replay/receipt
 pairs, schema/gates, source binding, event sequence, redaction and S08 recovery.
-The committed calibration is `tests/unit/test_b110_replay_integrity.py`.
+The committed calibration is `tests/unit/test_static_evidence_integrity.py`.
 The static Chromium critical path is `web/e2e/static-evidence.spec.ts` and uses
 the stable Playwright 1.63.0 lockfile.
 

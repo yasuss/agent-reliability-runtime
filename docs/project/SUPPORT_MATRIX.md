@@ -4,7 +4,7 @@ Statuses distinguish retained execution evidence from a portable contract.
 
 | Surface | Status | Proof context |
 | --- | --- | --- |
-| Windows 10 Pro local + Ollama qwen3:4b acceptance | TESTED | Accepted local provider and B100 evidence |
+| Windows 10 Pro local + Ollama qwen3:4b acceptance | TESTED | Accepted local provider and reliability acceptance evidence |
 | Windows 11 local end-to-end | EXPECTED | Target platform; no accepted live run |
 | Ubuntu GitHub-hosted static/unit | TESTED | Exact-head CI matrix |
 | Ubuntu GitHub-hosted PostgreSQL integration | TESTED | Exact-head CI database job |

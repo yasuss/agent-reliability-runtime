@@ -1,8 +1,8 @@
-# B80 safe traces, durable audit and replay mechanics
+# Observability, Audit, and Replay
 
-B90 intentionally strengthens the temporary structural receipt rule below to the
+evaluation harness intentionally strengthens the temporary structural receipt rule below to the
 exact eval-trial-v1 gate/SHA/scenario/lock profile before scenario export. See
-[B90 harness](B90_EVAL_HARNESS.md); locked schemas and content-safety rules remain.
+[evaluation harness harness](evaluation harness_EVAL_HARNESS.md); locked schemas and content-safety rules remain.
 
 Manual OTel API/SDK 1.45.0 instrumentation accepts a standard injected tracer.
 No import sets a global provider or requires an exporter/collector/vendor sink.
@@ -72,8 +72,8 @@ both validations pass. Manifest binds source run/SHA, receipt digest and replay
 SHA-256. Same inputs produce identical bytes; changing receipt/audit changes the
 appropriate digest. Unsafe final sentinel fixture creates neither artifact.
 
-B80 tests use temporary receipt/replay fixtures only. No canonical accepted public
-replays or B90/B100 eval claims are committed here. B60 OS kill/restart and B70
+observability and audit tests use temporary receipt/replay fixtures only. No canonical accepted public
+replays or evaluation harness/reliability acceptance eval claims are committed here. durable agent runtime OS kill/restart and governed memory
 poisoning/delete-after-checkpoint tests remain mandatory under instrumentation.
 Dependency locks, project schema/migrations and all locked spec files are unchanged.
 

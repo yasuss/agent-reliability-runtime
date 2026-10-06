@@ -1,4 +1,4 @@
-# B30 retrieval
+# Retrieval and Citation Integrity
 
 Run `uv run python -m agent_reliability_runtime.cli ingest SOURCE_PATH...` with
 normalized repository-relative paths. For the complete corpus in PowerShell:
@@ -14,19 +14,19 @@ The database must already be migrated. The developer command uses the existing
 local Ollama adapter and does not provision models.
 
 Ingestion accepts strict UTF-8 `.md`/`.txt`, normalizes newlines before SHA-256,
-and reuses B10's path/version/ordinal identities. Markdown ATX heading sections
+and reuses domain contracts and persistence's path/version/ordinal identities. Markdown ATX heading sections
 are split independently. Sections over 1200 characters repeat their heading,
 prefer newline then space breaks in the final quarter, and overlap body text by
 150 characters. Short sections have no overlap. H1 supplies the title; plain text
 and Markdown without H1 use the filename stem with hyphens/underscores replaced.
 Full embeddings are validated before a transaction begins. Per-source advisory
 locks serialize writes; failed inference or failed persistence preserves the
-previous version. An unchanged complete version is a no-op; pre-B30 null-vector
+previous version. An unchanged complete version is a no-op; pre-retrieval and citation integrity null-vector
 rows are re-embedded without changing their identity.
 
 Migration `0003_retrieval` adds nullable `VECTOR(1024)`, generated stored English
 `tsvector`, and a GIN text index. It invokes no provider. Downgrade removes only
-these retrieval columns/index; the B10 domain tables remain. No ANN index exists.
+these retrieval columns/index; the domain contracts and persistence domain tables remain. No ANN index exists.
 The official [pgvector Python adapter](https://github.com/pgvector/pgvector-python)
 provides SQLAlchemy binding/cosine operators. The preflight against server 0.8.6
 confirmed that 0.5.0 requires list input and delegates SQL dimension checking to

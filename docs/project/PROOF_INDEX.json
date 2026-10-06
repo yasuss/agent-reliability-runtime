@@ -58,19 +58,19 @@
     {
       "id": "eval-harness",
       "claim": "Deterministic evaluators and calibrated review produce bounded evidence.",
-      "proof_paths": ["tests/unit/test_evals_contracts.py", "tests/unit/test_campaign.py", "scripts/run_r10_heldout.py"],
+      "proof_paths": ["tests/unit/test_evals_contracts.py", "tests/unit/test_campaign.py", "tests/unit/test_campaign.py"],
       "proof_kind": "mixed"
     },
     {
       "id": "adversarial-scenarios",
       "claim": "Mandatory scenarios exercise hard trust and durability invariants.",
-      "proof_paths": ["tests/integration/test_mandatory_scenarios.py", "docs/project/B100_MANDATORY_SCENARIOS.md"],
+      "proof_paths": ["tests/integration/test_mandatory_scenarios.py", "docs/project/RELIABILITY_ACCEPTANCE.md"],
       "proof_kind": "test"
     },
     {
       "id": "static-evidence-demo",
       "claim": "The static viewer verifies accepted replay and receipt evidence.",
-      "proof_paths": ["scripts/verify_b110_replays.py", "tests/unit/test_b110_replay_integrity.py", "web/e2e/static-evidence.spec.ts"],
+      "proof_paths": ["scripts/verify_static_evidence.py", "tests/unit/test_static_evidence_integrity.py", "web/e2e/static-evidence.spec.ts"],
       "proof_kind": "mixed"
     }
   ]

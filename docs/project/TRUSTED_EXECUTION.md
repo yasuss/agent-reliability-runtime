@@ -1,7 +1,7 @@
-# B50 trusted policy, approvals and atomic effects
+# Trusted Execution, Approval, and Effects
 
 `policy.Gateway.execute` is the production tool execution surface for later graph
-connection. B50 adds no graph or API approval UI. Its project-owned immutable
+connection. trusted execution adds no graph or API approval UI. Its project-owned immutable
 registry is exactly `opsdesk-v1`: get_incident/get_service_status READ_ONLY;
 add_incident_note/restart_service/send_notification SIDE_EFFECT. MCP annotations,
 descriptions, model text, retrieval and memory never supply risk authority.
@@ -40,7 +40,7 @@ the final backstop. Same run/key/digest returns the original persisted receipt;
 different run/digest fails. Unknown run/FK failure rolls back the mutation. No raw
 business result payload is retained. Write structured outputs are exactly
 receipt_id/run_id/tool_name/idempotency_key/action_digest/result_digest/applied_at/
-replayed. Read outputs are unchanged. This explicitly supersedes B40 duplicate
+replayed. Read outputs are unchanged. This explicitly supersedes OpsDesk MCP boundary duplicate
 rejection and write business outputs, preserving its input/schema/annotation gates.
 
 Tests use real PostgreSQL and both official in-process and real stdio transports.
@@ -61,11 +61,11 @@ The proof creates intended run/approval/effect rows, approves through the servic
 uses the actual project stdio adapter, proves runtime reconciliation and direct
 server replay, rejects a conflicting digest, and asserts one notification and one
 intended receipt with unrelated sentinel preservation. Do not point it at user
-state. No Ollama/model call is needed for B50. Primary semantics were checked
+state. No Ollama/model call is needed for trusted execution. Primary semantics were checked
 against installed MCP 2.3.0 and the official
 [SDK client](https://py.sdk.modelcontextprotocol.io/client/) and
 [PostgreSQL transaction lock documentation](https://www.postgresql.org/docs/18/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS).
 
-B60 now composes this gateway into the [durable graph](B60_DURABLE_RUNTIME.md)
-and adds replay-safe deterministic approval ensure; explicit create retains B50
+durable agent runtime now composes this gateway into the [durable graph](durable agent runtime_DURABLE_RUNTIME.md)
+and adds replay-safe deterministic approval ensure; explicit create retains trusted execution
 semantics. No approval/effect gate is weakened.

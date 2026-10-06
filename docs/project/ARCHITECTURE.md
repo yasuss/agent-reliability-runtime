@@ -21,7 +21,7 @@ The main boundaries are:
 1. provider adapters normalize chat, tool calls and embeddings;
 2. retrieval returns evidence with canonical IDs and current-source digests;
 3. memory resolves only scoped IDs from a checkpoint and remains non-authorizing;
-4. the graph validates typed actions and sends every tool action to the B50
+4. the graph validates typed actions and sends every tool action to the trusted execution
    trusted gateway;
 5. policy classifies risk, exact approval authorizes required side effects, and
    idempotency/effect receipts reconcile retries;
@@ -51,7 +51,7 @@ fresh process, including the accepted S08 kill point after effect commit and
 before the graph checkpoint. The postcondition verification obligation is
 durable: completion cannot be finalized until the model emits the required real
 structured read and the observed state matches the obligation. The matching
-post-restart status read is part of the final S02/R10 contract.
+post-restart status read is part of the final S02/accepted live campaign contract.
 
 ## Evidence boundaries
 

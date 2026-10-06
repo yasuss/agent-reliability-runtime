@@ -81,7 +81,7 @@ Ubuntu and static/unit gates on Ubuntu, Windows and macOS. See
 
 The web app is a static recorded-replay viewer. It has no backend, live inference
 or arbitrary prompt input. Five accepted replay/receipt pairs are checked by
-`scripts/verify_b110_replays.py`; the critical Chromium path is covered by
+`scripts/verify_static_evidence.py`; the critical Chromium path is covered by
 `web/e2e/static-evidence.spec.ts`.
 
 ## Support and limitations

@@ -19,9 +19,9 @@ locked v1 contract under `spec/v1.0/` remains authoritative for exact semantics.
 
 - [Product and scope](spec/v1.0/00_PRODUCT_CONTRACT.md)
 - [Security and trust](spec/v1.0/05_SECURITY_AND_TRUST.md)
-- [B100 mandatory scenarios](B100_MANDATORY_SCENARIOS.md)
-- [B110 Static Evidence Demo](B110_STATIC_EVIDENCE.md)
-- [B90 evaluator contracts](B90_EVAL_HARNESS.md)
+- [reliability acceptance mandatory scenarios](reliability acceptance_MANDATORY_SCENARIOS.md)
+- [Static Evidence Demo Static Evidence Demo](Static Evidence Demo_STATIC_EVIDENCE.md)
+- [evaluation harness contracts](evaluation harness_EVAL_HARNESS.md)
 
 Stage and component documents remain useful implementation references. The
 canonical pages above are the operational starting point.

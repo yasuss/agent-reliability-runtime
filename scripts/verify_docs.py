@@ -64,10 +64,66 @@ STALE_RE = re.compile(
     r"pending\s+review\s+blocks\s+the\s+next\s+trial|"
     r"G3\+.*not\s+claimed)"
 )
+LEGACY_TOKEN_RE = re.compile(
+    r"(?<![A-Za-z0-9])(?:B(?:00|10|20|30|40|50|60|70|80|90|100|110|120|130)"
+    r"|R(?:10|[1-9])|G(?:1[0-4]|[0-9]))(?![A-Za-z0-9])"
+)
+PUBLIC_TEXT_EXTENSIONS = {".md", ".json", ".py", ".ts", ".tsx"}
+COMPATIBILITY_STUBS = {
+    Path("docs/project/spec/v1.0/10_ENGINEERING_BACKLOG.md"),
+    Path("docs/project/spec/v1.0/11_ACCEPTANCE_GATES.md"),
+    Path("docs/project/spec/v1.0/14_ORCHESTRATOR_HANDOFF.md"),
+}
 
 
 def _canonical_paths(root: Path) -> list[Path]:
     return [root / path for path in CANONICAL_DOCS]
+
+
+def _public_surface_paths(root: Path) -> list[Path]:
+    paths = [root / "README.md"]
+    project = root / "docs" / "project"
+    paths.extend(sorted(path for path in project.rglob("*") if path.is_file()))
+    return [
+        path
+        for path in paths
+        if path.exists()
+        and path.suffix.lower() in PUBLIC_TEXT_EXTENSIONS
+        and "docs/internal" not in path.as_posix()
+    ]
+
+
+def _legacy_surface_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    history_root = (root / "docs/internal/acceptance-history").resolve()
+    public_paths = _public_surface_paths(root)
+    for path in public_paths:
+        relative = path.relative_to(root)
+        if re.match(r"^B(?:00|10|20|30|40|50|60|70|80|90|100|110|120|130)(?:_|\.)", path.name):
+            errors.append(f"legacy public filename: {relative}")
+        text = path.read_text(encoding="utf-8")
+        for line_number, line in enumerate(text.splitlines(), 1):
+            if LEGACY_TOKEN_RE.search(line):
+                errors.append(f"legacy public identifier: {relative}:{line_number}")
+        for raw_target in LINK_RE.findall(text):
+            target = raw_target.split("#", 1)[0].split("?", 1)[0].strip()
+            if not target or target.startswith(("http://", "https://", "mailto:", "#")):
+                continue
+            resolved = (path.parent / target).resolve()
+            try:
+                resolved.relative_to(history_root)
+            except ValueError:
+                continue
+            if relative not in COMPATIBILITY_STUBS:
+                errors.append(f"public link into internal history: {relative}: {raw_target}")
+    for path in (root / "web/src").rglob("*") if (root / "web/src").exists() else ():
+        if not path.is_file() or path.suffix.lower() not in {".ts", ".tsx"}:
+            continue
+        text = path.read_text(encoding="utf-8")
+        for line_number, line in enumerate(text.splitlines(), 1):
+            if LEGACY_TOKEN_RE.search(line):
+                errors.append(f"legacy Static Evidence UI identifier: {path.relative_to(root)}:{line_number}")
+    return errors
 
 
 def _project_facing_markdown(root: Path) -> list[Path]:
@@ -200,6 +256,7 @@ def verify_docs(root: Path) -> list[str]:
     errors.extend(_relative_link_failures(root, markdown_paths))
     errors.extend(_proof_index_errors(root, root / "docs/project/PROOF_INDEX.json"))
     errors.extend(_support_matrix_errors(root / "docs/project/SUPPORT_MATRIX.md"))
+    errors.extend(_legacy_surface_errors(root))
 
     project_docs = _project_facing_markdown(root)
     for path in project_docs:

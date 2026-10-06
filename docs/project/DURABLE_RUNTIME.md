@@ -1,11 +1,11 @@
-# B60 durable LangGraph runtime
+# Durable Agent Runtime
 
-The B70 implementation replaces the original empty memory placeholder with
-ID-only scoped memory resolution; see [B70](B70_GOVERNED_MEMORY.md). The B60
+The governed memory implementation replaces the original empty memory placeholder with
+ID-only scoped memory resolution; see [governed memory](governed memory_GOVERNED_MEMORY.md). The durable agent runtime
 approval/receipt/process durability boundaries described below remain unchanged.
 
-One production `StateGraph` uses the accepted provider, B30 retrieval, B40 model
-catalog and B50 Gateway. There is no raw MCP execution in the graph. B70 memory is
+One production `StateGraph` uses the accepted provider, retrieval and citation integrity retrieval, OpsDesk MCP boundary model
+catalog and trusted execution Gateway. There is no raw MCP execution in the graph. governed memory memory is
 an explicit empty `load_memory` placeholder; no governed memory or observability
 completion is claimed here.
 
@@ -50,7 +50,7 @@ checkpoints, checkpoint_blobs and checkpoint_writes are not project Alembic tabl
 no project migration or dependency change is added. On Windows the portable
 `run_async` entry point uses SelectorEventLoop for psycopg async compatibility.
 An embedding provider is passed through context, and retrieval always calls the
-accepted B30 service; DB integration uses deterministic 1024-dimensional fixtures.
+accepted retrieval and citation integrity service; DB integration uses deterministic 1024-dimensional fixtures.
 
 ## Runtime surface and approval
 
@@ -64,14 +64,14 @@ the previous checkpoint for continuation; provider protocol/policy violations
 produce bounded FAILED reasons. Terminal continuations preserve terminal state.
 
 `validate_action` checkpoints runtime key/action identity before policy.
-`policy_gate` uses B50 deterministic approval `ensure`: SHA-256 of compact JSON
+`policy_gate` uses trusted execution deterministic approval `ensure`: SHA-256 of compact JSON
 ["approval", action_id], with advisory serialization and exact-payload checks.
 Re-entry/concurrent ensure returns one existing row, preserving lifecycle and
-human timestamps; conflict fails. B50 `create` retains its previous explicit new
+human timestamps; conflict fails. trusted execution `create` retains its previous explicit new
 approval behavior. `await_approval` performs interrupt as its first consequential
-operation. The caller uses B50 Approvals outside the graph, then resumes the same
+operation. The caller uses trusted execution Approvals outside the graph, then resumes the same
 thread. The graph reloads the row: PENDING re-interrupts; REJECTED/EXPIRED terminate
-without effects; APPROVED reaches the exact B50 gateway checks.
+without effects; APPROVED reaches the exact trusted execution gateway checks.
 
 ## Counters and recovery
 
@@ -88,7 +88,7 @@ Tool steps count successful logical gateway node outputs, including receipt
 reconciliation after a lost output. The counter increment is returned only after
 the optional test-only post-Gateway/pre-node-return fault hook. Therefore killing
 that node and replaying its exact receipt yields one logical tool step. No automatic
-side-effect retry exists outside B50 receipt reconciliation.
+side-effect retry exists outside trusted execution receipt reconciliation.
 
 ## Real fresh-process proof
 
@@ -99,7 +99,7 @@ uv run python -m scripts.probe_runtime --output ABSOLUTE_EXTERNAL_EVIDENCE.json
 ```
 
 The proof explicitly sets up checkpoints, seeds fictional state/unrelated
-sentinels and real B30 evidence, starts the graph until approval interrupt, and
+sentinels and real retrieval and citation integrity evidence, starts the graph until approval interrupt, and
 persists APPROVED outside the graph. Worker A resumes with real OpsDesk stdio;
 after Gateway has committed one effect/receipt and consumed approval, the fault
 hook atomically signals the parent and blocks before execute_tool returns.

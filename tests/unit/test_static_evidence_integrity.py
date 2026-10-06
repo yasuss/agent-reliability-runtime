@@ -1,4 +1,4 @@
-"""Committed fail-closed calibration for the B110 replay collection."""
+"""Committed fail-closed calibration for the Static Evidence Demo replay collection."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.verify_b110_replays import verify_collection
+from scripts.verify_static_evidence import verify_collection
 
 ROOT = Path(__file__).resolve().parents[2]
 COLLECTION = ROOT / "web/public/replays"

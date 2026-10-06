@@ -1,8 +1,8 @@
-# B90 deterministic evaluators and calibration
+# Evaluation Harness and Calibration
 
 The harness measures evidence; it neither runs the complete S01–S12 campaign nor
-grants authorization. B100 supplies the full scenario execution and repeated live
-model trials. B90 uses small deterministic mechanism fixtures and real PostgreSQL,
+grants authorization. reliability acceptance supplies the full scenario execution and repeated live
+model trials. evaluation harness uses small deterministic mechanism fixtures and real PostgreSQL,
 MCP, runtime, retrieval and exporter compatibility checks. No dependency,
 lockfile, migration, external evaluation service or model judge was added.
 
@@ -20,7 +20,7 @@ relative POSIX paths. Formatting-only changes alter the digest. Copying identica
 bytes to another checkout preserves it. Lock digests hash raw `uv.lock` and
 `web/package-lock.json` bytes under those exact keys.
 
-The B80 narrow locked-schema validator gains only boolean type support and the
+The observability and audit narrow locked-schema validator gains only boolean type support and the
 scenario schema selector; boolean is checked exactly, so integer 1 fails.
 
 ## Evidence and layers
@@ -48,13 +48,13 @@ broken replay candidates remain representable so L0 can detect them.
 
 Runner-owned TrialExpectations provide explicit objective source/tool/outcome
 constraints. They are the oracle reference, not model-generated instructions.
-B90 does not interpret prose invariant labels as executable security rules or
+evaluation harness does not interpret prose invariant labels as executable security rules or
 claim that all twelve scenarios have been executed.
 
 The production adapter validates actual Action/Approval records with accepted
 policy/domain functions before projecting metadata and argument digests. It never
 duplicates raw arguments or idempotency keys into trial artifacts. It consumes
-strict persisted Run, ordered AuditEvent, durable receipt and B30 Evidence shapes.
+strict persisted Run, ordered AuditEvent, durable receipt and retrieval and citation integrity Evidence shapes.
 All four fictional tables are represented as row-ID/raw-row-digest snapshots.
 Append-only notification/note physical counts come from actual before/after row
 membership using the accepted effect identity function. Non-append mutations such
@@ -77,7 +77,7 @@ L1_RETRIEVAL, L2_TRAJECTORY, L3_ENVIRONMENT, L4_ANSWER_QUALITY, HARD_INVARIANTS 
 TASK_SUCCESS. Only PASS/NOT_APPLICABLE are accepted; objective L0/L2/L3 and hard/task
 must PASS. Legitimately inapplicable L1/L4 may be NOT_APPLICABLE.
 
-B80 export-replays now requires this stronger profile and exact scenario/lock/SHA
+observability and audit export-replays now requires this stronger profile and exact scenario/lock/SHA
 bindings before DB access or artifact write. Weak arbitrary-PASS receipts,
 missing/failed/unrun gates, subject drift and malformed/naive/non-UTC timestamps
 reject. Existing exporter-mechanics fixtures use temporary valid-profile receipts;
@@ -96,9 +96,9 @@ secret final replay bytes, safety order, environment drift, stale/low-recall
 retrieval, budgets, retries, tool requirements, receipt identity and all four rubric
 items. Same-key replay retains one mutation/receipt; valid extra reads and citation
 subsets pass. Real-evidence tests run read-only and approved notification flows
-through PostgreSQL-backed LangGraph and genuine stdio MCP, then reuse the real B80
-exporter and Gateway replay path. B60 kill/restart, B70 poisoning/delete-resume and
-B80 span/audit/replay tests remain required in primary, fresh checkout and CI.
+through PostgreSQL-backed LangGraph and genuine stdio MCP, then reuse the real observability and audit
+exporter and Gateway replay path. durable agent runtime kill/restart, governed memory poisoning/delete-resume and
+observability and audit span/audit/replay tests remain required in primary, fresh checkout and CI.
 
 Research basis: [Anthropic agent evals](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)
 and [OpenAI evaluation practices](https://developers.openai.com/api/docs/guides/evaluation-best-practices).

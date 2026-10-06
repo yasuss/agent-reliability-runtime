@@ -1,7 +1,7 @@
-# B70 governed contextual memory
+# Governed Memory
 
-B80 now implements atomic memory create/delete audit through an internal scope
-anchor; see [B80](B80_OBSERVABILITY_AUDIT.md). B70 scope, trust and ID-only
+observability and audit now implements atomic memory create/delete audit through an internal scope
+anchor; see [observability and audit](observability and audit_OBSERVABILITY_AUDIT.md). governed memory scope, trust and ID-only
 checkpoint/delete-resume invariants remain unchanged.
 
 `MemoryStore` reuses the accepted `memories` table and strict Memory snapshots.
@@ -20,7 +20,7 @@ Creation has three explicit profiles, rather than a public arbitrary trust sette
 
 Profile mismatch and nonexistent/foreign source runs fail before persistence.
 TRUSTED describes contextual provenance; it never grants authorization. Creation
-is an internal trusted service boundary; automatic model writes are outside B70.
+is an internal trusted service boundary; automatic model writes are outside governed memory.
 
 ## Local HTTP surface
 
@@ -37,18 +37,18 @@ No POST route, enterprise identity, authentication or permission claim is added.
 
 ## Runtime and deletion
 
-The one B60 graph topology is preserved. load_memory reads the durable run's scope
+The one durable agent runtime graph topology is preserved. load_memory reads the durable run's scope
 and checkpoints only ordered `memory_ids`. Before every provider decision, current
 rows for those IDs are resolved against the current durable run scope. Deleted and
 foreign IDs silently drop. A transient user/data ChatMessage appears after the
 project system instruction, before task/conversation messages; its JSON snapshots
 preserve kind/provenance/trust and explicitly cannot override policy or approval.
 It is never appended to durable state.messages. No fake memory message is added
-when no rows resolve. Existing empty B60 placeholder checkpoints resolve no IDs.
+when no rows resolve. Existing empty durable agent runtime placeholder checkpoints resolve no IDs.
 
-Memory fields do not enter evaluate/propose/Gateway. B50 risk classification,
+Memory fields do not enter evaluate/propose/Gateway. trusted execution risk classification,
 approval bindings, runtime-owned keys and receipt reconciliation remain intact.
-Semantic budgets and B60 real process-kill recovery retain their original gates.
+Semantic budgets and durable agent runtime real process-kill recovery retain their original gates.
 
 `scripts.probe_memory` exercises real PostgreSQL, official strict PostgresSaver,
 real OpsDesk stdio, harmless personalization, UNTRUSTED observation poisoning and
@@ -74,14 +74,14 @@ uv run python -m scripts.probe_memory --output ABSOLUTE_EXTERNAL_EVIDENCE.json
 After re-interruption, use a scalar JSON resume value (for example `"continue"`),
 or the pinned API's correct interrupt-ID map. LangGraph 1.2.12 treats an empty dict
 as an empty resume map; it does not release the interrupt. Resume values remain
-non-authorizing. No B60 framework/service upgrade is required.
+non-authorizing. No durable agent runtime framework/service upgrade is required.
 
 ## Deferred obligations
 
-B80 owns complete audit/OTel deletion observability without retaining deleted
+observability and audit owns complete audit/OTel deletion observability without retaining deleted
 content in normal runtime payloads. No partial audit schema is introduced here.
 Vector/semantic memory, TTL/scoring, autonomous writes, full eval thresholds and
-enterprise auth remain outside B70. Dependency locks and migrations are unchanged.
+enterprise auth remain outside governed memory. Dependency locks and migrations are unchanged.
 
 The security boundary follows the locked project contract and
 [OWASP agent memory/context guidance](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html#3-memory--context-security).

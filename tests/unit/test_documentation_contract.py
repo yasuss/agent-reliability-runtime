@@ -186,3 +186,35 @@ def test_broken_controls_fail(
     del name
     mutate(docs_fixture)
     assert verify_docs(docs_fixture)
+
+def test_public_legacy_identifiers_fail(docs_fixture: Path) -> None:
+    path = docs_fixture / "docs/project/ARCHITECTURE.md"
+    path.write_text(path.read_text(encoding="utf-8") + "\nB100 R10 G8\n", encoding="utf-8")
+    assert verify_docs(docs_fixture)
+
+
+def test_public_stage_filename_fails(docs_fixture: Path) -> None:
+    (docs_fixture / "docs/project/B100_OLD.md").write_text("# old\n", encoding="utf-8")
+    assert verify_docs(docs_fixture)
+
+
+def test_internal_history_and_scenario_ids_are_allowed(docs_fixture: Path) -> None:
+    history = docs_fixture / "docs/internal/acceptance-history"
+    history.mkdir(parents=True)
+    (history / "record.md").write_text("B100 R10 G8\n", encoding="utf-8")
+    architecture = docs_fixture / "docs/project/ARCHITECTURE.md"
+    architecture.write_text(
+        architecture.read_text(encoding="utf-8") + "\nS02 durable verification obligation\n",
+        encoding="utf-8",
+    )
+    assert_passes(docs_fixture)
+
+
+def test_semantic_alternate_public_surface_passes(docs_fixture: Path) -> None:
+    architecture = docs_fixture / "docs/project/ARCHITECTURE.md"
+    architecture.write_text(
+        architecture.read_text(encoding="utf-8")
+        + "\nTrusted execution and durable recovery remain inspectable.\n",
+        encoding="utf-8",
+    )
+    assert_passes(docs_fixture)

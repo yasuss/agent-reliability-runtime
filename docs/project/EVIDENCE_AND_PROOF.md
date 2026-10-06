@@ -14,10 +14,10 @@ Each claim points to at least one tracked executable test, script or replay.
 | `durable-restart` | `tests/integration/test_durable_runtime.py`, `scripts/probe_runtime.py` |
 | `governed-memory` | `tests/integration/test_memory.py`, `scripts/probe_memory.py` |
 | `otel-audit` | `tests/unit/test_observability_contracts.py`, `tests/integration/test_observability.py` |
-| `eval-harness` | `tests/unit/test_evals_contracts.py`, `tests/unit/test_campaign.py`, `scripts/run_r10_heldout.py` |
-| `adversarial-scenarios` | `tests/integration/test_mandatory_scenarios.py`, `docs/project/B100_MANDATORY_SCENARIOS.md` |
-| `static-evidence-demo` | `scripts/verify_b110_replays.py`, `tests/unit/test_b110_replay_integrity.py`, `web/e2e/static-evidence.spec.ts` |
+| `eval-harness` | `tests/unit/test_evals_contracts.py`, `tests/unit/test_campaign.py`, `tests/unit/test_campaign.py` |
+| `adversarial-scenarios` | `tests/integration/test_mandatory_scenarios.py`, `docs/project/RELIABILITY_ACCEPTANCE.md` |
+| `static-evidence-demo` | `scripts/verify_static_evidence.py`, `tests/unit/test_static_evidence_integrity.py`, `web/e2e/static-evidence.spec.ts` |
 
-The B110 replay verifier binds static replay bytes to an accepted B100 source
+The Static Evidence Demo replay verifier binds static replay bytes to an accepted reliability acceptance source
 SHA and receipt gates. Runtime claims remain grounded in executable tests and
 real PostgreSQL/stdio proofs rather than documentation assertions.

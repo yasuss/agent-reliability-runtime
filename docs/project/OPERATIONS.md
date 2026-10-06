@@ -63,7 +63,7 @@ The viewer is static-only and shows recorded evidence. Build and verify it with:
 ```text
 npm --prefix web ci
 npm --prefix web run build
-python scripts/verify_b110_replays.py
+python scripts/verify_static_evidence.py
 npm --prefix web exec -- playwright test --config web/playwright.config.ts
 ```
 
@@ -140,10 +140,10 @@ Complete deterministic gates and freeze the candidate before any live run. Keep
 campaign output external:
 
 ```text
-uv run python -m agent_reliability_runtime.cli eval --live-local --phase freeze --output C:\temp\arr-r10
-uv run python -m agent_reliability_runtime.cli eval --live-local --phase next --output C:\temp\arr-r10
-uv run python -m agent_reliability_runtime.cli eval --live-local --phase finalize --trial-id ID --review C:\temp\review.json --output C:\temp\arr-r10
-uv run python -m agent_reliability_runtime.cli eval --live-local --phase summary --output C:\temp\arr-r10
+uv run python -m agent_reliability_runtime.cli eval --live-local --phase freeze --output C:\temp\arr-live-campaign
+uv run python -m agent_reliability_runtime.cli eval --live-local --phase next --output C:\temp\arr-live-campaign
+uv run python -m agent_reliability_runtime.cli eval --live-local --phase finalize --trial-id ID --review C:\temp\review.json --output C:\temp\arr-live-campaign
+uv run python -m agent_reliability_runtime.cli eval --live-local --phase summary --output C:\temp\arr-live-campaign
 ```
 
 All 15 executions complete before aggregate; calibrated L4 review follows
@@ -158,7 +158,7 @@ Export only from a successful receipt and a clean exact candidate:
 uv run python -m agent_reliability_runtime.cli export-replays --run-id RUN_ID --receipt C:\temp\receipt.json --source-git-sha EXACT_SHA --output C:\temp\replay
 ```
 
-The B110 verifier must pass before treating the static replay as accepted.
+The Static Evidence verifier must pass before treating the static replay as accepted.
 
 ## Cleanup
 
