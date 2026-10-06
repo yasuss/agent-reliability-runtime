@@ -10,11 +10,11 @@ import pytest
 
 
 def workflow_contract(workflow: dict[str, Any]) -> None:
-    assert workflow["on"]["push"]["branches"] == ["codex/**"]
+    assert workflow["on"]["push"]["branches"] == ["main", "codex/**", "release/**"]
     assert set(workflow["on"]["pull_request"]["branches"]) == {"main", "codex/**"}
     assert workflow["permissions"] == {"contents": "read"}
     jobs = workflow["jobs"]
-    assert set(jobs) == {"static-unit", "database", "web-e2e"}
+    assert set(jobs) == {"static-unit", "database", "web-e2e", "release-audit"}
     static = jobs["static-unit"]
     assert static["strategy"] == {
         "fail-fast": "false",
@@ -42,6 +42,17 @@ def workflow_contract(workflow: dict[str, Any]) -> None:
         "npm --prefix web ci",
         "npx --prefix web playwright install --with-deps chromium",
         "npm --prefix web exec -- playwright test --config web/playwright.config.ts",
+    ]
+    audit = jobs["release-audit"]
+    assert audit["runs-on"] == "ubuntu-latest"
+    assert audit["permissions"] == {"contents": "read", "actions": "read"}
+    assert [step["run"] for step in audit["steps"] if "run" in step] == [
+        "uv sync --locked",
+        "uv run python scripts/verify_release.py",
+        "uv run python scripts/audit_public_release.py",
+        "uv run python scripts/verify_docs.py",
+        "uv run python docs/project/spec/v1.0/scripts/validate_spec.py",
+        "uv run python scripts/secret_scan.py",
     ]
     accepted_pins = {
         "actions/checkout": "d23441a48e516b6c34aea4fa41551a30e30af803",

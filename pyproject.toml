@@ -1,7 +1,7 @@
 [project]
 name = "agent-reliability-runtime"
-version = "0.1.0"
-description = "Local-first agent reliability reference implementation: foundation only"
+version = "1.0.0"
+description = "Local-first reference implementation for durable, policy-gated, auditable AI agents"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "fastapi==0.142.2", "pydantic==2.13.4", "uvicorn==0.54.0",

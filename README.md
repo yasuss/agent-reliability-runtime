@@ -89,7 +89,15 @@ or arbitrary prompt input. Five accepted replay/receipt pairs are checked by
 See the [support matrix](docs/project/SUPPORT_MATRIX.md) for TESTED versus
 EXPECTED environments and [limitations](docs/project/LIMITATIONS.md) for claim
 boundaries. Development Compose credentials are fictional and must not be
-deployed. No license or publication decision is made.
+deployed.
+
+## License and public API
+
+This candidate is licensed under the [Apache License 2.0](LICENSE). SECURITY.md
+describes responsible disclosure. The documented runtime, configuration, tool
+and evidence contracts form the public v1 interface; arbitrary internal Python
+symbols are not guaranteed API. Candidate preparation does not publish the
+repository, create a release, or deploy the Static Evidence Demo.
 
 ## Documentation map
 
@@ -100,3 +108,6 @@ deployed. No license or publication decision is made.
 - [Limitations](docs/project/LIMITATIONS.md)
 - [Evidence & Proof](docs/project/EVIDENCE_AND_PROOF.md)
 - [Project truth map](docs/project/README.md)
+- [Release and deployment operations](docs/project/RELEASE_AND_DEPLOYMENT.md)
+- [Public release checklist](docs/project/PUBLIC_RELEASE_CHECKLIST.md)
+- [Security policy](SECURITY.md)

@@ -18,4 +18,7 @@ The following boundaries are deliberate:
 - OTel defaults exclude raw prompt/tool secret content; explicit local opt-ins are
   the developer's responsibility.
 - Development Compose credentials and configuration must not be deployed.
-- No license or publication decision has been made.
+- The release candidate records Apache-2.0 licensing, but publication, repository
+  visibility, tags and deployment remain separate authorized actions.
+- The documented runtime/configuration/tool/evidence contracts are the public v1
+  interface; arbitrary internal Python symbols are not guaranteed API.

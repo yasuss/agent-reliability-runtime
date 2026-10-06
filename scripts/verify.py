@@ -25,6 +25,7 @@ def main() -> int:
                 "python",
                 "docs/project/spec/v1.0/scripts/validate_spec.py",
             ],
+            ["uv", "run", "python", "scripts/verify_release.py"],
             ["uv", "run", "pytest", "tests/unit"],
             ["npm", "--prefix", "web", "ci"],
             ["npm", "--prefix", "web", "run", "lint"],

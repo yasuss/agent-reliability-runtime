@@ -28,6 +28,8 @@ locked v1 contract under `spec/v1.0/` remains authoritative for exact semantics.
 - [Evaluation Harness](EVALUATION_HARNESS.md)
 - [Reliability Acceptance](RELIABILITY_ACCEPTANCE.md)
 - [Static Evidence Demo](STATIC_EVIDENCE_DEMO.md)
+- [Release and Deployment Operations](RELEASE_AND_DEPLOYMENT.md)
+- [Public Release Checklist](PUBLIC_RELEASE_CHECKLIST.md)
 - [Requirement traceability](spec/v1.0/requirements/REQUIREMENTS.json)
 - [Verification catalog](spec/v1.0/requirements/VERIFICATION_CATALOG.json)
 
