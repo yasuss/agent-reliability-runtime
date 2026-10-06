@@ -81,21 +81,16 @@ def audit(*, include_actions: bool = True) -> dict[str, Any]:
         for label, pattern in PATTERNS.items():
             if pattern.search(blob):
                 findings.append({"class": label, "path": path or oid})
-    metadata_commits = 0
-    metadata_identities: set[str] = set()
+    metadata_rows: list[tuple[str, str]] = []
     for row in (
         run("git", "log", "--all", "--format=%H%x00%ae%x00%ce")
         .decode(errors="replace")
         .splitlines()
     ):
         parts = row.split("\x00")
-        if len(parts) != 3:
-            continue
-        author, committer = parts[1], parts[2]
-        bad = [value for value in (author, committer) if not NOREPLY.search(value)]
-        if bad:
-            metadata_commits += 1
-            metadata_identities.update("non-noreply" for _ in bad)
+        if len(parts) == 3:
+            metadata_rows.append((parts[1], parts[2]))
+    metadata_commits, metadata_distinct = metadata_summary(metadata_rows)
     workflow_secret_refs = []
     for workflow_path in (ROOT / ".github/workflows").glob("*.y*ml"):
         if "secrets." in workflow_path.read_text(encoding="utf-8", errors="ignore"):
@@ -165,10 +160,22 @@ def audit(*, include_actions: bool = True) -> dict[str, Any]:
     return {
         "state": state,
         "secret_findings": findings,
-        "non_noreply_distinct_count": len(metadata_identities),
+        "non_noreply_distinct_count": metadata_distinct,
         "non_noreply_commit_count": metadata_commits,
         "actions_runs": action_runs,
     }
+
+
+def metadata_summary(rows: Any) -> tuple[int, int]:
+    """Return commit and normalized-identity counts without exposing identities."""
+    metadata_commits = 0
+    metadata_identities: set[str] = set()
+    for author, committer in rows:
+        bad = [value for value in (author, committer) if not NOREPLY.search(value)]
+        if bad:
+            metadata_commits += 1
+            metadata_identities.update(value.strip().casefold() for value in bad)
+    return metadata_commits, len(metadata_identities)
 
 
 def main() -> int:

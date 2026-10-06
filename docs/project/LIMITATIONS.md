@@ -22,3 +22,14 @@ The following boundaries are deliberate:
   visibility, tags and deployment remain separate authorized actions.
 - The documented runtime/configuration/tool/evidence contracts are the public v1
   interface; arbitrary internal Python symbols are not guaranteed API.
+- The unauthenticated v1 API is supported only on loopback by default. Do not bind
+  it to `0.0.0.0`, a LAN interface, or a public interface without an external
+  trust/authentication boundary.
+
+Supported local startup is:
+
+```text
+uv run uvicorn agent_reliability_runtime.api:app --host 127.0.0.1 --port 8000
+```
+
+The v1 API has no authentication boundary. Do not bind it to `0.0.0.0`, a LAN interface, or a public interface without an external trust/authentication boundary.

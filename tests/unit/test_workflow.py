@@ -49,6 +49,7 @@ def workflow_contract(workflow: dict[str, Any]) -> None:
     assert [step["run"] for step in audit["steps"] if "run" in step] == [
         "uv sync --locked",
         "uv run python scripts/verify_release.py",
+        "uv run python scripts/verify_behavior_provenance.py",
         "uv run python scripts/audit_public_release.py",
         "uv run python scripts/verify_docs.py",
         "uv run python docs/project/spec/v1.0/scripts/validate_spec.py",

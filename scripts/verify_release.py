@@ -6,11 +6,13 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 import tomllib
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+
 BASE_SHA = "4cc3f9fdaeb5e3061e2f87a7aab0abaf6c92b265"
 VERSION = "1.0.0"
 LICENSE_SHA = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
@@ -89,8 +91,19 @@ def protected_paths() -> list[str]:
     ]
 
 
+def behavior_provenance_errors() -> list[str]:
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from scripts.verify_behavior_provenance import check
+
+    return check()
+
+
 def check() -> list[str]:
     errors: list[str] = []
+    errors.extend(
+        f"behavior provenance: {error}" for error in behavior_provenance_errors()
+    )
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))[
         "project"
     ]

@@ -105,6 +105,15 @@ uv run python -m agent_reliability_runtime.cli run --task "Inspect checkout-api"
 The API equivalents are `POST /api/v1/runs` and `GET /api/v1/runs/{run_id}`.
 `/healthz` is process liveness; `/readyz` includes the readiness contract.
 
+Start the unauthenticated local API explicitly on loopback:
+
+```text
+uv run uvicorn agent_reliability_runtime.api:app --host 127.0.0.1 --port 8000
+```
+
+The v1 API has no authentication boundary. Do not bind it to `0.0.0.0`, a LAN
+interface, or a public interface without an external trust/authentication boundary.
+
 ## Approve or reject a pending side effect
 
 Inspect the run and its pending approval, then send exactly one decision through
