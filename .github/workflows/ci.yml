@@ -1,0 +1,77 @@
+name: Repository verification
+on:
+  pull_request:
+    branches: [main, 'codex/**']
+  push:
+    branches: [main, 'codex/**', 'release/**']
+permissions:
+  contents: read
+jobs:
+  static-unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.23'
+          python-version: '3.12'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - run: uv run python scripts/verify.py --scope static-unit
+  database:
+    runs-on: ubuntu-latest
+    env:
+      ARR_TEST_DATABASE_URL: postgresql+psycopg://arr:local-development-fixture@127.0.0.1:5432/arr
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.23'
+          python-version: '3.12'
+      - run: uv sync --locked
+      - run: uv run python scripts/verify.py --scope db
+      - run: uv run pytest
+      - name: Stop disposable CI database
+        if: always()
+        run: docker compose down --volumes
+  web-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - run: npm --prefix web ci
+      - run: npx --prefix web playwright install --with-deps chromium
+      - run: npm --prefix web exec -- playwright test --config web/playwright.config.ts
+  release-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.23'
+          python-version: '3.12'
+      - run: uv sync --locked
+      - run: uv run python scripts/verify_release.py
+      - run: uv run python scripts/verify_behavior_provenance.py
+      - run: uv run python scripts/audit_public_release.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: uv run python scripts/verify_docs.py
+      - run: uv run python docs/project/spec/v1.0/scripts/validate_spec.py
+      - run: uv run python scripts/secret_scan.py

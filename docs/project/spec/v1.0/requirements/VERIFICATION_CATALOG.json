@@ -1,0 +1,233 @@
+{
+  "version": "verification-catalog-v1",
+  "entries": [
+    {
+      "id": "VC-FOUNDATION",
+      "title": "Local application foundation",
+      "methods": [
+        "Locked Python environment, bootstrap and import/health checks"
+      ],
+      "requirement_ids": [
+        "ARR-001",
+        "ARR-003"
+      ],
+      "proof_paths": [
+        "scripts/bootstrap.py",
+        "tests/unit/test_foundation.py",
+        "tests/integration/test_database.py"
+      ]
+    },
+    {
+      "id": "VC-SCOPE",
+      "title": "Scope and trust exclusions",
+      "methods": [
+        "Structural boundary tests and locked scope inspection"
+      ],
+      "requirement_ids": [
+        "ARR-001",
+        "ARR-023",
+        "ARR-024"
+      ],
+      "proof_paths": [
+        "tests/unit/test_b100_boundaries.py",
+        "docs/project/spec/v1.0/01_SCOPE_AND_NON_GOALS.md"
+      ]
+    },
+    {
+      "id": "VC-PROVIDER-BOUNDARY",
+      "title": "Typed provider boundary",
+      "methods": [
+        "Deterministic request/response calibration and exact local model probe"
+      ],
+      "requirement_ids": [
+        "ARR-004",
+        "ARR-005",
+        "ARR-006",
+        "ARR-023"
+      ],
+      "proof_paths": [
+        "tests/unit/test_providers.py",
+        "scripts/probe_providers.py"
+      ]
+    },
+    {
+      "id": "VC-PERSISTENCE-RETRIEVAL",
+      "title": "PostgreSQL hybrid retrieval and citations",
+      "methods": [
+        "Real PostgreSQL persistence, exact-source retrieval and citation calibration"
+      ],
+      "requirement_ids": [
+        "ARR-005",
+        "ARR-007",
+        "ARR-008"
+      ],
+      "proof_paths": [
+        "tests/integration/test_persistence.py",
+        "tests/integration/test_retrieval.py",
+        "tests/unit/test_retrieval_mechanisms.py",
+        "scripts/probe_retrieval.py"
+      ]
+    },
+    {
+      "id": "VC-MCP-BOUNDARY",
+      "title": "Five-tool stdio MCP boundary",
+      "methods": [
+        "Exact model/wire schema checks, annotation spoofing and genuine stdio protocol"
+      ],
+      "requirement_ids": [
+        "ARR-009"
+      ],
+      "proof_paths": [
+        "tests/unit/test_opsdesk_contracts.py",
+        "tests/integration/test_opsdesk_protocol.py",
+        "scripts/probe_opsdesk.py"
+      ]
+    },
+    {
+      "id": "VC-TRUSTED-EXECUTION",
+      "title": "Trusted policy, exact approvals and effects",
+      "methods": [
+        "Negative authorization tests, atomic rollback/concurrency and receipt reconciliation"
+      ],
+      "requirement_ids": [
+        "ARR-010",
+        "ARR-011",
+        "ARR-012",
+        "ARR-013"
+      ],
+      "proof_paths": [
+        "tests/unit/test_policy.py",
+        "tests/integration/test_policy_effects.py",
+        "scripts/probe_policy_effects.py"
+      ]
+    },
+    {
+      "id": "VC-DURABLE-RUNTIME",
+      "title": "Bounded durable graph and fresh-process recovery",
+      "methods": [
+        "Strict checkpoints, approval interrupt, budget and real OS kill/restart proof"
+      ],
+      "requirement_ids": [
+        "ARR-002",
+        "ARR-013",
+        "ARR-014"
+      ],
+      "proof_paths": [
+        "tests/unit/test_runtime_contract.py",
+        "tests/integration/test_durable_runtime.py",
+        "tests/integration/test_read_batch_recovery.py",
+        "scripts/probe_runtime.py"
+      ]
+    },
+    {
+      "id": "VC-GOVERNED-MEMORY",
+      "title": "Scoped non-authorizing memory",
+      "methods": [
+        "Real scope/provenance/API, poisoning and delete-after-checkpoint resume tests"
+      ],
+      "requirement_ids": [
+        "ARR-015"
+      ],
+      "proof_paths": [
+        "tests/integration/test_memory.py",
+        "scripts/probe_memory.py"
+      ]
+    },
+    {
+      "id": "VC-OBSERVABILITY-AUDIT",
+      "title": "Correlated telemetry, audit and safe export",
+      "methods": [
+        "Twelve-span calibration, concurrent audit sequence/correlation, atomic deletion and secret-export rejection"
+      ],
+      "requirement_ids": [
+        "ARR-016"
+      ],
+      "proof_paths": [
+        "tests/unit/test_observability_contracts.py",
+        "tests/integration/test_observability.py"
+      ]
+    },
+    {
+      "id": "VC-EVALUATION-HARNESS",
+      "title": "Deterministic evaluators and strict receipts",
+      "methods": [
+        "Layer calibration, hard-invariant precedence, exact scenario identity and weak-receipt rejection"
+      ],
+      "requirement_ids": [
+        "ARR-017",
+        "ARR-025"
+      ],
+      "proof_paths": [
+        "tests/unit/test_evals_contracts.py",
+        "tests/integration/test_eval_evidence.py"
+      ]
+    },
+    {
+      "id": "VC-RELIABILITY-ACCEPTANCE",
+      "title": "Mandatory scenarios and fixed live population",
+      "methods": [
+        "S01–S12 deterministic execution and immutable five-case three-seed live scoring"
+      ],
+      "requirement_ids": [
+        "ARR-004",
+        "ARR-018",
+        "ARR-019"
+      ],
+      "proof_paths": [
+        "tests/integration/test_mandatory_scenarios.py",
+        "tests/unit/test_b100r9_harness.py",
+        "src/agent_reliability_runtime/evals/campaign.py",
+        "docs/project/RELIABILITY_ACCEPTANCE.md"
+      ]
+    },
+    {
+      "id": "VC-STATIC-EVIDENCE",
+      "title": "Static Evidence Demo integrity and browser isolation",
+      "methods": [
+        "Five immutable replay/receipt checks, verifier calibration and static-only browser critical path"
+      ],
+      "requirement_ids": [
+        "ARR-020",
+        "ARR-021",
+        "ARR-023"
+      ],
+      "proof_paths": [
+        "scripts/verify_static_evidence.py",
+        "tests/unit/test_static_evidence_integrity.py",
+        "web/e2e/static-evidence.spec.ts"
+      ]
+    },
+    {
+      "id": "VC-PORTABILITY",
+      "title": "Explicit tested and expected platform support",
+      "methods": [
+        "Cross-platform static/unit CI and support-status calibration"
+      ],
+      "requirement_ids": [
+        "ARR-022"
+      ],
+      "proof_paths": [
+        ".github/workflows/ci.yml",
+        "tests/unit/test_documentation_contract.py",
+        "docs/project/SUPPORT_MATRIX.md"
+      ]
+    },
+    {
+      "id": "VC-RELEASE-INTEGRITY",
+      "title": "Exact-source proof and explicit release approval",
+      "methods": [
+        "Git-blob manifest, source-bound replay integrity and manual merge/release authorization"
+      ],
+      "requirement_ids": [
+        "ARR-025",
+        "ARR-026"
+      ],
+      "proof_paths": [
+        "docs/project/spec/v1.0/scripts/validate_spec.py",
+        "tests/unit/test_spec_manifest_integrity.py",
+        "scripts/verify_static_evidence.py",
+        "docs/project/spec/v1.0/00_PRODUCT_CONTRACT.md"
+      ]
+    }
+  ]
+}

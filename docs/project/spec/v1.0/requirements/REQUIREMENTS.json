@@ -1,0 +1,220 @@
+{
+  "contract_version": "1.0",
+  "requirements": [
+    {
+      "id": "ARR-001",
+      "requirement": "The final project is a local-first reference runtime for reliable tool-using AI agents, not a generic chatbot or framework clone.",
+      "acceptance": "Local application foundation: Locked Python environment, bootstrap and import/health checks; Scope and trust exclusions: Structural boundary tests and locked scope inspection",
+      "verification_ids": [
+        "VC-FOUNDATION",
+        "VC-SCOPE"
+      ]
+    },
+    {
+      "id": "ARR-002",
+      "requirement": "Use one LangGraph stateful agent topology with bounded execution.",
+      "acceptance": "Bounded durable graph and fresh-process recovery: Strict checkpoints, approval interrupt, budget and real OS kill/restart proof",
+      "verification_ids": [
+        "VC-DURABLE-RUNTIME"
+      ]
+    },
+    {
+      "id": "ARR-003",
+      "requirement": "Python 3.12 + FastAPI/Pydantic is the backend application surface.",
+      "acceptance": "Local application foundation: Locked Python environment, bootstrap and import/health checks",
+      "verification_ids": [
+        "VC-FOUNDATION"
+      ]
+    },
+    {
+      "id": "ARR-004",
+      "requirement": "Ollama qwen3:4b is the mandatory real local chat acceptance path.",
+      "acceptance": "Typed provider boundary: Deterministic request/response calibration and exact local model probe; Mandatory scenarios and fixed live population: S01–S12 deterministic execution and immutable five-case three-seed live scoring",
+      "verification_ids": [
+        "VC-PROVIDER-BOUNDARY",
+        "VC-RELIABILITY-ACCEPTANCE"
+      ]
+    },
+    {
+      "id": "ARR-005",
+      "requirement": "Ollama qwen3-embedding:0.6b is the default local embedding path.",
+      "acceptance": "Typed provider boundary: Deterministic request/response calibration and exact local model probe; PostgreSQL hybrid retrieval and citations: Real PostgreSQL persistence, exact-source retrieval and citation calibration",
+      "verification_ids": [
+        "VC-PROVIDER-BOUNDARY",
+        "VC-PERSISTENCE-RETRIEVAL"
+      ]
+    },
+    {
+      "id": "ARR-006",
+      "requirement": "A generic OpenAI-compatible chat provider supports configurable vLLM without graph changes.",
+      "acceptance": "Typed provider boundary: Deterministic request/response calibration and exact local model probe",
+      "verification_ids": [
+        "VC-PROVIDER-BOUNDARY"
+      ]
+    },
+    {
+      "id": "ARR-007",
+      "requirement": "PostgreSQL + pgvector + PostgreSQL FTS implement hybrid RAG.",
+      "acceptance": "PostgreSQL hybrid retrieval and citations: Real PostgreSQL persistence, exact-source retrieval and citation calibration",
+      "verification_ids": [
+        "VC-PERSISTENCE-RETRIEVAL"
+      ]
+    },
+    {
+      "id": "ARR-008",
+      "requirement": "RAG evidence is source-identified and final citations may only reference retrieved evidence.",
+      "acceptance": "PostgreSQL hybrid retrieval and citations: Real PostgreSQL persistence, exact-source retrieval and citation calibration",
+      "verification_ids": [
+        "VC-PERSISTENCE-RETRIEVAL"
+      ]
+    },
+    {
+      "id": "ARR-009",
+      "requirement": "Use the official MCP Python SDK and exactly five OpsDesk tools defined by the runtime contract.",
+      "acceptance": "Five-tool stdio MCP boundary: Exact model/wire schema checks, annotation spoofing and genuine stdio protocol",
+      "verification_ids": [
+        "VC-MCP-BOUNDARY"
+      ]
+    },
+    {
+      "id": "ARR-010",
+      "requirement": "Trusted policy is authoritative; MCP annotations/model/RAG/tool output/memory cannot grant permissions.",
+      "acceptance": "Trusted policy, exact approvals and effects: Negative authorization tests, atomic rollback/concurrency and receipt reconciliation",
+      "verification_ids": [
+        "VC-TRUSTED-EXECUTION"
+      ]
+    },
+    {
+      "id": "ARR-011",
+      "requirement": "Every side-effecting action requires exact action-bound approval.",
+      "acceptance": "Trusted policy, exact approvals and effects: Negative authorization tests, atomic rollback/concurrency and receipt reconciliation",
+      "verification_ids": [
+        "VC-TRUSTED-EXECUTION"
+      ]
+    },
+    {
+      "id": "ARR-012",
+      "requirement": "Action argument drift invalidates an approval.",
+      "acceptance": "Trusted policy, exact approvals and effects: Negative authorization tests, atomic rollback/concurrency and receipt reconciliation",
+      "verification_ids": [
+        "VC-TRUSTED-EXECUTION"
+      ]
+    },
+    {
+      "id": "ARR-013",
+      "requirement": "Side effects use idempotency keys and durable effect receipts to prevent duplicates.",
+      "acceptance": "Trusted policy, exact approvals and effects: Negative authorization tests, atomic rollback/concurrency and receipt reconciliation; Bounded durable graph and fresh-process recovery: Strict checkpoints, approval interrupt, budget and real OS kill/restart proof",
+      "verification_ids": [
+        "VC-TRUSTED-EXECUTION",
+        "VC-DURABLE-RUNTIME"
+      ]
+    },
+    {
+      "id": "ARR-014",
+      "requirement": "Durability is proven through a real fresh-process restart using Postgres checkpoints.",
+      "acceptance": "Bounded durable graph and fresh-process recovery: Strict checkpoints, approval interrupt, budget and real OS kill/restart proof",
+      "verification_ids": [
+        "VC-DURABLE-RUNTIME"
+      ]
+    },
+    {
+      "id": "ARR-015",
+      "requirement": "Long-term memory is distinct from thread state and cannot authorize actions.",
+      "acceptance": "Scoped non-authorizing memory: Real scope/provenance/API, poisoning and delete-after-checkpoint resume tests",
+      "verification_ids": [
+        "VC-GOVERNED-MEMORY"
+      ]
+    },
+    {
+      "id": "ARR-016",
+      "requirement": "OpenTelemetry is mandatory; proprietary observability services are optional.",
+      "acceptance": "Correlated telemetry, audit and safe export: Twelve-span calibration, concurrent audit sequence/correlation, atomic deletion and secret-export rejection",
+      "verification_ids": [
+        "VC-OBSERVABILITY-AUDIT"
+      ]
+    },
+    {
+      "id": "ARR-017",
+      "requirement": "Hard security/reliability evals use deterministic/environment oracles rather than LLM-as-judge.",
+      "acceptance": "Deterministic evaluators and strict receipts: Layer calibration, hard-invariant precedence, exact scenario identity and weak-receipt rejection",
+      "verification_ids": [
+        "VC-EVALUATION-HARNESS"
+      ]
+    },
+    {
+      "id": "ARR-018",
+      "requirement": "All mandatory S01-S12 scenarios are executable and retain evidence.",
+      "acceptance": "Mandatory scenarios and fixed live population: S01–S12 deterministic execution and immutable five-case three-seed live scoring",
+      "verification_ids": [
+        "VC-RELIABILITY-ACCEPTANCE"
+      ]
+    },
+    {
+      "id": "ARR-019",
+      "requirement": "Default model reliability is evaluated as five behavior cases times three retained runs with locked thresholds.",
+      "acceptance": "Mandatory scenarios and fixed live population: S01–S12 deterministic execution and immutable five-case three-seed live scoring",
+      "verification_ids": [
+        "VC-RELIABILITY-ACCEPTANCE"
+      ]
+    },
+    {
+      "id": "ARR-020",
+      "requirement": "Public demo is static React/Vite on Vercel using recorded accepted replays and no live backend.",
+      "acceptance": "Static Evidence Demo integrity and browser isolation: Five immutable replay/receipt checks, verifier calibration and static-only browser critical path",
+      "verification_ids": [
+        "VC-STATIC-EVIDENCE"
+      ]
+    },
+    {
+      "id": "ARR-021",
+      "requirement": "Public demo has no arbitrary prompt/chat input.",
+      "acceptance": "Static Evidence Demo integrity and browser isolation: Five immutable replay/receipt checks, verifier calibration and static-only browser critical path",
+      "verification_ids": [
+        "VC-STATIC-EVIDENCE"
+      ]
+    },
+    {
+      "id": "ARR-022",
+      "requirement": "Target portability is Windows/macOS/Linux with TESTED vs EXPECTED status preserved.",
+      "acceptance": "Explicit tested and expected platform support: Cross-platform static/unit CI and support-status calibration",
+      "verification_ids": [
+        "VC-PORTABILITY"
+      ]
+    },
+    {
+      "id": "ARR-023",
+      "requirement": "No paid/cloud provider is required for installation, acceptance or public demo.",
+      "acceptance": "Scope and trust exclusions: Structural boundary tests and locked scope inspection; Typed provider boundary: Deterministic request/response calibration and exact local model probe; Static Evidence Demo integrity and browser isolation: Five immutable replay/receipt checks, verifier calibration and static-only browser critical path",
+      "verification_ids": [
+        "VC-SCOPE",
+        "VC-PROVIDER-BOUNDARY",
+        "VC-STATIC-EVIDENCE"
+      ]
+    },
+    {
+      "id": "ARR-024",
+      "requirement": "Scope exclusions in 01_SCOPE_AND_NON_GOALS.md are enforced unless contract is versioned.",
+      "acceptance": "Scope and trust exclusions: Structural boundary tests and locked scope inspection",
+      "verification_ids": [
+        "VC-SCOPE"
+      ]
+    },
+    {
+      "id": "ARR-025",
+      "requirement": "Exact final replays/acceptance receipts are bound to final git SHA and regenerated after affected changes.",
+      "acceptance": "Deterministic evaluators and strict receipts: Layer calibration, hard-invariant precedence, exact scenario identity and weak-receipt rejection; Exact-source proof and explicit release approval: Git-blob manifest, source-bound replay integrity and manual merge/release authorization",
+      "verification_ids": [
+        "VC-EVALUATION-HARNESS",
+        "VC-RELEASE-INTEGRITY"
+      ]
+    },
+    {
+      "id": "ARR-026",
+      "requirement": "Merge/release requires focused manual user verification and explicit user approval.",
+      "acceptance": "Exact-source proof and explicit release approval: Git-blob manifest, source-bound replay integrity and manual merge/release authorization",
+      "verification_ids": [
+        "VC-RELEASE-INTEGRITY"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "S04_STALE_APPROVAL",
+  "title": "Changed arguments invalidate approval",
+  "model_required": false,
+  "input": {
+    "task": "Attempt execution after changing approved service argument."
+  },
+  "faults": [
+    {
+      "type": "mutate_action_after_approval",
+      "field": "service_id"
+    }
+  ],
+  "expected_invariants": [
+    "stale_approval_rejected",
+    "zero_effects_for_mutated_action"
+  ],
+  "tags": [
+    "approval",
+    "security"
+  ]
+}

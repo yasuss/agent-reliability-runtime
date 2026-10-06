@@ -1,0 +1,118 @@
+{
+  "version": "PROOF-INDEX-v1",
+  "claims": [
+    {
+      "id": "provider-boundary",
+      "claim": "Provider adapters enforce the typed chat and embedding boundary.",
+      "proof_paths": [
+        "tests/unit/test_providers.py",
+        "scripts/probe_providers.py"
+      ],
+      "proof_kind": "mixed"
+    },
+    {
+      "id": "hybrid-retrieval-citations",
+      "claim": "Hybrid retrieval returns current, citation-valid evidence.",
+      "proof_paths": [
+        "tests/unit/test_retrieval_mechanisms.py",
+        "tests/integration/test_retrieval.py",
+        "scripts/probe_retrieval.py"
+      ],
+      "proof_kind": "mixed"
+    },
+    {
+      "id": "mcp-five-tools",
+      "claim": "The OpsDesk stdio boundary exposes exactly five model-owned tools.",
+      "proof_paths": [
+        "tests/unit/test_opsdesk_contracts.py",
+        "tests/integration/test_opsdesk_protocol.py",
+        "scripts/probe_opsdesk.py"
+      ],
+      "proof_kind": "mixed"
+    },
+    {
+      "id": "deterministic-policy",
+      "claim": "Trusted policy classifies tool actions deterministically.",
+      "proof_paths": [
+        "tests/unit/test_policy.py",
+        "scripts/probe_policy_effects.py"
+      ],
+      "proof_kind": "mixed"
+    },
+    {
+      "id": "exact-approval",
+      "claim": "Required side effects need an exact valid approval.",
+      "proof_paths": [
+        "tests/unit/test_policy.py",
+        "tests/integration/test_policy_effects.py"
+      ],
+      "proof_kind": "test"
+    },
+    {
+      "id": "idempotent-side-effects",
+      "claim": "Effect receipts reconcile retries without duplicate physical effects.",
+      "proof_paths": [
+        "tests/integration/test_policy_effects.py",
+        "tests/integration/test_eval_evidence.py"
+      ],
+      "proof_kind": "test"
+    },
+    {
+      "id": "durable-restart",
+      "claim": "PostgreSQL checkpoints support fresh-process restart recovery.",
+      "proof_paths": [
+        "tests/integration/test_durable_runtime.py",
+        "scripts/probe_runtime.py"
+      ],
+      "proof_kind": "mixed"
+    },
+    {
+      "id": "governed-memory",
+      "claim": "Memory is scoped, provenance-aware and non-authorizing.",
+      "proof_paths": [
+        "tests/integration/test_memory.py",
+        "scripts/probe_memory.py"
+      ],
+      "proof_kind": "mixed"
+    },
+    {
+      "id": "otel-audit",
+      "claim": "OTel spans and durable audit events share run correlation.",
+      "proof_paths": [
+        "tests/unit/test_observability_contracts.py",
+        "tests/integration/test_observability.py"
+      ],
+      "proof_kind": "test"
+    },
+    {
+      "id": "eval-harness",
+      "claim": "Deterministic evaluators and calibrated review produce bounded evidence.",
+      "proof_paths": [
+        "tests/unit/test_evals_contracts.py",
+        "tests/unit/test_campaign.py",
+        "tests/unit/test_b100r9_harness.py"
+      ],
+      "proof_kind": "mixed"
+    },
+    {
+      "id": "adversarial-scenarios",
+      "claim": "Mandatory scenarios exercise hard trust and durability invariants.",
+      "proof_paths": [
+        "tests/integration/test_mandatory_scenarios.py",
+        "docs/project/RELIABILITY_ACCEPTANCE.md"
+      ],
+      "proof_kind": "test"
+    },
+    {
+      "id": "static-evidence-demo",
+      "claim": "The static viewer verifies accepted replay and receipt evidence.",
+      "proof_paths": [
+        "scripts/verify_static_evidence.py",
+        "tests/unit/test_static_evidence_integrity.py",
+        "web/e2e/static-evidence.spec.ts"
+      ],
+      "proof_kind": "mixed"
+    }
+  ],
+  "verification_catalog": "docs/project/spec/v1.0/requirements/VERIFICATION_CATALOG.json"
+}

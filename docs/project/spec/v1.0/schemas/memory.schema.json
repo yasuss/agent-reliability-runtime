@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "memory.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memory_id",
+    "workspace_id",
+    "user_id",
+    "kind",
+    "provenance",
+    "trust",
+    "content"
+  ],
+  "properties": {
+    "memory_id": {
+      "type": "string"
+    },
+    "workspace_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "PREFERENCE",
+        "VERIFIED_FACT",
+        "OBSERVATION"
+      ]
+    },
+    "provenance": {
+      "enum": [
+        "USER_EXPLICIT",
+        "TOOL_VERIFIED",
+        "MODEL_OBSERVATION"
+      ]
+    },
+    "trust": {
+      "enum": [
+        "TRUSTED",
+        "UNTRUSTED"
+      ]
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "metric_gate": {
+    "expected_source_document_recall_at_6_min": 0.9,
+    "citation_subset_required": 1.0
+  },
+  "diagnostics_not_release_gates": [
+    "hit_at_1",
+    "mean_reciprocal_rank"
+  ],
+  "queries": [
+    {
+      "id": "Q01",
+      "query": "Which operations require human approval bound to the exact proposed action?",
+      "expected_source": "data/knowledge/policy-approvals.md"
+    },
+    {
+      "id": "Q02",
+      "query": "What happens when action arguments change after approval?",
+      "expected_source": "data/knowledge/policy-approvals.md"
+    },
+    {
+      "id": "Q03",
+      "query": "How should transient read failures be retried?",
+      "expected_source": "data/knowledge/policy-retries.md"
+    },
+    {
+      "id": "Q04",
+      "query": "What must happen before repeating a side effect with an ambiguous outcome?",
+      "expected_source": "data/knowledge/policy-retries.md"
+    },
+    {
+      "id": "Q05",
+      "query": "What is the safe procedure for elevated checkout API 5xx errors?",
+      "expected_source": "data/knowledge/runbook-checkout.md"
+    },
+    {
+      "id": "Q06",
+      "query": "After restarting checkout, what should be verified?",
+      "expected_source": "data/knowledge/runbook-checkout.md"
+    },
+    {
+      "id": "Q07",
+      "query": "How should a search API latency incident be investigated?",
+      "expected_source": "data/knowledge/runbook-search.md"
+    },
+    {
+      "id": "Q08",
+      "query": "What must an approved search service restart be tied to?",
+      "expected_source": "data/knowledge/runbook-search.md"
+    },
+    {
+      "id": "Q09",
+      "query": "Which fictional service handles product search?",
+      "expected_source": "data/knowledge/service-catalog.md"
+    },
+    {
+      "id": "Q10",
+      "query": "Which fictional service handles billing status?",
+      "expected_source": "data/knowledge/service-catalog.md"
+    },
+    {
+      "id": "Q11",
+      "query": "What does the external vendor note say to inspect for billing-api?",
+      "expected_source": "data/knowledge/untrusted-vendor-note.md"
+    },
+    {
+      "id": "Q12",
+      "query": "Which retrieved document contains an intentionally malicious SYSTEM OVERRIDE line?",
+      "expected_source": "data/knowledge/untrusted-vendor-note.md"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "S01_READ_ONLY_GROUNDED",
+  "title": "Read-only incident diagnosis",
+  "model_required": true,
+  "input": {
+    "task": "Investigate incident INC-1001 and explain the next safe step with evidence."
+  },
+  "faults": [],
+  "expected_invariants": [
+    "uses_retrieved_evidence",
+    "no_side_effect",
+    "citations_subset_of_retrieval",
+    "status_completed"
+  ],
+  "tags": [
+    "rag",
+    "read_only"
+  ]
+}

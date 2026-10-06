@@ -1,0 +1,225 @@
+{
+  "package": "context",
+  "files": [
+    {
+      "path": "00_PRODUCT_CONTRACT.md",
+      "size": 3626,
+      "sha256": "477a25f2c555e2819e64a59144bd1d183a26360e96d6b973bdb9676e9212e1f8"
+    },
+    {
+      "path": "01_SCOPE_AND_NON_GOALS.md",
+      "size": 2938,
+      "sha256": "ee8b48cf65fb22b2bd2c41c5f63f33f540293b90403d61e7ce4b6563cbbbbefc"
+    },
+    {
+      "path": "02_ARCHITECTURE.md",
+      "size": 5817,
+      "sha256": "da122e399031d79f38bc86a6dde6e2f66383eb4b9ced1f596497368ab9db1572"
+    },
+    {
+      "path": "03_RUNTIME_CONTRACTS.md",
+      "size": 6198,
+      "sha256": "51ecddb7f863d7d7f4dd4d74d9e31cf86a04683f2b95099480eb7dcd697991bb"
+    },
+    {
+      "path": "04_DATA_AND_STATE_MODEL.md",
+      "size": 1993,
+      "sha256": "2370b40f9d9d5b0d26956a2267188c732776bc1cefae8dc9d8f9e637b6e9e6c3"
+    },
+    {
+      "path": "05_SECURITY_AND_TRUST.md",
+      "size": 2433,
+      "sha256": "ce8fc051171f7b52fe0e6890df0bb29902cd704dc16aa48cb67b7b7b8c1b03f6"
+    },
+    {
+      "path": "06_OBSERVABILITY.md",
+      "size": 1976,
+      "sha256": "4fb2f16df7b5558b06a39955eec89b7a990b5c902cb856267d560ab2cfbee009"
+    },
+    {
+      "path": "07_EVALS_AND_SCENARIOS.md",
+      "size": 3508,
+      "sha256": "0fdef4d0a7c6567832a87adad8aa8e37b966fe195f99a8e0e39dec2fb7c14630"
+    },
+    {
+      "path": "08_DEMO_UX.md",
+      "size": 2008,
+      "sha256": "8f04da012ea64fa324e677a79df15fc180b32aa11ab94e34bfe3c2d1f66234fe"
+    },
+    {
+      "path": "09_TARGET_REPOSITORY_STRUCTURE.md",
+      "size": 2295,
+      "sha256": "50a2fb82276500ec24958699a2c7b023a869c9606de858b8b907f8c558cafd07"
+    },
+    {
+      "path": "10_ENGINEERING_BACKLOG.md",
+      "size": 243,
+      "sha256": "3c6bbb453bc32f09d239822a4bde3bc30bb515a460f8aeae79d43d133003a59c"
+    },
+    {
+      "path": "11_ACCEPTANCE_GATES.md",
+      "size": 240,
+      "sha256": "fc8add6ca565dc1403104776c7787feb8c92c0dc6b9fbe523a8af82b753e5376"
+    },
+    {
+      "path": "12_RESEARCH_AND_DESIGN_DECISIONS.md",
+      "size": 5472,
+      "sha256": "75fa997d0b904d991e64fb6f4bc2158c85e30b84d858b73b6a3ee53a6b37dad0"
+    },
+    {
+      "path": "13_SOURCE_INDEX.md",
+      "size": 6523,
+      "sha256": "ea38d744b09a569e4780597dc761e0eb7804cf041719659239f5da9e0bdb1b7a"
+    },
+    {
+      "path": "14_ORCHESTRATOR_HANDOFF.md",
+      "size": 244,
+      "sha256": "5229c3d3960825a5f997d5f8128acaddc7bacabc98d2e2e6e36a985eaf9ad6a6"
+    },
+    {
+      "path": "READ_FIRST.md",
+      "size": 1261,
+      "sha256": "2371c85dac9ddabeeca3e2f10e215af492fd55771c98aaf823f5f2c2c4df14aa"
+    },
+    {
+      "path": "fixtures/demo_state.json",
+      "size": 1273,
+      "sha256": "fd9ec5380c3bad3b34fe6ec439f028dfac92b0baaea8e704b2f740932590d6ec"
+    },
+    {
+      "path": "fixtures/knowledge/policy-approvals.md",
+      "size": 254,
+      "sha256": "91d506f27dd5c0ba3b72aa235fcd27f5c58cbb57a36db633159250f7a5e444aa"
+    },
+    {
+      "path": "fixtures/knowledge/policy-retries.md",
+      "size": 226,
+      "sha256": "0e59d83c30e034d0734f7ed854339940095909cda80d55727e365cc7294ae447"
+    },
+    {
+      "path": "fixtures/knowledge/runbook-checkout.md",
+      "size": 455,
+      "sha256": "6bcc92bf772df9dfe89bc667cf53691b22382ceee3f866fce449491f5923797a"
+    },
+    {
+      "path": "fixtures/knowledge/runbook-search.md",
+      "size": 214,
+      "sha256": "1af3cd7abaed283371a274a7d6c9fc7b705eb5dee176d29d599b05c41045b3e2"
+    },
+    {
+      "path": "fixtures/knowledge/service-catalog.md",
+      "size": 197,
+      "sha256": "9bc5cf6fee907ce13e6c822a76055a23e897ab9aed3b1513b6f8be746effeeef"
+    },
+    {
+      "path": "fixtures/knowledge/untrusted-vendor-note.md",
+      "size": 371,
+      "sha256": "0fd28bee4d3b16b5f5d4081a1d764da12bab5f660f5baccc3fdb1a4d760b46fe"
+    },
+    {
+      "path": "fixtures/scenarios/S01_READ_ONLY_GROUNDED.json",
+      "size": 419,
+      "sha256": "e4d794c425d46987430586ddcd195c37b7dab98d791ab6fd84a1d6caaa85581a"
+    },
+    {
+      "path": "fixtures/scenarios/S02_APPROVAL_REQUIRED.json",
+      "size": 437,
+      "sha256": "89badd38156d2438118fd6fc53ce78c3c41b8a25fcd71e23140c210ac83be8c1"
+    },
+    {
+      "path": "fixtures/scenarios/S03_APPROVAL_REJECTED.json",
+      "size": 417,
+      "sha256": "17e9636010d6cc32db245bf052782f6c2ea77dd1d7ce686ace69873fa640c906"
+    },
+    {
+      "path": "fixtures/scenarios/S04_STALE_APPROVAL.json",
+      "size": 458,
+      "sha256": "d74fe5d815dec7227a8671e98206ffca34df9dfdcadf78c3e9488a2f433bc5f2"
+    },
+    {
+      "path": "fixtures/scenarios/S05_RAG_PROMPT_INJECTION.json",
+      "size": 421,
+      "sha256": "ef2c8f4b089e0ac350f5fdbceb3d260dcc50fd8398eee13afe0cf2e77d18f2d9"
+    },
+    {
+      "path": "fixtures/scenarios/S06_MALICIOUS_TOOL_OUTPUT.json",
+      "size": 470,
+      "sha256": "f1206120e33e6a281467e4f64b59bf85f9dad29640413f801de3059471602ef6"
+    },
+    {
+      "path": "fixtures/scenarios/S07_TRANSIENT_TIMEOUT.json",
+      "size": 477,
+      "sha256": "8c08f27ccf6d6e3a89706c7134214370add1740fbb9110a1a55b84ec2480e809"
+    },
+    {
+      "path": "fixtures/scenarios/S08_PROCESS_KILL_RESUME.json",
+      "size": 484,
+      "sha256": "c48ed2503f6662ab02d0ef912ca43c1444163dcd5521879dd99e24c97e3767e0"
+    },
+    {
+      "path": "fixtures/scenarios/S09_DUPLICATE_EFFECT.json",
+      "size": 487,
+      "sha256": "cfba8cf47d4a320ce7eee618d9b8038e5577b90f91e705a8c0f64348387cb997"
+    },
+    {
+      "path": "fixtures/scenarios/S10_MEMORY_POISONING.json",
+      "size": 535,
+      "sha256": "40a8fb5e99eb21fd432158ffee307d1eb353043a267258ba60eab46c1822e3f3"
+    },
+    {
+      "path": "fixtures/scenarios/S11_STEP_BUDGET.json",
+      "size": 396,
+      "sha256": "84fbc7a3173259b93f3cdd11ce77d80d7615ff00c2db1cb93b52615f378af904"
+    },
+    {
+      "path": "fixtures/scenarios/S12_PROVIDER_FAILURE.json",
+      "size": 414,
+      "sha256": "913b5f6e3ebf0538505d60d58a1824457985f7c2fa62c56a747af12871a7b9a0"
+    },
+    {
+      "path": "requirements/REQUIREMENTS.json",
+      "size": 10244,
+      "sha256": "7ca894ff9598769316b1b6af8a24a7c6da93c1d3e28aea2dd34306ec52c91138"
+    },
+    {
+      "path": "requirements/VERIFICATION_CATALOG.json",
+      "size": 6652,
+      "sha256": "7e85d5157b38f9dbe03863551aa2ec44e4ee05a9b18e3735d80c14c70eb1c6ef"
+    },
+    {
+      "path": "schemas/acceptance_receipt.schema.json",
+      "size": 956,
+      "sha256": "62cf52608fa5af85868f3c1f527f6ad4c24d4d80d31507cf7461463fa8432d26"
+    },
+    {
+      "path": "schemas/approval.schema.json",
+      "size": 966,
+      "sha256": "34ea7b7c595e15fa7644916453faf7b98321b7a36507f9b74cba61badea0ac8e"
+    },
+    {
+      "path": "schemas/memory.schema.json",
+      "size": 932,
+      "sha256": "933eb4a47f83a8e6f6373fb01af30189c10471234f0f6f67f9465a6db1c62d1a"
+    },
+    {
+      "path": "schemas/replay.schema.json",
+      "size": 1495,
+      "sha256": "3051693eb52d9293815dc4625e003397e819e6170add5025280d3cec6f12354e"
+    },
+    {
+      "path": "schemas/scenario.schema.json",
+      "size": 863,
+      "sha256": "4104a54641803d0eba2948ce0c113a4a6b9edc9cfe7b6d7974139bc46c4c2ada"
+    },
+    {
+      "path": "scripts/update_manifest.py",
+      "size": 868,
+      "sha256": "63dc4f08a249696eec3e8599bca4b534c7d432287f931f44af6c1651bc8f682a"
+    },
+    {
+      "path": "scripts/validate_spec.py",
+      "size": 9535,
+      "sha256": "1ea0b08de0ee0fe3583aa67666f124cb628355c62ffcbae5b2878d99c63ee5f4"
+    }
+  ]
+}
