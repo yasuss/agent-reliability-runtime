@@ -32,7 +32,7 @@ from agent_reliability_runtime.adapters.langgraph.protocol import (
 )
 from agent_reliability_runtime.adapters.langgraph.tool_batches import validate_calls
 from agent_reliability_runtime.adapters.mcp.session import (
-    MCPTransportError as OpsDeskError,
+    MCPTransportError,
 )
 from agent_reliability_runtime.adapters.otel.telemetry import Telemetry
 from agent_reliability_runtime.adapters.postgres.audit import AuditTrail
@@ -567,7 +567,7 @@ async def execute_tool(state: State, runtime: Runtime[Context]) -> dict[str, Any
                     action, state["approval_id"]
                 )
                 break
-            except OpsDeskError:
+            except MCPTransportError:
                 if action.risk_class != "READ_ONLY":
                     # Retain the checkpoint for B50 receipt reconciliation on
                     # continuation; an ambiguous write never enters this loop.

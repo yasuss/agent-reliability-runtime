@@ -2,11 +2,12 @@
 
 This readable map follows the machine-readable [PROOF_INDEX](PROOF_INDEX.json).
 Each claim points to at least one tracked executable test, script or replay.
-The [verification catalog](spec/v1.0/requirements/VERIFICATION_CATALOG.json)
-connects named VC methods back to the exact ARR requirements in
-[REQUIREMENTS](spec/v1.0/requirements/REQUIREMENTS.json). Both directions are
-validated, including tracked executable proof paths; generic gate labels do not
-establish coverage.
+The historical [verification catalog](spec/v1.0/requirements/VERIFICATION_CATALOG.json)
+is validated against the immutable `v1.0.0` tree at
+`e9fd3d29a969d66ad907ff5f7d0ea0055ed7ae2a` and connects named VC methods back to
+the exact historical ARR requirements in
+[REQUIREMENTS](spec/v1.0/requirements/REQUIREMENTS.json). Current v2 proof paths
+are defined by `PROOF_INDEX.json`; generic gate labels do not establish coverage.
 
 | Claim ID | Observable proof |
 | --- | --- |

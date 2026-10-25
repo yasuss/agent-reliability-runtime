@@ -33,6 +33,8 @@ The existing CLI (`python -m agent_reliability_runtime.cli`), MCP server launch
 internal imports moved in v2. The local API is `agent_reliability_runtime.demo.api:app`.
 
 Dependency groups/extras are deliberately unchanged and deferred to a later
-release: a core-only installation is not claimed by this release. No external
-dependency was added or upgraded. See [Architecture](project/ARCHITECTURE.md) and
+release: a core-only installation is not claimed by this release. Python runtime
+dependencies remain unchanged; Vite development/build tooling is patched from
+8.3.2 to 8.3.3 for reviewed upstream security advisories. See
+[Architecture](project/ARCHITECTURE.md) and
 [Verification](project/VERIFICATION.md) for boundaries and preserved evidence.

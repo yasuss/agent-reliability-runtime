@@ -1,4 +1,4 @@
-"""Trusted OpsDesk policy, exact approvals and durable execution gateway.
+"""Trusted policy, exact approvals and durable execution gateway.
 
 Only this gateway is a production execution surface. Raw MCP infrastructure is
 non-authorizing and must never be connected directly to a graph.

@@ -3,15 +3,16 @@
 Version 1.0.0 is a historical published release with an immutable tag and
 static web deployment. The historical procedure below records that release.
 
-## Version 2.0.0 candidate
+## Version 2.0.0 release procedure
 
-The v2 candidate separates core, adapters and demo while preserving behavior.
-After independent Architect acceptance, merge the one candidate commit, wait
-for exact-main CI, recheck the immutable v1 tag, then tag the verified main SHA
-and create the v2 GitHub release from its release notes. This is a code/docs
-release only: `web/**` and replay bytes remain unchanged, the web package stays
-at 1.0.0, and no Vercel redeploy is required. Candidate implementation does not
-merge, tag or publish.
+Version 2.0.0 separates core, adapters and demo while preserving behavior. After
+independent acceptance: merge the accepted PR, wait for exact-main CI, verify the
+historical v1 tag, verify the reviewed dependency state/security closure, tag the
+exact verified main SHA as `v2.0.0`, and create the GitHub Release using
+`release/RELEASE_NOTES_2.0.0.md`. This is a code/docs release only: generated
+static output and replay bytes remain unchanged, the web package stays at 1.0.0,
+and no production Vercel redeploy is required because the Vite delta is build/dev
+tooling.
 
 ## Historical v1 candidate verification
 

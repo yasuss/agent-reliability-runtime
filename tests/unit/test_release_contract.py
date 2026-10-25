@@ -1,7 +1,10 @@
 from pathlib import Path
 
+import pytest
+
 from scripts.verify_release import (
     BASE_SHA,
+    REVIEWED_NPM_DELTA,
     SCENARIO_SHA,
     VERSION,
     WEB_VERSION,
@@ -12,6 +15,19 @@ from scripts.verify_release import (
 
 def test_release_contract_is_green() -> None:
     assert check() == []
+
+
+def test_release_contract_rejects_unreviewed_npm_delta(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts import verify_release
+
+    monkeypatch.setattr(
+        verify_release,
+        "dependency_sets",
+        lambda: (set(), set(REVIEWED_NPM_DELTA) | {("node_modules/other", "1.0.0")}),
+    )
+    assert any("unreviewed dependency drift" in error for error in check())
 
 
 def test_release_contract_is_bound_to_accepted_baseline() -> None:

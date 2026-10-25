@@ -18,8 +18,10 @@ The following boundaries are deliberate:
 - OTel defaults exclude raw prompt/tool secret content; explicit local opt-ins are
   the developer's responsibility.
 - Development Compose credentials and configuration must not be deployed.
-- Apache-2.0 licensing applies. The historical v1 release remains immutable;
-  v2 tagging/publication follows independent acceptance.
+- Apache-2.0 licensing applies. The historical v1 release remains immutable.
+  Version 2.0.0 is a code/docs/runtime packaging release; its reviewed Vite patch
+  affects development/build tooling and does not require replacing the unchanged
+  static evidence deployment.
 - The v2 public Python extension boundary is `core.ports` and its neutral value
   contracts. Internal import paths changed; the CLI/MCP/script entry points remain.
 - Reconciler, TimerStore, SourceRevisionReader and CapabilityRegistry are planned

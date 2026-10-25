@@ -1,12 +1,20 @@
+import json
+from collections.abc import Callable
+from copy import deepcopy
+from typing import Any
+
 import pytest
 
 from scripts import verify_behavior_provenance as provenance
 from scripts.verify_behavior_provenance import (
     ACCEPTED_SOURCE_SHA,
     REFACTOR_BASE_SHA,
+    REVIEWED_VITE_FROM,
+    REVIEWED_VITE_TO,
     SCENARIO_SHA,
     check,
     surface_errors,
+    validate_reviewed_web_dependency_transition,
 )
 
 
@@ -43,6 +51,71 @@ def test_refactor_surface_calibration() -> None:
         "release/RELEASE_NOTES_1.0.0.md",
     ):
         assert surface_errors({path}), path
+
+
+def _web_fixtures() -> tuple[
+    dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]
+]:
+    before_package = json.loads(provenance.blob(REFACTOR_BASE_SHA, "web/package.json"))
+    before_lock = json.loads(
+        provenance.blob(REFACTOR_BASE_SHA, "web/package-lock.json")
+    )
+    current_package = deepcopy(before_package)
+    current_lock = deepcopy(before_lock)
+    current_package["devDependencies"]["vite"] = REVIEWED_VITE_TO
+    current_lock["packages"][""]["devDependencies"]["vite"] = REVIEWED_VITE_TO
+    vite = current_lock["packages"]["node_modules/vite"]
+    vite["version"] = REVIEWED_VITE_TO
+    vite["resolved"] = "https://registry.npmjs.org/vite/-/vite-8.3.3.tgz"
+    vite["integrity"] = (
+        "sha512-cTAldKPImjg6c+gk48U19POPn3GCBzZwpdsN8ZMEEcbpes+6/wvfqUd0C2y3qYY4wsj8PwgFwrZ/1jBPVttMSg=="
+    )
+    return before_package, before_lock, current_package, current_lock
+
+
+def test_reviewed_web_dependency_paths_are_authorized() -> None:
+    assert not surface_errors({"web/package.json", "web/package-lock.json"})
+    for path in (
+        "web/src/App.tsx",
+        "web/new-file.txt",
+        "web/public/replays/index.json",
+    ):
+        assert surface_errors({path}), path
+
+
+def test_exact_reviewed_vite_transition_passes() -> None:
+    before_package, before_lock, current_package, current_lock = _web_fixtures()
+    assert before_package["devDependencies"]["vite"] == REVIEWED_VITE_FROM
+    assert (
+        validate_reviewed_web_dependency_transition(
+            before_package, before_lock, current_package, current_lock
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda package, lock: package["devDependencies"].__setitem__("vite", "8.3.4"),
+        lambda package, lock: package["dependencies"].__setitem__("react", "19.2.9"),
+        lambda package, lock: lock["packages"].__setitem__(
+            "node_modules/extra", {"version": "1.0.0"}
+        ),
+        lambda package, lock: lock["packages"]["node_modules/react"].__setitem__(
+            "version", "19.2.9"
+        ),
+        lambda package, lock: lock.__setitem__("name", "changed-web"),
+    ],
+)
+def test_unreviewed_web_mutations_fail(
+    mutation: Callable[[dict[str, Any], dict[str, Any]], None],
+) -> None:
+    before_package, before_lock, current_package, current_lock = _web_fixtures()
+    mutation(current_package, current_lock)
+    assert validate_reviewed_web_dependency_transition(
+        before_package, before_lock, current_package, current_lock
+    )
 
 
 @pytest.mark.parametrize("kind", ["runtime", "lock"])

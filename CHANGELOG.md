@@ -5,9 +5,11 @@
 - Separate reusable framework-neutral core from framework/service adapters and OpsDesk demo.
 - Expose seven typed implemented extension ports and four planned interface-only ports.
 - Add VerificationStatus PASS/FAIL/PARTIAL; current OpsDesk behavior remains unchanged.
-- Preserve behavior and external dependencies without upgrades or schema migrations.
+- Preserve runtime/Python dependencies and database schema/migrations; patch Vite
+  development/build tooling from 8.3.2 to 8.3.3 for reviewed upstream advisories.
 - Break internal Python import paths; retain CLI, MCP server and Quickstart entry points.
-- Keep static web and recorded replay bytes unchanged; no Vercel redeploy.
+- Keep static web and recorded replay bytes unchanged; no production Vercel redeploy
+  is required.
 - Defer dependency extras to a later release.
 
 

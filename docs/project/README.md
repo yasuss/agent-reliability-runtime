@@ -36,5 +36,7 @@ remain constrained by the historical acceptance baseline and executable tests.
 - [Requirement traceability](spec/v1.0/requirements/REQUIREMENTS.json)
 - [Verification catalog](spec/v1.0/requirements/VERIFICATION_CATALOG.json)
 
-The component pages explain the current implementation; the catalog connects
-each locked requirement to a named verification method and tracked proof.
+The component pages explain the current implementation. The historical v1
+requirements and verification catalog remain evidence for the immutable
+`v1.0.0` tree; current v2 capability-to-proof paths are defined by
+`PROOF_INDEX.json`.

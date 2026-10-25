@@ -27,6 +27,10 @@ VERCEL = {
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
 }
+REVIEWED_NPM_DELTA = {
+    ("node_modules/vite", "8.3.2"),
+    ("node_modules/vite", "8.3.3"),
+}
 
 
 def git(*args: str) -> bytes:
@@ -155,10 +159,12 @@ def check() -> list[str]:
     if DOCS_SOURCE_SHA not in (ROOT / "web/src/App.tsx").read_text(encoding="utf-8"):
         errors.append("documentation snapshot link")
     uv_delta, npm_delta = dependency_sets()
-    if uv_delta or npm_delta:
+    if uv_delta:
+        errors.append(f"unreviewed dependency drift: uv={sorted(uv_delta)}")
+    if npm_delta != REVIEWED_NPM_DELTA:
         errors.append(
-            "dependency upgrade detected: "
-            f"uv={sorted(uv_delta)} npm={sorted(npm_delta)}"
+            "unreviewed dependency drift: "
+            f"npm={sorted(npm_delta)} expected={sorted(REVIEWED_NPM_DELTA)}"
         )
     for doc_path in list((ROOT / "docs/project").rglob("*.md")) + list(
         (ROOT / "docs/project").rglob("*.json")

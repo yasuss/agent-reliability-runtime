@@ -98,15 +98,16 @@ deployed.
 ## License and public API
 
 Agent Reliability Runtime uses the [Apache License 2.0](LICENSE).
-[SECURITY.md](SECURITY.md) describes responsible disclosure. The v2 candidate
-exposes the typed contracts in `agent_reliability_runtime.core.ports` documented
-in [Extension points](docs/extension-points.md). Internal Python imports moved
-and may break; the existing CLI command, MCP server launch and Quickstart scripts
-remain supported. Dependency extras are deferred.
+[SECURITY.md](SECURITY.md) describes responsible disclosure. Agent Reliability
+Runtime v2 exposes the typed contracts in `agent_reliability_runtime.core.ports`
+documented in [Extension points](docs/extension-points.md). Internal Python
+imports moved and may break; the existing CLI command, MCP server launch and
+Quickstart scripts remain supported. Dependency extras are deferred.
 
-The historical v1.0.0 release and static recorded-replay deployment remain
-unchanged. Version 2.0.0 is a behavior-preserving code/docs candidate pending
-independent acceptance; it requires no Vercel redeploy.
+The historical v1.0.0 tag and static recorded-replay deployment remain unchanged.
+Version 2.0.0 is a behavior-preserving code/docs release; Vite development/build
+tooling is patched from 8.3.2 to 8.3.3 without changing static application output,
+so no production Vercel redeploy is required for this release.
 
 ## Documentation map
 
