@@ -17,6 +17,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 ACCEPTED_SOURCE_SHA = "83514ebad336dbd6faf1b790c597ec8037be0874"
 REFACTOR_BASE_SHA = "3c1389bdb0b358c8232ed07caccf14932f7da727"
+V21_BASE_SHA = "77574ee445e97fe282a62c2528b2c250e6998ddb"
 SCENARIO_SHA = "ad14a89fb5816f2eea2ab700394df4b231191cb466e4b326437d035e34f475f9"
 PROTECTED_PREFIXES = (
     "docs/project/spec/v1.0/",
@@ -55,10 +56,33 @@ AUTHORIZED_SINGLETONS = {
     "uv.lock",
     "migrations/env.py",
     "release/RELEASE_NOTES_2.0.0.md",
+    "release/RELEASE_NOTES_2.1.0.md",
     # User-authorized bounded correction: historical v1 verification plumbing.
     ".github/workflows/ci.yml",
     *REVIEWED_WEB_DEPENDENCY_FILES,
 }
+V21_ALLOWED_PATHS = frozenset(
+    {
+        ".agents/skills/agent-reliability-runtime/references/repository-contract.md",
+        "CHANGELOG.md",
+        "README.md",
+        "docs/extension-points.md",
+        "docs/project/LIMITATIONS.md",
+        "docs/project/RELEASE_AND_DEPLOYMENT.md",
+        "docs/project/VERIFICATION.md",
+        "pyproject.toml",
+        "release/RELEASE_NOTES_2.1.0.md",
+        "scripts/verify_behavior_provenance.py",
+        "scripts/verify_docs.py",
+        "scripts/verify_release.py",
+        "src/agent_reliability_runtime/core/ports.py",
+        "tests/unit/test_behavior_provenance.py",
+        "tests/unit/test_core_boundary.py",
+        "tests/unit/test_documentation_contract.py",
+        "tests/unit/test_release_contract.py",
+        "uv.lock",
+    }
+)
 
 
 def git(*args: str) -> bytes:
@@ -90,6 +114,16 @@ def surface_errors(paths: set[str]) -> list[str]:
         ):
             errors.append(f"unauthorized refactor path: {path}")
     return errors
+
+
+def v21_surface_errors(paths: set[str]) -> list[str]:
+    """Reject any v2.1 change outside the exact interface/docs allowlist."""
+
+    return [
+        f"v2.1 unauthorized changed path: {path}"
+        for path in sorted(paths)
+        if path not in V21_ALLOWED_PATHS
+    ]
 
 
 def blob(revision: str, path: str) -> bytes:
@@ -218,6 +252,15 @@ def check() -> list[str]:
         != 0
     ):
         errors.append("refactor baseline is not an ancestor")
+    if (
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", V21_BASE_SHA, candidate],
+            cwd=ROOT,
+            capture_output=True,
+        ).returncode
+        != 0
+    ):
+        errors.append("v2.1 baseline is not an ancestor")
     # Include staged, unstaged, deleted and new files before the single commit;
     # on clean CI this same comparison binds the candidate commit itself.
     changed = set(
@@ -229,6 +272,13 @@ def check() -> list[str]:
         git("ls-files", "--others", "--exclude-standard").decode().splitlines()
     )
     errors.extend(surface_errors(changed))
+    v21_changed = set(
+        git("diff", "--name-only", "--no-renames", V21_BASE_SHA).decode().splitlines()
+    )
+    v21_changed.update(
+        git("ls-files", "--others", "--exclude-standard").decode().splitlines()
+    )
+    errors.extend(v21_surface_errors(v21_changed))
 
     try:
         before_package = json.loads(blob(REFACTOR_BASE_SHA, "web/package.json"))
@@ -278,12 +328,14 @@ def main() -> int:
         "state": "FAIL" if errors else "PASS",
         "accepted_source_sha": ACCEPTED_SOURCE_SHA,
         "refactor_base_sha": REFACTOR_BASE_SHA,
+        "v21_base_sha": V21_BASE_SHA,
         "candidate_sha": git("rev-parse", "HEAD").decode().strip(),
         "protected_changed_paths": [
             error.removeprefix("protected byte/path drift: ")
             for error in errors
             if error.startswith("protected byte/path drift:")
         ],
+        "v21_allowed_paths": sorted(V21_ALLOWED_PATHS),
         "errors": errors,
         "scenario_set_sha256": SCENARIO_SHA,
     }

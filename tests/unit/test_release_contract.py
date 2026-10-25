@@ -4,8 +4,10 @@ import pytest
 
 from scripts.verify_release import (
     BASE_SHA,
+    RELEASE_NOTES_PATH,
     REVIEWED_NPM_DELTA,
     SCENARIO_SHA,
+    V20_RELEASE_SHA,
     VERSION,
     WEB_VERSION,
     check,
@@ -32,10 +34,20 @@ def test_release_contract_rejects_unreviewed_npm_delta(
 
 def test_release_contract_is_bound_to_accepted_baseline() -> None:
     assert BASE_SHA == "3c1389bdb0b358c8232ed07caccf14932f7da727"
-    assert VERSION == "2.0.0"
+    assert VERSION == "2.1.0"
+    assert V20_RELEASE_SHA == "77574ee445e97fe282a62c2528b2c250e6998ddb"
+    assert RELEASE_NOTES_PATH == "release/RELEASE_NOTES_2.1.0.md"
     assert WEB_VERSION == "1.0.0"
     assert scenario_digest() == SCENARIO_SHA
     assert Path("LICENSE").is_file()
+
+
+def test_predecessor_tag_is_validated() -> None:
+    from scripts import verify_release
+
+    assert verify_release.git("rev-parse", "refs/tags/v2.0.0").decode().strip() == (
+        verify_release.V20_RELEASE_SHA
+    )
 
 
 def test_local_api_documentation_prescribes_loopback_only_startup() -> None:

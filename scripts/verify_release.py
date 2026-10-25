@@ -14,8 +14,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 BASE_SHA = "3c1389bdb0b358c8232ed07caccf14932f7da727"
-VERSION = "2.0.0"
+VERSION = "2.1.0"
+V20_RELEASE_SHA = "77574ee445e97fe282a62c2528b2c250e6998ddb"
 WEB_VERSION = "1.0.0"
+RELEASE_NOTES_PATH = f"release/RELEASE_NOTES_{VERSION}.md"
 LICENSE_SHA = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
 SCENARIO_SHA = "ad14a89fb5816f2eea2ab700394df4b231191cb466e4b326437d035e34f475f9"
 ACCEPTED_SOURCE_SHA = "83514ebad336dbd6faf1b790c597ec8037be0874"
@@ -142,6 +144,7 @@ def check() -> list[str]:
         "CONTRIBUTING.md",
         "web/vercel.json",
         "release/RELEASE_NOTES_2.0.0.md",
+        RELEASE_NOTES_PATH,
     ):
         if not (ROOT / required).is_file():
             errors.append(f"missing {required}")
@@ -180,16 +183,32 @@ def check() -> list[str]:
             "README.md",
             "docs/project/RELEASE_AND_DEPLOYMENT.md",
             "release/RELEASE_NOTES_2.0.0.md",
+            RELEASE_NOTES_PATH,
         )
     )
+    version_pattern = re.escape(VERSION)
     if re.search(
-        r"(?i)(?:v?2\.0\.0 (?:tag (?:created|published)|"
-        r"(?:is |already )?(?:tagged|published|released))|"
-        r"(?:tagged|published|released) (?:v?2\.0\.0)|"
-        r"published (?:GitHub )?release[^\n]{0,30}v?2\.0\.0)",
+        rf"(?i)(?:v?{version_pattern} (?:tag (?:created|published)|"
+        rf"(?:is |already )?(?:tagged|published|released))|"
+        rf"(?:tagged|published|released) (?:v?{version_pattern})|"
+        rf"published (?:GitHub )?release[^\n]{{0,30}}v?{version_pattern})",
         public,
     ):
         errors.append("premature release-action claim")
+    try:
+        if git("rev-parse", "refs/tags/v2.0.0").decode().strip() != V20_RELEASE_SHA:
+            errors.append("v2.0.0 predecessor tag mismatch")
+        if (
+            subprocess.run(
+                ["git", "rev-parse", "--verify", "refs/tags/v2.1.0"],
+                cwd=ROOT,
+                capture_output=True,
+            ).returncode
+            == 0
+        ):
+            errors.append("v2.1.0 tag exists before release")
+    except subprocess.CalledProcessError:
+        errors.append("v2.0.0 predecessor tag is missing")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     if (
         not re.search(r"Apache(?: License)? 2\.0", readme)
@@ -212,6 +231,8 @@ def main() -> int:
                 "state": "PASS",
                 "version": VERSION,
                 "base_sha": BASE_SHA,
+                "v20_release_sha": V20_RELEASE_SHA,
+                "release_notes": RELEASE_NOTES_PATH,
                 "scenario_set_sha256": SCENARIO_SHA,
                 "protected_paths": len(protected_paths()),
             },

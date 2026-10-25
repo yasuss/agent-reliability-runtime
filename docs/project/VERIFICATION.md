@@ -44,6 +44,11 @@ output equivalence is verified during release acceptance. It checks the working
 tree before commit and the exact commit on clean CI.
 Moved source is not claimed byte-equivalent; the full behavior suite is required.
 
+Existing provenance protects immutable history and dependency invariants. ARR 2.1
+adds an exact changed-path allowlist relative to published v2.0.0, substantiating
+the interface, documentation and release-only claim without adding a
+`PROOF_INDEX` behavior claim for planned ports.
+
 ## Database scope
 
 Set `ARR_TEST_DATABASE_URL` to a disposable PostgreSQL 18/pgvector 0.8.6 database.

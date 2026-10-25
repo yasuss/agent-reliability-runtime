@@ -171,8 +171,8 @@ def _project_facing_markdown(root: Path) -> list[Path]:
         root / "CHANGELOG.md",
         root / "SECURITY.md",
         root / "docs/extension-points.md",
-        root / "release/RELEASE_NOTES_2.0.0.md",
     ]
+    paths.extend(sorted((root / "release").glob("RELEASE_NOTES_*.md")))
     project = root / "docs" / "project"
     paths.extend(sorted(project.rglob("*.md")))
     return [path for path in paths if path.exists()]
@@ -185,8 +185,8 @@ def _pre_release_wording_errors(root: Path) -> list[str]:
         root / "CHANGELOG.md",
         root / "SECURITY.md",
         root / "docs/extension-points.md",
-        root / "release/RELEASE_NOTES_2.0.0.md",
     ]
+    paths.extend(sorted((root / "release").glob("RELEASE_NOTES_*.md")))
     project = root / "docs/project"
     paths.extend(project.rglob("*.md"))
     for path in paths:

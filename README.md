@@ -9,6 +9,8 @@ postcondition verification — with replaceable adapters for LangGraph, PostgreS
 model providers, MCP and OpenTelemetry. A fictional OpsDesk demo shows one durable
 agent end to end, and every accepted capability is tied to machine-checkable proof.
 
+[**Static Evidence Demo**](https://agent-reliability-runtime.vercel.app/)
+
 ## Why it exists
 
 An agent that calls tools can retry a payment, act on a stale approval or report
@@ -70,6 +72,18 @@ ARR's reliability semantics into another orchestrator, store or domain.
 their current limits and the 1.x migration table. Implementing a port alone does
 not automatically reproduce every composed reliability invariant.
 
+Two architectures are built on these ports:
+
+- [reliable-ai-agents-for-enterprise-workflows](https://github.com/yasuss/reliable-ai-agents-for-enterprise-workflows) —
+  AI agents resolving ERP and finance exceptions over days, with exact approval,
+  reconciliation and verified completion.
+- [agent-safe-mcp-for-product-analytics](https://github.com/yasuss/agent-safe-mcp-for-product-analytics) —
+  an MCP action layer for product analytics with project/region scoping,
+  execution-boundary authorization, retry-safe writes and budgets.
+
+Both linked repositories are architecture specifications with explicit ARR mappings;
+neither is claimed here as a runtime dependency of ARR.
+
 ## Quickstart
 
 Prerequisites: Git, uv 0.12.23, Python 3.12, Node.js 24 with npm, and Docker
@@ -128,11 +142,11 @@ deployed.
 
 Agent Reliability Runtime uses the [Apache License 2.0](LICENSE).
 [SECURITY.md](SECURITY.md) describes responsible disclosure. Agent Reliability
-Runtime v2 exposes the typed contracts in `agent_reliability_runtime.core.ports`
+Runtime 2.x exposes the typed contracts in `agent_reliability_runtime.core.ports`
 documented in [Extension points](docs/extension-points.md). Internal Python
 imports moved and may break; the existing CLI command, MCP server launch and
-Quickstart scripts remain supported. Dependency extras are not part of 2.0.0; a
-core-only installation is not claimed.
+Quickstart scripts remain supported. Dependency extras are not currently part of
+the public extension contract; a core-only installation is not claimed.
 
 The historical v1.0.0 tag and static recorded-replay deployment remain unchanged.
 

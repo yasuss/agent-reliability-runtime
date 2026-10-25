@@ -12,8 +12,10 @@ from scripts.verify_behavior_provenance import (
     REVIEWED_VITE_FROM,
     REVIEWED_VITE_TO,
     SCENARIO_SHA,
+    V21_BASE_SHA,
     check,
     surface_errors,
+    v21_surface_errors,
     validate_reviewed_web_dependency_transition,
 )
 
@@ -52,6 +54,28 @@ def test_refactor_surface_calibration() -> None:
         "release/RELEASE_NOTES_1.0.0.md",
     ):
         assert surface_errors({path}), path
+
+
+def test_v21_surface_allowlist_calibration() -> None:
+    assert V21_BASE_SHA == "77574ee445e97fe282a62c2528b2c250e6998ddb"
+    assert not v21_surface_errors(
+        {
+            "README.md",
+            "src/agent_reliability_runtime/core/ports.py",
+            "release/RELEASE_NOTES_2.1.0.md",
+            "uv.lock",
+        }
+    )
+    for path in (
+        "src/agent_reliability_runtime/demo/local.py",
+        "src/agent_reliability_runtime/adapters/langgraph/graph.py",
+        "web/package.json",
+        "migrations/versions/new.py",
+        "docs/project/spec/v1.0/00_PRODUCT_CONTRACT.md",
+        "data/seed/new.json",
+        "release/RELEASE_NOTES_1.0.0.md",
+    ):
+        assert v21_surface_errors({path}), path
 
 
 def _web_fixtures() -> tuple[

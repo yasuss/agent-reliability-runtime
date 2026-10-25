@@ -16,7 +16,9 @@ registration is unnecessary. Values referenced by these ports are core-clean.
 | Reconciler | Planned, interface only | Future ambiguous-effect resolution; no implementation |
 | TimerStore | Planned, interface only | Future durable wait metadata; no scanner/queue |
 | SourceRevisionReader | Planned, interface only | Future source-version revalidation |
-| CapabilityRegistry | Planned, interface only | Future typed capability lookup |
+| CapabilityRegistry | Planned, interface only | Future typed capability lookup; `CapabilityDefinition` carries optional `risk_tier`, `egress_class`, `reversible` (2.1) |
+| ScopeAuthorizer | Planned, interface only (2.1) | Future execution-boundary check of a `TaskScope` (tenant, project, region, principals, grants, auth epoch) |
+| BudgetBroker | Planned, interface only (2.1) | Future `BudgetLease` reservation before an expensive step and settlement afterwards |
 
 ## Port scope and current limits
 
@@ -43,6 +45,23 @@ an approved effect executes, and `CapabilityRegistry` provides typed capability
 lookup. They are interface-only: no implementation, wiring, behavior branch or
 `PROOF_INDEX` entry.
 
+Version 2.1 adds the contracts that multi-tenant agent action layers need, for
+example an MCP surface exposing a product's capabilities to external agents:
+`ScopeAuthorizer` defines a future execution-boundary check of an immutable
+`TaskScope` (tenant, project, region, separately recorded human / agent-client /
+task principals, capability grants, authorization epoch); `BudgetBroker` defines
+future `BudgetLease` reservation and settlement; `RiskTier` (read, internal
+reversible, external or production, forbidden) and `EgressClass` extend
+`CapabilityDefinition` as optional metadata. These contracts are interface-only:
+ARR 2.1 does not implement authorization, multi-tenancy or budget enforcement and
+changes no existing behavior.
+
+Architectures these ports were derived from:
+[reliable-ai-agents-for-enterprise-workflows](https://github.com/yasuss/reliable-ai-agents-for-enterprise-workflows)
+(Reconciler, TimerStore, SourceRevisionReader, CapabilityRegistry) and
+[agent-safe-mcp-for-product-analytics](https://github.com/yasuss/agent-safe-mcp-for-product-analytics)
+(ScopeAuthorizer, BudgetBroker, RiskTier).
+
 ## Migrating from 1.x
 
 | 1.x module | 2.0 location |
@@ -59,7 +78,8 @@ lookup. They are interface-only: no implementation, wiring, behavior branch or
 | `mcp.client`, `mcp.contracts` | `demo.opsdesk.mcp`, `demo.opsdesk.contracts` |
 | `api`, `replay`, `evals.*`, `demo_state.*` | `demo.*` |
 
-Dependency extras are not part of 2.0.0; a core-only install is not claimed.
+Dependency extras are not currently part of the public extension contract; a
+core-only install is not claimed.
 
 `core/` imports only Python stdlib, Pydantic and core modules. Adapters may use
 external frameworks and core but must not import demo. Demo owns composition and

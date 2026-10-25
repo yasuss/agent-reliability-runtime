@@ -1,15 +1,18 @@
 # Release and Deployment Operations
 
-## Version 2.0.0 release procedure
+## Version 2.1.0 release procedure
 
-Version 2.0.0 separates core, adapters and demo while preserving behavior. After
-independent acceptance: merge the accepted PR, wait for exact-main CI, verify the
-historical v1 tag, verify the reviewed dependency state/security closure, tag the
-exact verified main SHA as `v2.0.0`, and create the GitHub Release using
-`release/RELEASE_NOTES_2.0.0.md`. This is a code/docs release only: generated
-static output and replay bytes remain unchanged, the web package stays at 1.0.0,
-and no production Vercel redeploy is required because the Vite delta is build/dev
-tooling.
+Version 2.1.0 is an additive interface-only release. After independent
+acceptance: merge the accepted PR, wait for exact-main CI, verify dependency and
+security state, verify the predecessor tags, tag the exact verified main SHA as
+`v2.1.0`, and create the GitHub Release using
+`release/RELEASE_NOTES_2.1.0.md`. There is no `web/**` change and no production
+Vercel redeploy is required.
+
+## Historical v2.0.0 release
+
+Version 2.0.0 is immutable at `77574ee445e97fe282a62c2528b2c250e6998ddb`. It
+established the core/adapters/demo boundary. Never move its tag.
 
 ## Historical v1.0.0 release
 
@@ -26,6 +29,6 @@ operations use exact release commits and the current v2 verification gates.
 
 ## Rollback boundary
 
-Never move an immutable `v1.0.0` tag. Corrective changes become a new version.
+Never move any published SemVer tag. Corrective changes become a new version.
 If publication or deployment fails, leave the prior immutable state intact and
 investigate through a new release commit.
