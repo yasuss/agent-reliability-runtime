@@ -18,6 +18,8 @@ remain constrained by the historical acceptance baseline and executable tests.
 - [Limitations](LIMITATIONS.md) — explicit non-goals and evidence limits.
 - [Evidence & Proof](EVIDENCE_AND_PROOF.md) — readable capability map.
 - [Machine-readable PROOF_INDEX](PROOF_INDEX.json) — claim-to-proof paths.
+- [ADR-0001](decisions/ADR-0001-initialization-revalidation.md) — initialization and revalidation decisions.
+- [ADR-0002](decisions/ADR-0002-core-adapters-demo.md) — core, adapters and demo boundary.
 
 ## Deeper references
 

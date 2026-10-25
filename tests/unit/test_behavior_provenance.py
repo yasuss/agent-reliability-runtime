@@ -35,6 +35,7 @@ def test_refactor_surface_calibration() -> None:
             "docs/extension-points.md",
             "migrations/env.py",
             "uv.lock",
+            "SECURITY.md",
             "release/RELEASE_NOTES_2.0.0.md",
         }
     )
@@ -79,8 +80,12 @@ def test_reviewed_web_dependency_paths_are_authorized() -> None:
         "web/src/App.tsx",
         "web/new-file.txt",
         "web/public/replays/index.json",
+        "SECURITY.md",
     ):
-        assert surface_errors({path}), path
+        if path == "SECURITY.md":
+            assert not surface_errors({path}), path
+        else:
+            assert surface_errors({path}), path
 
 
 def test_exact_reviewed_vite_transition_passes() -> None:

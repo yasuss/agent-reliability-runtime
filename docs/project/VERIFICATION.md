@@ -41,7 +41,7 @@ rejects all external/Python dependency drift, and allowlists only the reviewed V
 development/build transition `8.3.2 -> 8.3.3` in the two web manifests. All other
 web package/lock drift and unauthorized changed paths remain rejected. Static
 output equivalence is verified during release acceptance. It checks the working
-tree before commit and the exact candidate on clean CI.
+tree before commit and the exact commit on clean CI.
 Moved source is not claimed byte-equivalent; the full behavior suite is required.
 
 ## Database scope

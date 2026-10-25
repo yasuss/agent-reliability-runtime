@@ -13,7 +13,11 @@ from pathlib import Path
 
 CANONICAL_DOCS = (
     "README.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
     "docs/extension-points.md",
+    "docs/project/decisions/ADR-0001-initialization-revalidation.md",
+    "docs/project/decisions/ADR-0002-core-adapters-demo.md",
     "docs/project/ARCHITECTURE.md",
     "docs/project/OPERATIONS.md",
     "docs/project/VERIFICATION.md",
@@ -97,6 +101,11 @@ STALE_CURRENT_RE = re.compile(
     r"later graph\s+connection|empty\s+`load_memory`\s+placeholder|"
     r"POST run/approval control endpoints remain later scope)"
 )
+PRE_RELEASE_STALE_RE = re.compile(
+    r"(?i)(?:release\s+candidate|candidate\s+PR|candidate\s+SHA|"
+    r"exact\s+candidate|clean\s+exact\s+candidate|freeze\s+the\s+candidate|"
+    r"new\s+candidate|draft\s+v1\.0\.0)"
+)
 
 
 def _canonical_paths(root: Path) -> list[Path]:
@@ -157,10 +166,40 @@ def _legacy_surface_errors(root: Path) -> list[str]:
 
 
 def _project_facing_markdown(root: Path) -> list[Path]:
-    paths = [root / "README.md", root / "docs/extension-points.md"]
+    paths = [
+        root / "README.md",
+        root / "CHANGELOG.md",
+        root / "SECURITY.md",
+        root / "docs/extension-points.md",
+        root / "release/RELEASE_NOTES_2.0.0.md",
+    ]
     project = root / "docs" / "project"
     paths.extend(sorted(project.rglob("*.md")))
     return [path for path in paths if path.exists()]
+
+
+def _pre_release_wording_errors(root: Path) -> list[str]:
+    errors: list[str] = []
+    paths = [
+        root / "README.md",
+        root / "CHANGELOG.md",
+        root / "SECURITY.md",
+        root / "docs/extension-points.md",
+        root / "release/RELEASE_NOTES_2.0.0.md",
+    ]
+    project = root / "docs/project"
+    paths.extend(project.rglob("*.md"))
+    for path in paths:
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root)
+        if "docs/project/spec/v1.0" in relative.as_posix():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for line_number, line in enumerate(text.splitlines(), 1):
+            if PRE_RELEASE_STALE_RE.search(line):
+                errors.append(f"stale pre-release wording: {relative}:{line_number}")
+    return errors
 
 
 def _relative_link_failures(root: Path, paths: list[Path]) -> list[str]:
@@ -292,6 +331,7 @@ def verify_docs(root: Path) -> list[str]:
     errors.extend(_proof_index_errors(root, root / "docs/project/PROOF_INDEX.json"))
     errors.extend(_support_matrix_errors(root / "docs/project/SUPPORT_MATRIX.md"))
     errors.extend(_legacy_surface_errors(root))
+    errors.extend(_pre_release_wording_errors(root))
 
     project_docs = _project_facing_markdown(root)
     for path in project_docs:

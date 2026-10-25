@@ -1,8 +1,8 @@
 """Generic, serializable obligations; verification never dispatches a read."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from enum import StrEnum
-from typing import Any, TypedDict
+from typing import Any, Protocol, TypedDict
 
 from pydantic import JsonValue
 
@@ -23,17 +23,41 @@ class VerificationObligation(TypedDict):
     expected_arguments: dict[str, str]
 
 
+class ObligationFactory(Protocol):
+    def __call__(
+        self, action: dict[str, Any], effect_sequence: int
+    ) -> VerificationObligation | None: ...
+
+
+class SatisfiesCheck(Protocol):
+    def __call__(
+        self,
+        obligation: VerificationObligation,
+        *,
+        tool_name: str,
+        arguments: dict[str, JsonValue],
+        effect_sequence: int,
+        result: dict[str, JsonValue],
+    ) -> bool: ...
+
+
 class VerificationRule:
     def __init__(
         self,
-        obligation_for: Callable[[dict[str, Any], int], VerificationObligation | None],
-        satisfies: Callable[..., bool],
+        obligation_for: ObligationFactory,
+        satisfies: SatisfiesCheck,
     ) -> None:
         self.obligation_for = obligation_for
         self.satisfies = satisfies
 
 
 class RuleVerifier:
+    """Binary rule-based verifier: returns PASS or FAIL.
+
+    PARTIAL is reserved for verifiers whose postcondition has several parts
+    (for example a partially recovered amount); RuleVerifier never emits it.
+    """
+
     def __init__(self, rules: Sequence[VerificationRule] = ()) -> None:
         self.rules = tuple(rules)
 

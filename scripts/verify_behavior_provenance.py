@@ -50,6 +50,7 @@ AUTHORIZED_SINGLETONS = {
     "AGENTS.md",
     "README.md",
     "CHANGELOG.md",
+    "SECURITY.md",
     "pyproject.toml",
     "uv.lock",
     "migrations/env.py",

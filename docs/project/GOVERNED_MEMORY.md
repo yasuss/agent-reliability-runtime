@@ -68,7 +68,7 @@ and memory-derived risk fixtures must fail calibrated oracles; valid alternates
 pass. Provider output can itself repeat contextual text; this oracle concerns the
 runtime copying memory content into checkpoints merely by loading it.
 
-For an exact clean candidate and fresh disposable migrated DB:
+For an exact clean commit and fresh disposable migrated DB:
 
 ```text
 uv run python -m scripts.probe_memory --output ABSOLUTE_EXTERNAL_EVIDENCE.json

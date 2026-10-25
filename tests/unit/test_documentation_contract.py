@@ -18,6 +18,20 @@ def _fixture(root: Path) -> None:
     (root / "docs/extension-points.md").write_text(
         "# Extension points\n", encoding="utf-8"
     )
+    (root / "CHANGELOG.md").write_text("# Changelog\n", encoding="utf-8")
+    (root / "SECURITY.md").write_text("# Security\n", encoding="utf-8")
+    decisions = root / "docs/project/decisions"
+    decisions.mkdir(parents=True)
+    (decisions / "ADR-0001-initialization-revalidation.md").write_text(
+        "# ADR-0001\n", encoding="utf-8"
+    )
+    (decisions / "ADR-0002-core-adapters-demo.md").write_text(
+        "# ADR-0002\n", encoding="utf-8"
+    )
+    (root / "release").mkdir()
+    (root / "release/RELEASE_NOTES_2.0.0.md").write_text(
+        "# Release notes\n", encoding="utf-8"
+    )
     required_commands = """
 python scripts/bootstrap.py
 uv run python scripts/reset_demo.py --confirm-development-reset
@@ -212,6 +226,26 @@ def test_internal_history_and_scenario_ids_are_allowed(docs_fixture: Path) -> No
     architecture.write_text(
         architecture.read_text(encoding="utf-8")
         + "\nS02 durable verification obligation\n",
+        encoding="utf-8",
+    )
+    assert_passes(docs_fixture)
+
+
+def test_stale_pre_release_wording_fails_but_technical_candidate_passes(
+    docs_fixture: Path,
+) -> None:
+    architecture = docs_fixture / "docs/project/ARCHITECTURE.md"
+    architecture.write_text(
+        architecture.read_text(encoding="utf-8") + "\nrelease candidate\n",
+        encoding="utf-8",
+    )
+    assert any(
+        "stale pre-release wording" in error for error in verify_docs(docs_fixture)
+    )
+    architecture.write_text(
+        architecture.read_text(encoding="utf-8").replace(
+            "release candidate", "Candidate schema"
+        ),
         encoding="utf-8",
     )
     assert_passes(docs_fixture)

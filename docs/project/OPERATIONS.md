@@ -145,7 +145,7 @@ oracles. It does not require Ollama.
 
 The accepted final campaign uses qwen3:4b, the accepted embedding artifact,
 context 32768, timeout 1800 seconds, five locked cases and seeds 101/202/303.
-Complete deterministic gates and freeze the candidate before any live run. Keep
+Complete deterministic gates and freeze the commit before any live run. Keep
 campaign output external:
 
 ```text
@@ -161,7 +161,7 @@ checkers after campaign start.
 
 ## Replay export
 
-Export only from a successful receipt and a clean exact candidate:
+Export only from a successful receipt and a clean exact commit:
 
 ```text
 uv run python -m agent_reliability_runtime.cli export-replays --run-id RUN_ID --receipt C:\temp\receipt.json --source-git-sha EXACT_SHA --output C:\temp\replay

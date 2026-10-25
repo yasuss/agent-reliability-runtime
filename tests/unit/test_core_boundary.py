@@ -1,6 +1,7 @@
 """Calibrated dependency boundaries and neutral extension semantics."""
 
 import ast
+import inspect
 import sys
 from importlib.util import resolve_name
 from pathlib import Path
@@ -31,6 +32,7 @@ from agent_reliability_runtime.core.ports import (
     ModelProvider,
     PolicyEngine,
     Retriever,
+    TimerStore,
     Verifier,
 )
 from agent_reliability_runtime.core.verification import RuleVerifier, VerificationStatus
@@ -148,6 +150,11 @@ def test_implemented_adapters_conform_to_public_ports() -> None:
             verifier.verify,
         )
     )
+
+
+def test_planned_timer_store_is_async_and_unimplemented() -> None:
+    assert inspect.iscoroutinefunction(TimerStore.put)
+    assert inspect.iscoroutinefunction(TimerStore.due)
 
 
 @pytest.mark.parametrize(

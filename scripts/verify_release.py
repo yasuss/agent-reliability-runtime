@@ -1,4 +1,4 @@
-"""Verify the release-candidate contract using only the Python standard library."""
+"""Verify the release contract using only the Python standard library."""
 
 from __future__ import annotations
 
