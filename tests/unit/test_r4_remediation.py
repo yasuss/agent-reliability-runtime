@@ -9,15 +9,17 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from agent_reliability_runtime.evals.campaign import POPULATION, configuration
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.graph import decide
+from agent_reliability_runtime.adapters.langgraph.service import SYSTEM_INSTRUCTION
+from agent_reliability_runtime.core.contracts.model import (
     ChatResult,
     ModelSettings,
     ToolCall,
 )
-from agent_reliability_runtime.runtime.graph import decide
-from agent_reliability_runtime.runtime.local import local_runtime
-from agent_reliability_runtime.runtime.service import SYSTEM_INSTRUCTION
+from agent_reliability_runtime.demo.evals.campaign import POPULATION, configuration
+from agent_reliability_runtime.demo.local import local_runtime
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
+from agent_reliability_runtime.demo.opsdesk.postconditions import opsdesk_verifier
 
 
 @pytest.mark.parametrize(
@@ -61,6 +63,8 @@ def test_completion_truth(
         tools=(),
         engine=Mock(),
         telemetry=SimpleNamespace(span=lambda *a, **kw: nullcontext(Mock())),
+        policy=OpsDeskPolicyEngine(),
+        verifier=opsdesk_verifier(),
         gateway=SimpleNamespace(execute=AsyncMock()),
     )
     state = dict(
@@ -75,11 +79,13 @@ def test_completion_truth(
     )
     with (
         patch(
-            "agent_reliability_runtime.runtime.graph.memory_scope",
+            "agent_reliability_runtime.adapters.langgraph.graph.memory_scope",
             return_value=("local", "fixture"),
         ),
-        patch("agent_reliability_runtime.runtime.graph.MemoryStore") as memory,
-        patch("agent_reliability_runtime.runtime.graph.audit"),
+        patch(
+            "agent_reliability_runtime.adapters.langgraph.graph.MemoryStore"
+        ) as memory,
+        patch("agent_reliability_runtime.adapters.langgraph.graph.audit"),
     ):
         memory.return_value.resolve.return_value = []
         update = asyncio.run(
@@ -109,13 +115,13 @@ def test_local_scope_and_generic_alternate() -> None:
 
     async def invoke() -> None:
         with (
-            patch("agent_reliability_runtime.runtime.local.OpsDeskMCPClient", client),
-            patch("agent_reliability_runtime.runtime.local.Gateway"),
+            patch("agent_reliability_runtime.demo.local.OpsDeskMCPClient", client),
+            patch("agent_reliability_runtime.demo.local.Gateway"),
             patch(
-                "agent_reliability_runtime.runtime.local.Context",
+                "agent_reliability_runtime.demo.local.Context",
                 side_effect=lambda **kw: kw,
             ),
-            patch("agent_reliability_runtime.runtime.local.open_runtime", opened),
+            patch("agent_reliability_runtime.demo.local.open_runtime", opened),
         ):
             async with local_runtime(cast(Any, SimpleNamespace(url=Mock()))):
                 pass

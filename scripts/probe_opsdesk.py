@@ -12,14 +12,14 @@ from typing import Any
 from opsdesk_proof_support import digest, state_proof
 from sqlalchemy import create_engine, func, select, text
 
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.mcp.client import (
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.demo.opsdesk.mcp import (
     OpsDeskError,
     OpsDeskMCPClient,
     catalog,
     validate_model_view,
 )
-from agent_reliability_runtime.persistence import schema
 
 
 async def proof(root: Path) -> dict[str, Any]:

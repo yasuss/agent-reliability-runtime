@@ -6,10 +6,13 @@ from typing import Any
 
 import pytest
 
-from agent_reliability_runtime.evals.receipts import GATES
-from agent_reliability_runtime.evals.scenarios import load_scenarios, lockfile_digests
-from agent_reliability_runtime.observability import canonical, public_safe, sanitize
-from agent_reliability_runtime.replay import (
+from agent_reliability_runtime.core.evidence import canonical, public_safe, sanitize
+from agent_reliability_runtime.demo.evals.receipts import GATES
+from agent_reliability_runtime.demo.evals.scenarios import (
+    load_scenarios,
+    lockfile_digests,
+)
+from agent_reliability_runtime.demo.replay import (
     accepted_receipt,
     locked_validate,
     write_candidate,

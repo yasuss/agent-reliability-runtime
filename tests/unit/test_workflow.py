@@ -52,7 +52,7 @@ def workflow_contract(workflow: dict[str, Any]) -> None:
         "uv run python scripts/verify_behavior_provenance.py",
         "uv run python scripts/audit_public_release.py",
         "uv run python scripts/verify_docs.py",
-        "uv run python docs/project/spec/v1.0/scripts/validate_spec.py",
+        "uv run python scripts/verify_v1_spec.py",
         "uv run python scripts/secret_scan.py",
     ]
     accepted_pins = {

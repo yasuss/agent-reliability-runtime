@@ -12,14 +12,18 @@ from mcp import Client
 from mcp.types import CallToolResult, Tool, ToolAnnotations
 from sqlalchemy import create_engine
 
-from agent_reliability_runtime.mcp.client import (
+from agent_reliability_runtime.demo.opsdesk.contracts import (
+    INPUTS,
+    OUTPUTS,
+    RUNTIME_FIELDS,
+)
+from agent_reliability_runtime.demo.opsdesk.mcp import (
     OpsDeskError,
     OpsDeskMCPClient,
     catalog,
     validate_model_view,
     validated_result,
 )
-from agent_reliability_runtime.mcp.contracts import INPUTS, OUTPUTS, RUNTIME_FIELDS
 from mcp_server.opsdesk.server import create_server
 
 

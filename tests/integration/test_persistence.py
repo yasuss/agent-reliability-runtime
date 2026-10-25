@@ -19,9 +19,14 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.exc import IntegrityError
 
-from agent_reliability_runtime.contracts.domain import (
-    Approval,
-    ApprovalStatus,
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    insert_snapshot,
+    set_approval_status,
+    set_run_status,
+)
+from agent_reliability_runtime.core.approval import Approval, ApprovalStatus
+from agent_reliability_runtime.core.contracts.domain import (
     AuditEvent,
     EffectReceipt,
     KnowledgeChunk,
@@ -33,13 +38,7 @@ from agent_reliability_runtime.contracts.domain import (
     chunk_id,
     document_id,
 )
-from agent_reliability_runtime.demo_state.reset import load_seed, reset_demo
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import (
-    insert_snapshot,
-    set_approval_status,
-    set_run_status,
-)
+from agent_reliability_runtime.demo.demo_state.reset import load_seed, reset_demo
 
 pytestmark = pytest.mark.integration
 NOW = datetime(2026, 10, 3, tzinfo=UTC)

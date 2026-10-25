@@ -9,22 +9,25 @@ import pytest
 from alembic.config import Config
 from sqlalchemy import Engine
 
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.evals.adapter import capture, environment_snapshot
-from agent_reliability_runtime.evals.calibration import replace
-from agent_reliability_runtime.evals.contracts import TrialExpectations
-from agent_reliability_runtime.evals.harness import evaluate
-from agent_reliability_runtime.evals.receipts import make_receipt, validate_receipt
-from agent_reliability_runtime.evals.scenarios import IDS, load_scenarios
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.mcp.contracts import ReceiptEnvelope
-from agent_reliability_runtime.observability import AuditTrail
-from agent_reliability_runtime.policy import Action
-from agent_reliability_runtime.replay import export_replay
-from agent_reliability_runtime.retrieval.service import ingest, retrieve
-from agent_reliability_runtime.retrieval.text import plan_source
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.postgres.audit import AuditTrail
+from agent_reliability_runtime.adapters.postgres.retrieval import ingest, retrieve
+from agent_reliability_runtime.core.effects import ReceiptEnvelope
+from agent_reliability_runtime.core.policy import Action
+from agent_reliability_runtime.core.source_text import plan_source
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.evals.adapter import capture, environment_snapshot
+from agent_reliability_runtime.demo.evals.calibration import replace
+from agent_reliability_runtime.demo.evals.contracts import TrialExpectations
+from agent_reliability_runtime.demo.evals.harness import evaluate
+from agent_reliability_runtime.demo.evals.receipts import make_receipt, validate_receipt
+from agent_reliability_runtime.demo.evals.scenarios import IDS, load_scenarios
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
+from agent_reliability_runtime.demo.replay import export_replay
 from scripts.runtime_proof_support import (
     Embeddings,
     ScriptedProvider,

@@ -13,12 +13,15 @@ import pytest
 from alembic.config import Config
 from sqlalchemy import Engine
 
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.retrieval.service import ingest
-from agent_reliability_runtime.retrieval.text import plan_source
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.postgres.retrieval import ingest
+from agent_reliability_runtime.core.source_text import plan_source
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
 from scripts.runtime_proof_support import Embeddings, context_for, counts, primitive
 
 pytestmark = pytest.mark.integration

@@ -1,4 +1,8 @@
-"""Prove that the candidate inherits the accepted live behavior surface."""
+"""Preserve accepted ancestry and immutable inputs around the v2 refactor.
+
+Source bytes deliberately move. The complete behavior suite, rather than a
+claim of source byte equivalence, establishes behavior preservation.
+"""
 
 from __future__ import annotations
 
@@ -11,22 +15,39 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 ACCEPTED_SOURCE_SHA = "83514ebad336dbd6faf1b790c597ec8037be0874"
+REFACTOR_BASE_SHA = "3c1389bdb0b358c8232ed07caccf14932f7da727"
 SCENARIO_SHA = "ad14a89fb5816f2eea2ab700394df4b231191cb466e4b326437d035e34f475f9"
 PROTECTED_PREFIXES = (
-    "src/agent_reliability_runtime/",
-    "mcp_server/",
-    "migrations/",
+    "docs/project/spec/v1.0/",
+    "migrations/versions/",
+    "web/",
     "data/knowledge/",
-    "docs/project/spec/v1.0/fixtures/scenarios/",
-    "docs/project/spec/v1.0/fixtures/knowledge/",
+    "data/seed/",
 )
 PROTECTED_SINGLETONS = (
     "compose.yaml",
     "alembic.ini",
-    "scripts/setup_checkpoints.py",
-    "scripts/probe_providers.py",
-    "scripts/reset_demo.py",
 )
+
+AUTHORIZED_PREFIXES = (
+    "src/agent_reliability_runtime/",
+    "mcp_server/",
+    "scripts/",
+    "tests/",
+    "docs/",
+    ".agents/skills/agent-reliability-runtime/",
+)
+AUTHORIZED_SINGLETONS = {
+    "AGENTS.md",
+    "README.md",
+    "CHANGELOG.md",
+    "pyproject.toml",
+    "uv.lock",
+    "migrations/env.py",
+    "release/RELEASE_NOTES_2.0.0.md",
+    # User-authorized bounded correction: historical v1 verification plumbing.
+    ".github/workflows/ci.yml",
+}
 
 
 def git(*args: str) -> bytes:
@@ -45,6 +66,18 @@ def protected(path: str) -> bool:
     return path in PROTECTED_SINGLETONS or path.startswith(PROTECTED_PREFIXES)
 
 
+def surface_errors(paths: set[str]) -> list[str]:
+    errors = []
+    for path in sorted(paths):
+        if protected(path):
+            errors.append(f"protected byte/path drift: {path}")
+        elif path not in AUTHORIZED_SINGLETONS and not path.startswith(
+            AUTHORIZED_PREFIXES
+        ):
+            errors.append(f"unauthorized refactor path: {path}")
+    return errors
+
+
 def blob(revision: str, path: str) -> bytes:
     return git("show", f"{revision}:{path}")
 
@@ -61,12 +94,16 @@ def scenario_digest() -> str:
     return sha(canonical)
 
 
-def dependency_sets(revision: str) -> tuple[set[str], set[tuple[str, str]]]:
-    pyproject = tomllib.loads(blob(revision, "pyproject.toml").decode())
+def dependency_sets(revision: str | None) -> tuple[set[str], set[tuple[str, str]]]:
+    def contents(path: str) -> bytes:
+        return blob(revision, path) if revision else (ROOT / path).read_bytes()
+
+    pyproject = tomllib.loads(contents("pyproject.toml").decode())
     runtime = set(pyproject.get("project", {}).get("dependencies", []))
-    lock = tomllib.loads(blob(revision, "uv.lock").decode())
+    runtime.add(json.dumps(pyproject.get("dependency-groups", {}), sort_keys=True))
+    lock = tomllib.loads(contents("uv.lock").decode())
     packages = {
-        (str(item["name"]), str(item["version"]))
+        (str(item["name"]), json.dumps(item, sort_keys=True))
         for item in lock.get("package", [])
         if item.get("name") != "agent-reliability-runtime"
     }
@@ -84,22 +121,30 @@ def check() -> list[str]:
     if ancestry.returncode != 0:
         errors.append("accepted source is not an ancestor")
 
-    accepted_paths = {
-        path for path in tree_paths(ACCEPTED_SOURCE_SHA) if protected(path)
-    }
-    candidate_paths = {path for path in tree_paths(candidate) if protected(path)}
-    if accepted_paths != candidate_paths:
-        errors.extend(
-            f"protected path set drift: {path}"
-            for path in sorted(accepted_paths ^ candidate_paths)
-        )
-    for path in sorted(accepted_paths & candidate_paths):
-        if sha(blob(ACCEPTED_SOURCE_SHA, path)) != sha(blob(candidate, path)):
-            errors.append(f"protected byte drift: {path}")
+    if (
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", REFACTOR_BASE_SHA, candidate],
+            cwd=ROOT,
+            capture_output=True,
+        ).returncode
+        != 0
+    ):
+        errors.append("refactor baseline is not an ancestor")
+    # Include staged, unstaged, deleted and new files before the single commit;
+    # on clean CI this same comparison binds the candidate commit itself.
+    changed = set(
+        git("diff", "--name-only", "--no-renames", REFACTOR_BASE_SHA)
+        .decode()
+        .splitlines()
+    )
+    changed.update(
+        git("ls-files", "--others", "--exclude-standard").decode().splitlines()
+    )
+    errors.extend(surface_errors(changed))
 
     try:
-        accepted_runtime, accepted_lock = dependency_sets(ACCEPTED_SOURCE_SHA)
-        candidate_runtime, candidate_lock = dependency_sets(candidate)
+        accepted_runtime, accepted_lock = dependency_sets(REFACTOR_BASE_SHA)
+        candidate_runtime, candidate_lock = dependency_sets(None)
     except (KeyError, subprocess.CalledProcessError, tomllib.TOMLDecodeError) as error:
         errors.append(f"dependency provenance unavailable: {type(error).__name__}")
     else:
@@ -124,16 +169,12 @@ def main() -> int:
     payload: dict[str, Any] = {
         "state": "FAIL" if errors else "PASS",
         "accepted_source_sha": ACCEPTED_SOURCE_SHA,
+        "refactor_base_sha": REFACTOR_BASE_SHA,
         "candidate_sha": git("rev-parse", "HEAD").decode().strip(),
         "protected_changed_paths": [
-            error.removeprefix("protected path set drift: ")
+            error.removeprefix("protected byte/path drift: ")
             for error in errors
-            if error.startswith("protected path set drift:")
-        ]
-        + [
-            error.removeprefix("protected byte drift: ")
-            for error in errors
-            if error.startswith("protected byte drift:")
+            if error.startswith("protected byte/path drift:")
         ],
         "errors": errors,
         "scenario_set_sha256": SCENARIO_SHA,

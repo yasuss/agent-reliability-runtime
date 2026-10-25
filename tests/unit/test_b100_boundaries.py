@@ -10,23 +10,21 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from agent_reliability_runtime.mcp.client import OpsDeskError
-from agent_reliability_runtime.mcp.contracts import Service
-from agent_reliability_runtime.policy import propose
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.graph import execute_tool
+from agent_reliability_runtime.adapters.providers.http import (
+    HTTPProviderConfig,
+    OpenAICompatibleChatProvider,
+)
+from agent_reliability_runtime.core.contracts.model import (
     ChatMessage,
     ChatRequest,
     ModelSettings,
 )
-from agent_reliability_runtime.providers.http import (
-    HTTPProviderConfig,
-    OpenAICompatibleChatProvider,
-)
-from agent_reliability_runtime.retrieval.citations import (
-    citation_ids,
-    validate_citations,
-)
-from agent_reliability_runtime.runtime.graph import execute_tool
+from agent_reliability_runtime.core.retrieval import citation_ids, validate_citations
+from agent_reliability_runtime.demo.opsdesk.contracts import Service
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskError
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine, propose
+from agent_reliability_runtime.demo.opsdesk.postconditions import opsdesk_verifier
 
 
 @pytest.mark.parametrize("seed", [-1, True, 1.0, "101"])
@@ -105,7 +103,12 @@ def test_retry_calibration(
             ]
         )
     )
-    context = SimpleNamespace(gateway=gateway, fault_hook=None)
+    context = SimpleNamespace(
+        gateway=gateway,
+        fault_hook=None,
+        policy=OpsDeskPolicyEngine(),
+        verifier=opsdesk_verifier(),
+    )
     state = {
         "action": action.model_dump(),
         "approval_id": None,
@@ -113,7 +116,7 @@ def test_retry_calibration(
         "run_id": "run",
     }
     result: dict[str, Any]
-    with patch("agent_reliability_runtime.runtime.graph.audit") as audited:
+    with patch("agent_reliability_runtime.adapters.langgraph.graph.audit") as audited:
         if side:
             with pytest.raises(OpsDeskError):
                 asyncio.run(

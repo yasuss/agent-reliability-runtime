@@ -6,17 +6,25 @@ from typing import Any
 
 from sqlalchemy import Engine
 
-from agent_reliability_runtime.contracts.domain import Run, RunStatus
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.policy import VERSION, Gateway
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.graph import Context
+from agent_reliability_runtime.adapters.postgres.execution import Gateway
+from agent_reliability_runtime.adapters.postgres.retrieval import (
+    PostgresHybridRetriever,
+)
+from agent_reliability_runtime.core.contracts.domain import Run, RunStatus
+from agent_reliability_runtime.core.contracts.model import (
     ChatRequest,
     ChatResult,
     EmbeddingRequest,
     EmbeddingResult,
     ToolCall,
 )
-from agent_reliability_runtime.runtime.graph import Context
+from agent_reliability_runtime.demo.opsdesk.mcp import (
+    OpsDeskMCPClient,
+    validate_model_view,
+)
+from agent_reliability_runtime.demo.opsdesk.policy import VERSION, OpsDeskPolicyEngine
+from agent_reliability_runtime.demo.opsdesk.postconditions import opsdesk_verifier
 
 
 class Embeddings:
@@ -130,10 +138,13 @@ def context_for(
     return Context(
         engine=engine,
         provider=provider or ScriptedProvider(),
-        embeddings=Embeddings(),
+        retriever=PostgresHybridRetriever(engine, Embeddings()),
         tools=client.model_tools,
-        gateway=Gateway(engine, client),
+        gateway=Gateway(engine, client, policy=OpsDeskPolicyEngine()),
         **kwargs,
+        policy=OpsDeskPolicyEngine(),
+        verifier=opsdesk_verifier(),
+        tool_validator=validate_model_view,
     )
 
 
@@ -156,7 +167,7 @@ def primitive(value: Any) -> None:
 def counts(engine: Engine, run_id: str) -> dict[str, Any]:
     from sqlalchemy import func, select
 
-    from agent_reliability_runtime.persistence import schema
+    from agent_reliability_runtime.adapters.postgres.persistence import schema
 
     with engine.connect() as con:
         run = (

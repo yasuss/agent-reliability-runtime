@@ -8,7 +8,7 @@ Objective security/reliability outcomes are not delegated to a model judge.
 
 ## Scenario identity
 
-`evals.scenarios.load_scenarios` reads the committed locked scenario directory.
+`demo.evals.scenarios.load_scenarios` reads the committed locked scenario directory.
 Every file validates against the committed scenario schema and a strict
 ScenarioDefinition. Exactly the twelve locked IDs are required, sorted by path;
 filename must equal ID. Missing, extra, duplicate, invalid or unknown directory

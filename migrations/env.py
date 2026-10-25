@@ -3,8 +3,8 @@
 from alembic import context
 from sqlalchemy import create_engine
 
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.persistence.schema import metadata
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.postgres.persistence.schema import metadata
 
 if context.is_offline_mode():
     context.configure(url=database_url(), literal_binds=True, target_metadata=metadata)

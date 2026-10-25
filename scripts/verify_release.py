@@ -13,8 +13,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 
-BASE_SHA = "4cc3f9fdaeb5e3061e2f87a7aab0abaf6c92b265"
-VERSION = "1.0.0"
+BASE_SHA = "3c1389bdb0b358c8232ed07caccf14932f7da727"
+VERSION = "2.0.0"
+WEB_VERSION = "1.0.0"
 LICENSE_SHA = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
 SCENARIO_SHA = "ad14a89fb5816f2eea2ab700394df4b231191cb466e4b326437d035e34f475f9"
 ACCEPTED_SOURCE_SHA = "83514ebad336dbd6faf1b790c597ec8037be0874"
@@ -115,9 +116,9 @@ def check() -> list[str]:
     package = json.loads((ROOT / "web/package.json").read_text(encoding="utf-8"))
     lock = json.loads((ROOT / "web/package-lock.json").read_text(encoding="utf-8"))
     if (
-        package.get("version") != VERSION
-        or lock.get("version") != VERSION
-        or lock.get("packages", {}).get("", {}).get("version") != VERSION
+        package.get("version") != WEB_VERSION
+        or lock.get("version") != WEB_VERSION
+        or lock.get("packages", {}).get("", {}).get("version") != WEB_VERSION
     ):
         errors.append("web package versions")
     uv = tomllib.loads((ROOT / "uv.lock").read_text(encoding="utf-8"))
@@ -132,7 +133,12 @@ def check() -> list[str]:
         not in (ROOT / "LICENSE").read_text(encoding="utf-8")
     ):
         errors.append("canonical Apache-2.0 LICENSE")
-    for required in ("SECURITY.md", "CONTRIBUTING.md", "web/vercel.json"):
+    for required in (
+        "SECURITY.md",
+        "CONTRIBUTING.md",
+        "web/vercel.json",
+        "release/RELEASE_NOTES_2.0.0.md",
+    ):
         if not (ROOT / required).is_file():
             errors.append(f"missing {required}")
     if json.loads((ROOT / "web/vercel.json").read_text(encoding="utf-8")) != VERCEL:
@@ -167,12 +173,14 @@ def check() -> list[str]:
         for p in (
             "README.md",
             "docs/project/RELEASE_AND_DEPLOYMENT.md",
-            "release/RELEASE_NOTES_1.0.0.md",
+            "release/RELEASE_NOTES_2.0.0.md",
         )
     )
     if re.search(
-        r"(?i)(?:repository is public|published release|"
-        r"production deployment is live|v1\.0\.0 tag created)",
+        r"(?i)(?:v?2\.0\.0 (?:tag (?:created|published)|"
+        r"(?:is |already )?(?:tagged|published|released))|"
+        r"(?:tagged|published|released) (?:v?2\.0\.0)|"
+        r"published (?:GitHub )?release[^\n]{0,30}v?2\.0\.0)",
         public,
     ):
         errors.append("premature release-action claim")

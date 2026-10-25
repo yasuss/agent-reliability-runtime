@@ -1,1 +1,1 @@
-"""Agent Reliability Runtime: B00 foundation."""
+"""Agent Reliability Runtime: reusable reliability core, adapters and demo."""

@@ -6,8 +6,11 @@ import pytest
 from alembic.config import Config
 from sqlalchemy import Engine
 
-from agent_reliability_runtime.evals.execution import mandatory_suite
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.demo.evals.execution import mandatory_suite
 
 pytestmark = pytest.mark.integration
 

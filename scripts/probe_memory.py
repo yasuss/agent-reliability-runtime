@@ -11,21 +11,26 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, create_engine, select, text
 
-from agent_reliability_runtime.api import create_app
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.memory import MemoryStore
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import insert_snapshot
-from agent_reliability_runtime.policy import TOOL_RISK
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.postgres.memory import MemoryStore
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    insert_snapshot,
+)
+from agent_reliability_runtime.core.contracts.model import (
     ChatRequest,
     ChatResult,
     ToolCall,
 )
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.demo.api import create_app
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
+from agent_reliability_runtime.demo.opsdesk.policy import TOOL_RISK, OpsDeskPolicyEngine
 from scripts.runtime_proof_support import context_for, counts, primitive, run_record
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,7 +138,7 @@ async def graph_proof(engine: Engine, mode: str) -> dict[str, Any]:
     await setup_checkpoints(engine.url)
     reset_demo(engine, confirm_development_reset=True)
     ident = "b70-" + uuid4().hex
-    store = MemoryStore(engine)
+    store = MemoryStore(engine, policy=OpsDeskPolicyEngine())
     source = run_record(ident + "-source")
     with engine.begin() as con:
         insert_snapshot(con, source)
@@ -315,7 +320,7 @@ async def main(output: Path) -> None:
         results = []
         for mode in ("personalize", "untrusted", "trusted"):
             # Separate exact scopes/DB rows for each proof; no prior memories leak.
-            store = MemoryStore(engine)
+            store = MemoryStore(engine, policy=OpsDeskPolicyEngine())
             for workspace in ("local", "other"):
                 for memory in store.list(workspace, "test"):
                     store.delete(workspace, "test", memory.memory_id)

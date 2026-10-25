@@ -5,19 +5,19 @@ from pathlib import Path
 
 import pytest
 
-from agent_reliability_runtime.evals.calibration import controls
-from agent_reliability_runtime.evals.campaign import (
+from agent_reliability_runtime.demo.evals.calibration import controls
+from agent_reliability_runtime.demo.evals.campaign import (
     POPULATION,
     aggregate,
     next_trial,
     write_once,
 )
-from agent_reliability_runtime.evals.harness import evaluate
-from agent_reliability_runtime.evals.l4_review import (
+from agent_reliability_runtime.demo.evals.harness import evaluate
+from agent_reliability_runtime.demo.evals.l4_review import (
     build_review_packet,
     calibrate_l4,
 )
-from agent_reliability_runtime.evals.scenarios import load_scenarios
+from agent_reliability_runtime.demo.evals.scenarios import load_scenarios
 
 
 def test_r10_ids_and_first_four_fail_still_reach_fifteen(tmp_path: Path) -> None:

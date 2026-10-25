@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from agent_reliability_runtime.runtime.checkpoints import strict_serde
-from agent_reliability_runtime.runtime.service import RunConfig
+from agent_reliability_runtime.adapters.langgraph.checkpoints import strict_serde
+from agent_reliability_runtime.adapters.langgraph.service import RunConfig
 from scripts.runtime_proof_support import primitive
 
 
@@ -97,7 +97,7 @@ def check_topology(source: str) -> None:
 def test_topology_good_bad_alternate() -> None:
     source = (
         Path(__file__).resolve().parents[2]
-        / "src/agent_reliability_runtime/runtime/graph.py"
+        / "src/agent_reliability_runtime/adapters/langgraph/graph.py"
     ).read_text()
     check_topology(source)
     check_topology("# harmless alternative\n" + source)

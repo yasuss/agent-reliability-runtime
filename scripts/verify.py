@@ -23,7 +23,7 @@ def main() -> int:
                 "uv",
                 "run",
                 "python",
-                "docs/project/spec/v1.0/scripts/validate_spec.py",
+                "scripts/verify_v1_spec.py",
             ],
             ["uv", "run", "python", "scripts/verify_release.py"],
             ["uv", "run", "python", "scripts/verify_behavior_provenance.py"],

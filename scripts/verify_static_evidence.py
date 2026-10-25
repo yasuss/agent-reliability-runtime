@@ -9,8 +9,8 @@ import re
 from pathlib import Path
 from typing import Any
 
-from agent_reliability_runtime.observability import canonical, public_safe
-from agent_reliability_runtime.replay import locked_validate
+from agent_reliability_runtime.core.evidence import canonical, public_safe
+from agent_reliability_runtime.demo.replay import locked_validate
 
 ACCEPTED_SHA = "83514ebad336dbd6faf1b790c597ec8037be0874"
 EXPECTED = (

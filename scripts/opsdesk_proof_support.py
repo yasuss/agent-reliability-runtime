@@ -8,9 +8,13 @@ from typing import Any
 
 from sqlalchemy import Engine, inspect, select
 
-from agent_reliability_runtime.contracts.domain import (
-    Approval,
-    ApprovalStatus,
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    Snapshot,
+    insert_snapshot,
+)
+from agent_reliability_runtime.core.approval import Approval, ApprovalStatus
+from agent_reliability_runtime.core.contracts.domain import (
     AuditEvent,
     EffectReceipt,
     KnowledgeChunk,
@@ -23,11 +27,9 @@ from agent_reliability_runtime.contracts.domain import (
     chunk_id,
     document_id,
 )
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.mcp.client import OpsDeskError
-from agent_reliability_runtime.mcp.contracts import INPUTS
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import Snapshot, insert_snapshot
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.opsdesk.contracts import INPUTS
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskError
 
 NOW = datetime(2026, 10, 4, tzinfo=UTC)
 DEMO = {name for name in schema.metadata.tables if name.startswith("demo_")}
@@ -138,7 +140,7 @@ async def state_proof(
     raw = call
 
     async def bound_call(name: str, args: dict[str, Any]) -> Record:
-        from agent_reliability_runtime.mcp.contracts import (
+        from agent_reliability_runtime.demo.opsdesk.contracts import (
             DIGEST_META,
             RUN_META,
             RUNTIME_FIELDS,

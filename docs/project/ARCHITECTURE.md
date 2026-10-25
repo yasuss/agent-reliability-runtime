@@ -1,11 +1,34 @@
 # Architecture
 
-This document is the current orientation for the accepted implementation. The
-locked contracts remain the authority for exact schemas and invariants:
-[architecture contracts](spec/v1.0/02_ARCHITECTURE.md),
+This page describes the current v2 topology. The immutable
+[v1 architecture](spec/v1.0/02_ARCHITECTURE.md),
 [runtime contracts](spec/v1.0/03_RUNTIME_CONTRACTS.md),
-[state model](spec/v1.0/04_DATA_AND_STATE_MODEL.md), and
-[security model](spec/v1.0/05_SECURITY_AND_TRUST.md).
+[state model](spec/v1.0/04_DATA_AND_STATE_MODEL.md) and
+[security model](spec/v1.0/05_SECURITY_AND_TRUST.md) are historical behavior and
+security acceptance evidence, not the current file topology.
+
+## Reusable layers
+
+- `core/`: neutral domain/model/retrieval values, exact action identity, approval
+  lifecycle, effect receipt values, evidence redaction, generic verification and
+  the [public ports](../extension-points.md). Imports are limited to stdlib,
+  Pydantic and other core modules.
+- `adapters/`: LangGraph orchestration/checkpoints; PostgreSQL persistence,
+  approvals/effects, memory, hybrid retrieval and audit; HTTP providers; generic
+  MCP stdio sessions; OTel telemetry. Adapters never import demo modules.
+- `demo/`: OpsDesk records/schema policy, catalog/transport wrapper, restart/status
+  verification rule, assembly/API/CLI, state reset, evaluation and replay export.
+
+The demo composition root injects `PolicyEngine`, `Retriever` and `Verifier` into
+the graph; approval operations use `Approver`. The generic `RuleVerifier` receives
+the OpsDesk rule at assembly. Only PASS resolves an obligation; FAIL and PARTIAL
+leave it pending. Current OpsDesk never emits PARTIAL. Verification never issues
+an automatic status read.
+
+The checkpoint port exposes setup/existence only; concrete saver access stays in
+the LangGraph adapter. PostgreSQL approval/effect adapters retain their private
+in-transaction helpers, locks and consume/reconciliation ordering. SQLAlchemy
+metadata still includes the demo tables; migration revisions are unchanged.
 
 ## Topology and ownership
 
@@ -57,6 +80,6 @@ post-restart status read is part of the final S02/accepted live campaign contrac
 
 The [Evidence & Proof map](EVIDENCE_AND_PROOF.md) and
 [PROOF_INDEX](PROOF_INDEX.json) point each capability to a real tracked test,
-script or replay. The locked spec and accepted implementation/tests are stronger
-than historical task prose. The architecture describes ownership; it does not
+script or replay. Historical v1 acceptance evidence and the full preserved behavior suite
+constrain the refactor; the current layer/port contracts describe topology. The architecture describes ownership; it does not
 replace the executable gates.

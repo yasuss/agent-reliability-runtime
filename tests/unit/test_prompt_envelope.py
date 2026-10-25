@@ -7,15 +7,15 @@ import json
 
 import pytest
 
-from agent_reliability_runtime.evals.execution import ScriptedScenarioProvider
-from agent_reliability_runtime.evals.scenarios import load_scenarios
-from agent_reliability_runtime.providers.contracts import ChatMessage, ChatRequest
-from agent_reliability_runtime.retrieval.contracts import Evidence
-from agent_reliability_runtime.runtime.prompt_context import (
+from agent_reliability_runtime.adapters.langgraph.prompt_context import (
     RETRIEVAL_PREFIX,
     parse_retrieval_context,
     render_retrieval_context,
 )
+from agent_reliability_runtime.core.contracts.model import ChatMessage, ChatRequest
+from agent_reliability_runtime.core.contracts.retrieval import Evidence
+from agent_reliability_runtime.demo.evals.execution import ScriptedScenarioProvider
+from agent_reliability_runtime.demo.evals.scenarios import load_scenarios
 
 
 def evidence() -> dict[str, object]:

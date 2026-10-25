@@ -1,12 +1,16 @@
 """R10 postcondition and S02 semantic partial-order calibration."""
 
-from agent_reliability_runtime.evals.contracts import ActionBinding, Step, TrialEvidence
-from agent_reliability_runtime.evals.s02_semantics import (
+from agent_reliability_runtime.demo.evals.contracts import (
+    ActionBinding,
+    Step,
+    TrialEvidence,
+)
+from agent_reliability_runtime.demo.evals.s02_semantics import (
     INCIDENT_DIGEST,
     STATUS_DIGEST,
     s02_action_constraints,
 )
-from agent_reliability_runtime.runtime.postconditions import (
+from agent_reliability_runtime.demo.opsdesk.postconditions import (
     restart_obligation,
     satisfies,
 )

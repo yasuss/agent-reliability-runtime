@@ -1,10 +1,19 @@
 # Release and Deployment Operations
 
-This document describes the authorized sequence for the 1.0.0 release. The
-release candidate itself does not merge, change repository visibility, create a
-tag or release, create a Vercel project, or deploy.
+Version 1.0.0 is a historical published release with an immutable tag and
+static web deployment. The historical procedure below records that release.
 
-## Candidate verification
+## Version 2.0.0 candidate
+
+The v2 candidate separates core, adapters and demo while preserving behavior.
+After independent Architect acceptance, merge the one candidate commit, wait
+for exact-main CI, recheck the immutable v1 tag, then tag the verified main SHA
+and create the v2 GitHub release from its release notes. This is a code/docs
+release only: `web/**` and replay bytes remain unchanged, the web package stays
+at 1.0.0, and no Vercel redeploy is required. Candidate implementation does not
+merge, tag or publish.
+
+## Historical v1 candidate verification
 
 Verify the exact candidate SHA, clean worktree, full-history public exposure
 audit and terminal CI. Keep the external
@@ -12,7 +21,7 @@ audit and terminal CI. Keep the external
 candidate uses Apache-2.0, has no package registry publication, and configures
 Vercel only through the checked-in `web/vercel.json`.
 
-## Authorized release sequence
+## Historical v1 release sequence
 
 After independent Architect review and separate explicit user authorization:
 

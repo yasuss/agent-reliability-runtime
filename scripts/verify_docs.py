@@ -13,6 +13,7 @@ from pathlib import Path
 
 CANONICAL_DOCS = (
     "README.md",
+    "docs/extension-points.md",
     "docs/project/ARCHITECTURE.md",
     "docs/project/OPERATIONS.md",
     "docs/project/VERIFICATION.md",
@@ -156,7 +157,7 @@ def _legacy_surface_errors(root: Path) -> list[str]:
 
 
 def _project_facing_markdown(root: Path) -> list[Path]:
-    paths = [root / "README.md"]
+    paths = [root / "README.md", root / "docs/extension-points.md"]
     project = root / "docs" / "project"
     paths.extend(sorted(project.rglob("*.md")))
     return [path for path in paths if path.exists()]

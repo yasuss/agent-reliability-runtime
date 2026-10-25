@@ -7,15 +7,13 @@ from typing import Any
 import pytest
 from pydantic import JsonValue, ValidationError
 
-from agent_reliability_runtime.contracts.domain import (
+from agent_reliability_runtime.core.approval import (
     Approval,
     ApprovalStatus,
+    transition_approval,
+)
+from agent_reliability_runtime.core.contracts.domain import (
     AuditEvent,
-    DemoIncident,
-    DemoIncidentNote,
-    DemoNotification,
-    DemoSeed,
-    DemoService,
     EffectReceipt,
     KnowledgeChunk,
     KnowledgeDocument,
@@ -25,10 +23,16 @@ from agent_reliability_runtime.contracts.domain import (
     action_digest,
     chunk_id,
     document_id,
-    transition_approval,
     transition_run,
 )
-from agent_reliability_runtime.demo_state.reset import load_seed
+from agent_reliability_runtime.demo.demo_state.reset import load_seed
+from agent_reliability_runtime.demo.opsdesk.contracts import (
+    DemoIncident,
+    DemoIncidentNote,
+    DemoNotification,
+    DemoSeed,
+    DemoService,
+)
 
 NOW = datetime(2026, 10, 3, tzinfo=UTC)
 DIGEST = "a" * 64

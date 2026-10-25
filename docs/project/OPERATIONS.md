@@ -108,7 +108,7 @@ The API equivalents are `POST /api/v1/runs` and `GET /api/v1/runs/{run_id}`.
 Start the unauthenticated local API explicitly on loopback:
 
 ```text
-uv run uvicorn agent_reliability_runtime.api:app --host 127.0.0.1 --port 8000
+uv run uvicorn agent_reliability_runtime.demo.api:app --host 127.0.0.1 --port 8000
 ```
 
 The v1 API has no authentication boundary. Do not bind it to `0.0.0.0`, a LAN

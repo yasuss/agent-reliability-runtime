@@ -9,12 +9,15 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy import Engine, func, select
 
-from agent_reliability_runtime.api import create_app
-from agent_reliability_runtime.contracts.domain import MemoryKind
-from agent_reliability_runtime.memory import MemoryError, MemoryStore
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import insert_snapshot
-from agent_reliability_runtime.runtime.checkpoints import run_async
+from agent_reliability_runtime.adapters.langgraph.checkpoints import run_async
+from agent_reliability_runtime.adapters.postgres.memory import MemoryError, MemoryStore
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    insert_snapshot,
+)
+from agent_reliability_runtime.core.contracts.domain import MemoryKind
+from agent_reliability_runtime.demo.api import create_app
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
 from scripts.probe_memory import graph_proof, no_marker
 from scripts.runtime_proof_support import run_record
 
@@ -27,7 +30,12 @@ def test_creation_profiles_scopes_and_physical_delete(
     engine, _ = isolated_db
     now = datetime.now(UTC)
     ids = iter(["z", "a", "b", "c", "foreign-user", "foreign-workspace", "optional"])
-    store = MemoryStore(engine, clock=lambda: now, id_factory=lambda: next(ids))
+    store = MemoryStore(
+        engine,
+        clock=lambda: now,
+        id_factory=lambda: next(ids),
+        policy=OpsDeskPolicyEngine(),
+    )
     with engine.begin() as con:
         insert_snapshot(con, run_record("source"))
         insert_snapshot(
@@ -122,7 +130,7 @@ def test_bad_profiles_rejected_before_persistence(
         insert_snapshot(
             con, run_record("foreign").model_copy(update={"workspace_id": "other"})
         )
-    store = MemoryStore(engine)
+    store = MemoryStore(engine, policy=OpsDeskPolicyEngine())
     with pytest.raises((MemoryError, ValidationError, TypeError)):
         if bad == "kind":
             store.user_explicit("local", "test", "bad", kind=MemoryKind.OBSERVATION)
@@ -160,11 +168,11 @@ def test_api_scope_order_validation_and_health(
 ) -> None:
     engine, _ = isolated_db
     now = datetime.now(UTC)
-    store = MemoryStore(engine, clock=lambda: now)
+    store = MemoryStore(engine, clock=lambda: now, policy=OpsDeskPolicyEngine())
     first = store.user_explicit("w", "u", "first")
-    later = MemoryStore(engine, clock=lambda: now + timedelta(seconds=1)).user_explicit(
-        "w", "u", "later"
-    )
+    later = MemoryStore(
+        engine, clock=lambda: now + timedelta(seconds=1), policy=OpsDeskPolicyEngine()
+    ).user_explicit("w", "u", "later")
     foreign = store.user_explicit("w", "v", "private")
     with TestClient(create_app(engine)) as client:
         own = {"workspace_id": "w", "user_id": "u"}

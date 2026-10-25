@@ -8,19 +8,31 @@ from alembic.config import Config
 from pydantic import JsonValue
 from sqlalchemy import Engine, select
 
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.adapters.langgraph.prompt_context import (
+    parse_retrieval_context,
+)
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.retrieval import (
+    ingest,
+)
+from agent_reliability_runtime.core.contracts.model import (
     ChatRequest,
     ChatResult,
     ToolCall,
 )
-from agent_reliability_runtime.retrieval.service import ingest
-from agent_reliability_runtime.retrieval.text import plan_source
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.prompt_context import parse_retrieval_context
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.core.source_text import plan_source
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.opsdesk.mcp import (
+    OpsDeskMCPClient,
+    validate_model_view,
+)
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
+from agent_reliability_runtime.demo.opsdesk.postconditions import opsdesk_verifier
 from scripts.runtime_proof_support import Embeddings, context_for, counts, run_record
 
 pytestmark = pytest.mark.integration
@@ -80,15 +92,18 @@ def test_pseudo_call_checkpoint_and_real_approval(
         ) as client:
             provider = Provider()
             # Runtime provider is structural; the fixture helper's annotation is narrow.
-            from agent_reliability_runtime.runtime.graph import Context
+            from agent_reliability_runtime.adapters.langgraph.graph import Context
 
             original = context_for(engine, client)
             context = Context(
                 engine=engine,
                 provider=provider,
-                embeddings=original.embeddings,
+                retriever=original.retriever,
                 tools=client.model_tools,
                 gateway=original.gateway,
+                policy=OpsDeskPolicyEngine(),
+                verifier=opsdesk_verifier(),
+                tool_validator=validate_model_view,
             )
             async with open_runtime(context, engine.url) as runtime:
                 state = await runtime.start(run_record("repair-pg-run"))

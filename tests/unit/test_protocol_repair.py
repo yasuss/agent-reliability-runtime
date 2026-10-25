@@ -10,14 +10,18 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.graph import decide
+from agent_reliability_runtime.adapters.langgraph.protocol import (
+    correction,
+    repair_reason,
+)
+from agent_reliability_runtime.core.contracts.model import (
     ChatResult,
     ModelSettings,
     ToolCall,
     ToolDefinition,
 )
-from agent_reliability_runtime.runtime.graph import decide
-from agent_reliability_runtime.runtime.protocol import correction, repair_reason
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
 
 EVIDENCE = "a" * 64
 OTHER = "b" * 64
@@ -99,6 +103,7 @@ def context_for_results(results: list[ChatResult]) -> Any:
             for n in sorted(TOOLS)
         ),
         engine=Mock(),
+        policy=OpsDeskPolicyEngine(),
         telemetry=SimpleNamespace(span=lambda *a, **kw: nullcontext(Mock())),
         gateway=SimpleNamespace(execute=AsyncMock()),
     )
@@ -117,12 +122,16 @@ async def decision(
 def boundaries() -> Any:
     with (
         patch(
-            "agent_reliability_runtime.runtime.graph.memory_scope",
+            "agent_reliability_runtime.adapters.langgraph.graph.memory_scope",
             return_value=("local", "fixture"),
         ),
-        patch("agent_reliability_runtime.runtime.graph.MemoryStore") as memory,
-        patch("agent_reliability_runtime.runtime.graph.audit") as audited,
-        patch("agent_reliability_runtime.runtime.graph.propose") as proposed,
+        patch(
+            "agent_reliability_runtime.adapters.langgraph.graph.MemoryStore"
+        ) as memory,
+        patch("agent_reliability_runtime.adapters.langgraph.graph.audit") as audited,
+        patch(
+            "agent_reliability_runtime.demo.opsdesk.policy.OpsDeskPolicyEngine.propose"
+        ) as proposed,
     ):
         memory.return_value.resolve.return_value = []
         yield audited, proposed
@@ -242,7 +251,7 @@ def test_structured_side_effect_with_bad_text_never_repairs(boundaries: Any) -> 
 
 def test_mutant_text_promoted_to_call_is_detected(boundaries: Any) -> None:
     """The same safety oracle rejects a deliberately promoted textual request."""
-    import agent_reliability_runtime.runtime.graph as graph_module
+    import agent_reliability_runtime.adapters.langgraph.graph as graph_module
 
     source = inspect.getsource(decide)
     needle = '"protocol_repairs": repairs + 1,'

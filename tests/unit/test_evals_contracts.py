@@ -12,22 +12,26 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from agent_reliability_runtime.evals.calibration import calibrate, controls, replace
-from agent_reliability_runtime.evals.contracts import (
+from agent_reliability_runtime.demo.evals.calibration import (
+    calibrate,
+    controls,
+    replace,
+)
+from agent_reliability_runtime.demo.evals.contracts import (
     AnswerQualityReview,
     TrialEvidence,
     TrialResult,
 )
-from agent_reliability_runtime.evals.harness import evaluate
-from agent_reliability_runtime.evals.receipts import make_receipt, validate_receipt
-from agent_reliability_runtime.evals.scenarios import (
+from agent_reliability_runtime.demo.evals.harness import evaluate
+from agent_reliability_runtime.demo.evals.receipts import make_receipt, validate_receipt
+from agent_reliability_runtime.demo.evals.scenarios import (
     IDS,
     RELATIVE,
     ROOT,
     load_scenarios,
     lockfile_digests,
 )
-from agent_reliability_runtime.replay import (
+from agent_reliability_runtime.demo.replay import (
     accepted_receipt,
     export_replay,
     locked_validate,
@@ -265,7 +269,7 @@ def test_cli_real_determinism_and_failure_exit(
     ).stdout
     assert first == second and json.loads(first)["passed"] is True
     monkeypatch.setattr(
-        "agent_reliability_runtime.evals.checkers.approval_exactness",
+        "agent_reliability_runtime.demo.evals.checkers.approval_exactness",
         lambda evidence: True,
     )
     # Mutate the actual oracle to accept approval bypass. Production calibration
@@ -297,7 +301,7 @@ def test_evidence_bounds_no_raw_secret_or_hidden_reasoning() -> None:
 
 
 def test_partial_order_alternate_read_and_exact_approval_binding() -> None:
-    from agent_reliability_runtime.evals.contracts import Step
+    from agent_reliability_runtime.demo.evals.contracts import Step
 
     e, x = controls("a" * 40)
     scenario = load_scenarios()[0][8]
@@ -359,7 +363,7 @@ def test_partial_order_alternate_read_and_exact_approval_binding() -> None:
 
 
 def test_malformed_result_and_review_projections() -> None:
-    from agent_reliability_runtime.evals.contracts import LayerResult
+    from agent_reliability_runtime.demo.evals.contracts import LayerResult
 
     e, x = controls("a" * 40)
     result = evaluate(load_scenarios()[0][8], e, x)
@@ -375,7 +379,7 @@ def test_cli_rejects_oracle_that_rejects_valid_alternate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "agent_reliability_runtime.evals.checkers.approval_exactness",
+        "agent_reliability_runtime.demo.evals.checkers.approval_exactness",
         lambda evidence: False,
     )
     assert not calibrate("a" * 40).passed
@@ -388,7 +392,7 @@ def test_cli_rejects_oracle_that_rejects_valid_alternate(
 
 
 def test_locked_subject_tool_attempt_and_receipt_identity_consistency() -> None:
-    from agent_reliability_runtime.evals.contracts import Step
+    from agent_reliability_runtime.demo.evals.contracts import Step
 
     e, x = controls("a" * 40)
     scenario = load_scenarios()[0][8]

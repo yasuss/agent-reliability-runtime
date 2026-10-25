@@ -13,28 +13,30 @@ import httpx
 from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.exc import IntegrityError
 
-from agent_reliability_runtime.cli import local_embeddings
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.persistence.schema import knowledge_chunks as chunks
-from agent_reliability_runtime.persistence.schema import (
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
+    knowledge_chunks as chunks,
+)
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
     knowledge_documents as documents,
 )
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.postgres.retrieval import ingest, retrieve
+from agent_reliability_runtime.core.contracts.model import (
     EmbeddingRequest,
     EmbeddingResult,
 )
-from agent_reliability_runtime.retrieval.contracts import (
+from agent_reliability_runtime.core.contracts.retrieval import (
     Evidence,
     validate_citations,
     validate_current_digest,
 )
-from agent_reliability_runtime.retrieval.evaluation import (
+from agent_reliability_runtime.core.source_text import plan_source, read_source
+from agent_reliability_runtime.demo.cli import local_embeddings
+from agent_reliability_runtime.demo.evals.retrieval import (
     calibrate_checkers,
     require_gates,
     score_query,
 )
-from agent_reliability_runtime.retrieval.service import ingest, retrieve
-from agent_reliability_runtime.retrieval.text import plan_source, read_source
 
 MODEL_DIGEST = "ac6da0dfba84a81fdbfbaf330198c33cd77c4cdfc53e8bc50eb581914a15621d"
 EVAL_DIGEST = "c6dc4cbc960f6b9a22297aad2e9523bee90a3147b612b94dfedccfbfd976d8a4"

@@ -11,16 +11,23 @@ from langgraph.runtime import Runtime
 from pydantic import ValidationError
 from sqlalchemy import Engine, inspect
 
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import insert_snapshot
-from agent_reliability_runtime.policy import Action, Approvals, PolicyError, propose
-from agent_reliability_runtime.retrieval.service import ingest
-from agent_reliability_runtime.retrieval.text import plan_source
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.graph import State, policy_gate
-from agent_reliability_runtime.runtime.service import RunConfig, open_runtime
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.adapters.langgraph.graph import State, policy_gate
+from agent_reliability_runtime.adapters.langgraph.service import RunConfig, open_runtime
+from agent_reliability_runtime.adapters.postgres.execution import Approvals
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    insert_snapshot,
+)
+from agent_reliability_runtime.adapters.postgres.retrieval import ingest
+from agent_reliability_runtime.core.policy import Action, PolicyError
+from agent_reliability_runtime.core.source_text import plan_source
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine, propose
 from scripts.probe_runtime import kill_proof
 from scripts.runtime_proof_support import (
     Embeddings,
@@ -278,7 +285,7 @@ def test_approval_ensure_good_bad_concurrent(
     engine, _ = isolated_db
     with engine.begin() as con:
         insert_snapshot(con, run_record())
-    approvals = Approvals(engine)
+    approvals = Approvals(engine, policy=OpsDeskPolicyEngine())
     action = propose(
         "b60-run", "send_notification", {"channel": "demo", "message": "exact"}
     )
@@ -287,7 +294,7 @@ def test_approval_ensure_good_bad_concurrent(
     assert ensured[0] == ensured[1] and len(counts(engine, "b60-run")["approvals"]) == 1
     assert approvals.ensure(action) == ensured[0]
     # Same stable identity, valid new digest/payload must not overwrite old approval.
-    from agent_reliability_runtime.contracts.domain import action_digest
+    from agent_reliability_runtime.core.contracts.domain import action_digest
 
     args = action.normalized_args | {"message": "changed"}
     drift = Action.model_validate(
@@ -364,8 +371,8 @@ def test_distinct_key_environmental_bad_calibration(
     isolated_db: tuple[Engine, Config],
 ) -> None:
 
-    from agent_reliability_runtime.contracts.domain import RunStatus, action_digest
-    from agent_reliability_runtime.mcp.contracts import DIGEST_META, RUN_META
+    from agent_reliability_runtime.core.contracts.domain import RunStatus, action_digest
+    from agent_reliability_runtime.demo.opsdesk.contracts import DIGEST_META, RUN_META
     from scripts.runtime_proof_support import kill_oracle
 
     engine, _ = isolated_db

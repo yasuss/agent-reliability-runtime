@@ -15,6 +15,9 @@ def _fixture(root: Path) -> None:
     (root / "docs/project").mkdir(parents=True)
     (root / "tests").mkdir()
     (root / "tests/proof.py").write_text("# proof\n", encoding="utf-8")
+    (root / "docs/extension-points.md").write_text(
+        "# Extension points\n", encoding="utf-8"
+    )
     required_commands = """
 python scripts/bootstrap.py
 uv run python scripts/reset_demo.py --confirm-development-reset

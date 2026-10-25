@@ -10,19 +10,20 @@ from mcp.server.mcpserver.context import Context
 from mcp.server.mcpserver.exceptions import ToolError
 from sqlalchemy import Connection, Engine, select, text
 
-from agent_reliability_runtime.contracts.domain import (
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    insert_snapshot,
+)
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
+    effect_receipts,
+)
+from agent_reliability_runtime.core.contracts.domain import (
     Digest,
     EffectReceipt,
     Identifier,
     Record,
 )
-from agent_reliability_runtime.mcp.contracts import (
-    DIGEST_META,
-    RUN_META,
-    ReceiptEnvelope,
-)
-from agent_reliability_runtime.persistence.records import insert_snapshot
-from agent_reliability_runtime.persistence.schema import effect_receipts
+from agent_reliability_runtime.core.effects import ReceiptEnvelope
+from agent_reliability_runtime.demo.opsdesk.contracts import DIGEST_META, RUN_META
 
 
 class Binding(Record):

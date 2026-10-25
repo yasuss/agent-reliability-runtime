@@ -12,27 +12,27 @@ from pydantic import ValidationError
 from sqlalchemy import Connection, Engine, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from agent_reliability_runtime.contracts.domain import Identifier
-from agent_reliability_runtime.mcp.contracts import (
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
+    demo_incident_notes as notes,
+)
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
+    demo_incidents as incidents,
+)
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
+    demo_notifications as notifications,
+)
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
+    demo_services as services,
+)
+from agent_reliability_runtime.core.contracts.domain import Identifier
+from agent_reliability_runtime.core.effects import ReceiptEnvelope
+from agent_reliability_runtime.demo.opsdesk.contracts import (
     INPUTS,
     Incident,
     Note,
     Notification,
-    ReceiptEnvelope,
     Restart,
     Service,
-)
-from agent_reliability_runtime.persistence.schema import (
-    demo_incident_notes as notes,
-)
-from agent_reliability_runtime.persistence.schema import (
-    demo_incidents as incidents,
-)
-from agent_reliability_runtime.persistence.schema import (
-    demo_notifications as notifications,
-)
-from agent_reliability_runtime.persistence.schema import (
-    demo_services as services,
 )
 from mcp_server.opsdesk.effects import apply_effect, row_id
 

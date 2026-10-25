@@ -2,8 +2,9 @@
 
 ## What it is
 
-Agent Reliability Runtime is a local-first reference implementation for one
-durable, tool-using LangGraph agent. It combines fictional OpsDesk state,
+Agent Reliability Runtime v2 separates a reusable framework-neutral reliability
+core from framework/service adapters and a fictional OpsDesk demonstration.
+The demo runs one durable, tool-using LangGraph agent and combines OpsDesk state,
 retrieval, governed memory, trusted policy, exact approval, idempotent effects,
 postcondition verification, OTel/audit evidence and deterministic evaluation.
 
@@ -35,7 +36,10 @@ duplicate delivery. The accepted capability map is tied to the machine-readable
 The current flow is memory scope -> retrieval -> model -> typed actions ->
 trusted policy -> approval -> idempotent effect -> postcondition verification ->
 result -> audit/OTel/evaluation. See the [architecture](docs/project/ARCHITECTURE.md)
-for ownership and data-flow details.
+for ownership and data-flow details. The [extension points](docs/extension-points.md)
+describe implemented ports and explicitly planned interfaces. `core/` depends only
+on Python stdlib and Pydantic; `adapters/` contains LangGraph, PostgreSQL, provider,
+MCP session and OTel integrations; `demo/` owns OpsDesk policy and composition.
 
 ## Quickstart
 
@@ -93,12 +97,16 @@ deployed.
 
 ## License and public API
 
-Agent Reliability Runtime 1.0.0 is published under the
-[Apache License 2.0](LICENSE). [SECURITY.md](SECURITY.md) describes responsible
-disclosure. The documented runtime, configuration, tool and evidence contracts
-form the public v1 interface; arbitrary internal Python symbols are not
-guaranteed API. The v1.0.0 release is tied to the verified release commit and the
-Static Evidence Demo is deployed as a backend-free recorded-replay viewer.
+Agent Reliability Runtime uses the [Apache License 2.0](LICENSE).
+[SECURITY.md](SECURITY.md) describes responsible disclosure. The v2 candidate
+exposes the typed contracts in `agent_reliability_runtime.core.ports` documented
+in [Extension points](docs/extension-points.md). Internal Python imports moved
+and may break; the existing CLI command, MCP server launch and Quickstart scripts
+remain supported. Dependency extras are deferred.
+
+The historical v1.0.0 release and static recorded-replay deployment remain
+unchanged. Version 2.0.0 is a behavior-preserving code/docs candidate pending
+independent acceptance; it requires no Vercel redeploy.
 
 ## Documentation map
 

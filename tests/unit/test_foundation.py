@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from agent_reliability_runtime.api import Health, app
+from agent_reliability_runtime.demo.api import Health, app
 from scripts.commands import run_commands
 
 

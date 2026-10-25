@@ -3,8 +3,8 @@
 import asyncio
 from unittest.mock import Mock
 
-from agent_reliability_runtime.mcp.client import catalog
-from agent_reliability_runtime.mcp.contracts import INPUTS, RUNTIME_FIELDS
+from agent_reliability_runtime.demo.opsdesk.contracts import INPUTS, RUNTIME_FIELDS
+from agent_reliability_runtime.demo.opsdesk.mcp import catalog
 from mcp_server.opsdesk.server import create_server
 
 

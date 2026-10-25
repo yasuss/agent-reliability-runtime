@@ -11,8 +11,8 @@ from mcp import Client
 from mcp.types import RequestParamsMeta
 from sqlalchemy import Engine
 
-from agent_reliability_runtime.contracts.domain import Record
-from agent_reliability_runtime.mcp.client import (
+from agent_reliability_runtime.core.contracts.domain import Record
+from agent_reliability_runtime.demo.opsdesk.mcp import (
     OpsDeskMCPClient,
     catalog,
     validated_result,
