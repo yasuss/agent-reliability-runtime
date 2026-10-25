@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from datetime import datetime
-from typing import Protocol
+from enum import IntEnum
+from typing import Annotated, Literal, Protocol
 
-from pydantic import JsonValue
+from pydantic import Field, JsonValue, StrictBool
 
 from agent_reliability_runtime.core.approval import Approval
 from agent_reliability_runtime.core.contracts.domain import (
@@ -98,10 +99,53 @@ class SourceRevision(Record):
     observed_at: Timestamp
 
 
+class RiskTier(IntEnum):
+    """Planned blast-radius tier for capability metadata; no behavior uses it yet."""
+
+    READ = 0
+    INTERNAL_REVERSIBLE = 1
+    EXTERNAL_OR_PRODUCTION = 2
+    FORBIDDEN = 3
+
+
+EgressClass = Literal["none", "model", "external_provider"]
+_NonNegativeInt = Annotated[int, Field(ge=0, strict=True)]
+
+
 class CapabilityDefinition(Record):
     capability_id: Identifier
     version: Identifier
     risk_class: Risk
+    risk_tier: RiskTier | None = None
+    egress_class: EgressClass = "none"
+    reversible: StrictBool | None = None
+
+
+class PrincipalRef(Record):
+    human_principal_id: Identifier | None = None
+    agent_client_id: Identifier | None = None
+    task_principal_id: Identifier | None = None
+
+
+class TaskScope(Record):
+    tenant_id: Identifier
+    project_id: Identifier
+    region: Identifier
+    principal: PrincipalRef
+    capability_grants: tuple[Identifier, ...] = ()
+    auth_epoch: _NonNegativeInt = 0
+
+
+class AuthorizationDecision(Record):
+    allowed: StrictBool
+    reason: Identifier
+
+
+class BudgetLease(Record):
+    lease_id: Identifier
+    run_id: Identifier
+    dimension: Identifier
+    amount: _NonNegativeInt
 
 
 class Reconciler(Protocol):
@@ -127,3 +171,20 @@ class CapabilityRegistry(Protocol):
     """Planned — interface only, no implementation."""
 
     def get(self, capability_id: str) -> CapabilityDefinition | None: ...
+
+
+class ScopeAuthorizer(Protocol):
+    """Planned — interface only, no implementation."""
+
+    async def authorize(
+        self, scope: TaskScope, action: Action
+    ) -> AuthorizationDecision: ...
+
+
+class BudgetBroker(Protocol):
+    """Planned — interface only, no implementation."""
+
+    async def reserve(
+        self, scope: TaskScope, run_id: str, dimension: str, amount: int
+    ) -> BudgetLease | None: ...
+    async def settle(self, lease: BudgetLease, actual: int) -> None: ...

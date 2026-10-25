@@ -5,7 +5,7 @@ import inspect
 import sys
 from importlib.util import resolve_name
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest.mock import Mock
 
 import pytest
@@ -155,6 +155,60 @@ def test_implemented_adapters_conform_to_public_ports() -> None:
 def test_planned_timer_store_is_async_and_unimplemented() -> None:
     assert inspect.iscoroutinefunction(TimerStore.put)
     assert inspect.iscoroutinefunction(TimerStore.due)
+
+
+def test_planned_scope_and_budget_ports_are_async_interfaces() -> None:
+    from pydantic import ValidationError
+
+    from agent_reliability_runtime.core.ports import (
+        BudgetBroker,
+        BudgetLease,
+        CapabilityDefinition,
+        PrincipalRef,
+        RiskTier,
+        ScopeAuthorizer,
+        TaskScope,
+    )
+
+    assert inspect.iscoroutinefunction(ScopeAuthorizer.authorize)
+    assert inspect.iscoroutinefunction(BudgetBroker.reserve)
+    assert inspect.iscoroutinefunction(BudgetBroker.settle)
+    assert [tier.value for tier in RiskTier] == [0, 1, 2, 3]
+    legacy = CapabilityDefinition(
+        capability_id="cap", version="1", risk_class="READ_ONLY"
+    )
+    assert (
+        legacy.risk_tier is None
+        and legacy.egress_class == "none"
+        and legacy.reversible is None
+    )
+    scope = TaskScope(
+        tenant_id="tenant",
+        project_id="project",
+        region="eu",
+        principal=PrincipalRef(human_principal_id="human"),
+        capability_grants=("cap",),
+    )
+    assert scope.auth_epoch == 0
+    with pytest.raises(ValidationError):
+        scope.auth_epoch = 1
+    with pytest.raises(ValidationError):
+        TaskScope(
+            tenant_id="tenant",
+            project_id="project",
+            region="eu",
+            principal=PrincipalRef(),
+            auth_epoch=-1,
+        )
+    with pytest.raises(ValidationError):
+        BudgetLease(lease_id="lease", run_id="run", dimension="tokens", amount=-1)
+    with pytest.raises(ValidationError):
+        CapabilityDefinition(
+            capability_id="cap",
+            version="1",
+            risk_class="READ_ONLY",
+            egress_class=cast(Any, "invalid"),
+        )
 
 
 @pytest.mark.parametrize(

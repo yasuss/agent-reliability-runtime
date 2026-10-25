@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import re
@@ -14,8 +15,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 BASE_SHA = "3c1389bdb0b358c8232ed07caccf14932f7da727"
-VERSION = "2.0.0"
+VERSION = "2.1.0"
+CURRENT_RELEASE_TAG = f"v{VERSION}"
+V20_RELEASE_SHA = "77574ee445e97fe282a62c2528b2c250e6998ddb"
 WEB_VERSION = "1.0.0"
+RELEASE_NOTES_PATH = f"release/RELEASE_NOTES_{VERSION}.md"
 LICENSE_SHA = "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
 SCENARIO_SHA = "ad14a89fb5816f2eea2ab700394df4b231191cb466e4b326437d035e34f475f9"
 ACCEPTED_SOURCE_SHA = "83514ebad336dbd6faf1b790c597ec8037be0874"
@@ -104,7 +108,132 @@ def behavior_provenance_errors() -> list[str]:
     return check()
 
 
-def check() -> list[str]:
+def validate_current_release_tag_state(
+    *,
+    tag_sha: str | None,
+    candidate_sha: str,
+    tag_is_ancestor: bool | None,
+    tag_version: str | None,
+    release_notes_present: bool | None,
+    require_unreleased: bool,
+) -> list[str]:
+    """Validate the current-version tag for either release lifecycle phase."""
+
+    del candidate_sha
+    if tag_sha is None:
+        return []
+    if require_unreleased:
+        return [f"{CURRENT_RELEASE_TAG} tag exists before release"]
+
+    errors: list[str] = []
+    if tag_is_ancestor is not True:
+        errors.append(f"{CURRENT_RELEASE_TAG} tag is not an ancestor of candidate HEAD")
+    if tag_version != VERSION:
+        errors.append(f"{CURRENT_RELEASE_TAG} tagged project version mismatch")
+    if release_notes_present is not True:
+        errors.append(f"{CURRENT_RELEASE_TAG} release notes missing")
+    return errors
+
+
+def _current_release_tag_state(
+    *, require_unreleased: bool
+) -> tuple[str | None, str, bool | None, str | None, bool | None, list[str]]:
+    """Collect tag state without allowing malformed tag data to escape uncaught."""
+
+    del require_unreleased
+    candidate_sha = ""
+    collector_errors: list[str] = []
+    try:
+        candidate_sha = git("rev-parse", "HEAD").decode().strip()
+    except (subprocess.CalledProcessError, UnicodeDecodeError) as exc:
+        collector_errors.append(f"candidate HEAD could not be resolved: {exc}")
+
+    tag_result = subprocess.run(
+        [
+            "git",
+            "rev-parse",
+            "--verify",
+            f"refs/tags/{CURRENT_RELEASE_TAG}^{{commit}}",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+    )
+    if tag_result.returncode != 0:
+        return None, candidate_sha, None, None, None, collector_errors
+    try:
+        tag_sha = tag_result.stdout.decode().strip()
+    except UnicodeDecodeError as exc:
+        collector_errors.append(
+            f"{CURRENT_RELEASE_TAG} tag SHA is not valid UTF-8: {exc}"
+        )
+        return None, candidate_sha, None, None, None, collector_errors
+
+    tag_is_ancestor = False
+    if candidate_sha:
+        tag_is_ancestor = (
+            subprocess.run(
+                ["git", "merge-base", "--is-ancestor", tag_sha, candidate_sha],
+                cwd=ROOT,
+                capture_output=True,
+            ).returncode
+            == 0
+        )
+
+    tag_version: str | None = None
+    try:
+        tagged_pyproject = git("show", f"{tag_sha}:pyproject.toml")
+        tag_version = tomllib.loads(tagged_pyproject.decode("utf-8"))["project"].get(
+            "version"
+        )
+    except (
+        subprocess.CalledProcessError,
+        UnicodeDecodeError,
+        tomllib.TOMLDecodeError,
+        KeyError,
+        TypeError,
+    ) as exc:
+        collector_errors.append(
+            f"{CURRENT_RELEASE_TAG} tagged pyproject.toml could not be read: {exc}"
+        )
+
+    release_notes_present = (
+        subprocess.run(
+            ["git", "cat-file", "-e", f"{tag_sha}:{RELEASE_NOTES_PATH}"],
+            cwd=ROOT,
+            capture_output=True,
+        ).returncode
+        == 0
+    )
+    return (
+        tag_sha,
+        candidate_sha,
+        tag_is_ancestor,
+        tag_version,
+        release_notes_present,
+        collector_errors,
+    )
+
+
+def current_release_tag_errors(*, require_unreleased: bool) -> list[str]:
+    (
+        tag_sha,
+        candidate_sha,
+        tag_is_ancestor,
+        tag_version,
+        release_notes_present,
+        collector_errors,
+    ) = _current_release_tag_state(require_unreleased=require_unreleased)
+    return collector_errors + validate_current_release_tag_state(
+        tag_sha=tag_sha,
+        candidate_sha=candidate_sha,
+        tag_is_ancestor=tag_is_ancestor,
+        tag_version=tag_version,
+        release_notes_present=release_notes_present,
+        require_unreleased=require_unreleased,
+    )
+
+
+def check(*, require_unreleased: bool = False) -> list[str]:
     errors: list[str] = []
     errors.extend(
         f"behavior provenance: {error}" for error in behavior_provenance_errors()
@@ -142,6 +271,7 @@ def check() -> list[str]:
         "CONTRIBUTING.md",
         "web/vercel.json",
         "release/RELEASE_NOTES_2.0.0.md",
+        RELEASE_NOTES_PATH,
     ):
         if not (ROOT / required).is_file():
             errors.append(f"missing {required}")
@@ -180,16 +310,24 @@ def check() -> list[str]:
             "README.md",
             "docs/project/RELEASE_AND_DEPLOYMENT.md",
             "release/RELEASE_NOTES_2.0.0.md",
+            RELEASE_NOTES_PATH,
         )
     )
+    version_pattern = re.escape(VERSION)
     if re.search(
-        r"(?i)(?:v?2\.0\.0 (?:tag (?:created|published)|"
-        r"(?:is |already )?(?:tagged|published|released))|"
-        r"(?:tagged|published|released) (?:v?2\.0\.0)|"
-        r"published (?:GitHub )?release[^\n]{0,30}v?2\.0\.0)",
+        rf"(?i)(?:v?{version_pattern} (?:tag (?:created|published)|"
+        rf"(?:is |already )?(?:tagged|published|released))|"
+        rf"(?:tagged|published|released) (?:v?{version_pattern})|"
+        rf"published (?:GitHub )?release[^\n]{{0,30}}v?{version_pattern})",
         public,
     ):
         errors.append("premature release-action claim")
+    try:
+        if git("rev-parse", "refs/tags/v2.0.0").decode().strip() != V20_RELEASE_SHA:
+            errors.append("v2.0.0 predecessor tag mismatch")
+    except subprocess.CalledProcessError:
+        errors.append("v2.0.0 predecessor tag is missing")
+    errors.extend(current_release_tag_errors(require_unreleased=require_unreleased))
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     if (
         not re.search(r"Apache(?: License)? 2\.0", readme)
@@ -200,7 +338,14 @@ def check() -> list[str]:
 
 
 def main() -> int:
-    errors = check()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--require-unreleased",
+        action="store_true",
+        help="require the current release tag to be absent before publication",
+    )
+    args = parser.parse_args()
+    errors = check(require_unreleased=args.require_unreleased)
     if errors:
         print("Release verifier: FAIL")
         for error in errors:
@@ -212,8 +357,11 @@ def main() -> int:
                 "state": "PASS",
                 "version": VERSION,
                 "base_sha": BASE_SHA,
+                "v20_release_sha": V20_RELEASE_SHA,
+                "release_notes": RELEASE_NOTES_PATH,
                 "scenario_set_sha256": SCENARIO_SHA,
                 "protected_paths": len(protected_paths()),
+                "require_unreleased": args.require_unreleased,
             },
             sort_keys=True,
         )

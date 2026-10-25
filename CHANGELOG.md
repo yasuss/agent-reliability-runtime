@@ -4,6 +4,27 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-25
+
+Additive, interface-only extension of the public `core.ports` boundary for
+multi-tenant agent action layers. No runtime behavior changes.
+
+### Added
+
+- Planned interface-only ports `ScopeAuthorizer` and `BudgetBroker`.
+- Core-clean value contracts `PrincipalRef`, `TaskScope`, `AuthorizationDecision`
+  and `BudgetLease`.
+- `RiskTier` and `EgressClass`; optional `risk_tier`, `egress_class` and
+  `reversible` fields on `CapabilityDefinition` (existing constructions remain valid).
+- A unit test asserting the new planned ports are async interfaces and that
+  `CapabilityDefinition` stays backward compatible.
+- Provenance and release verification now bind this interface/docs-only surface
+  to the published v2.0.0 baseline.
+- README links to the Static Evidence Demo and the two architecture specifications
+  that motivated these contracts.
+
+No runtime, dependency, web, migration or security behavior changed.
+
 ## [2.0.0] - 2026-10-25
 
 ARR 2.0.0 turns the runtime into a reusable reliability core with replaceable
@@ -59,4 +80,5 @@ Initial published release summary for the local-first Agent Reliability Runtime.
 Version 1.0.0 was published as the immutable v1.0.0 Git tag and GitHub release.
 
 [2.0.0]: https://github.com/yasuss/agent-reliability-runtime/compare/v1.0.0...v2.0.0
+[2.1.0]: https://github.com/yasuss/agent-reliability-runtime/compare/v2.0.0...v2.1.0
 [1.0.0]: https://github.com/yasuss/agent-reliability-runtime/releases/tag/v1.0.0

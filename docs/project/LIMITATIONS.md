@@ -24,8 +24,10 @@ The following boundaries are deliberate:
   static evidence deployment.
 - The v2 public Python extension boundary is `core.ports` and its neutral value
   contracts. Internal import paths changed; the CLI/MCP/script entry points remain.
-- Reconciler, TimerStore, SourceRevisionReader and CapabilityRegistry are planned
-  interfaces only. PARTIAL is a verification value, not new OpsDesk behavior.
+- Reconciler, TimerStore, SourceRevisionReader, CapabilityRegistry, ScopeAuthorizer
+  and BudgetBroker are planned interfaces only. They do not implement
+  multi-tenancy, execution-boundary authorization or budget enforcement. PARTIAL
+  is a verification value, not new OpsDesk behavior.
 - Dependency extras and a generic control plane are deferred.
 - The unauthenticated v1 API is supported only on loopback by default. Do not bind
   it to `0.0.0.0`, a LAN interface, or a public interface without an external

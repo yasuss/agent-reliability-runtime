@@ -111,6 +111,14 @@ def test_documentation_baseline_and_anchor_link_pass(docs_fixture: Path) -> None
     assert_passes(docs_fixture)
 
 
+def test_release_note_discovery_checks_new_release_files(docs_fixture: Path) -> None:
+    path = docs_fixture / "release/RELEASE_NOTES_2.1.0.md"
+    path.write_text("# 2.1.0\n[Broken](missing.md)\n", encoding="utf-8")
+    assert any("missing link" in error for error in verify_docs(docs_fixture))
+    path.write_text("# 2.1.0\n", encoding="utf-8")
+    assert_passes(docs_fixture)
+
+
 @pytest.mark.parametrize(
     ("name", "mutate"),
     [
