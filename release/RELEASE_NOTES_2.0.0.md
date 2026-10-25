@@ -21,7 +21,7 @@ and Quickstart scripts are unchanged.
 
 ## Verification
 
-- `scripts/verify.py --scope all`: Ruff, strict mypy, **357 unit** and
+- `scripts/verify.py --scope all`: Ruff, strict mypy, **359 unit** and
   **96 integration** tests, documentation truth gate, historical v1 spec,
   release/provenance, web checks, Compose/migrations/checkpoints and secret scan.
 - CI: static/unit on Ubuntu, Windows and macOS; PostgreSQL integration; web e2e;
