@@ -75,8 +75,8 @@ not automatically reproduce every composed reliability invariant.
 Two architectures are built on these ports:
 
 - [reliable-ai-agents-for-enterprise-workflows](https://github.com/yasuss/reliable-ai-agents-for-enterprise-workflows) —
-  AI agents resolving ERP and finance exceptions over days, with exact approval,
-  reconciliation and verified completion.
+  an implementable architecture for AI agents that resolve real business exceptions across SAP/ERP,
+  supplier portals, email and spreadsheets.
 - [agent-safe-mcp-for-product-analytics](https://github.com/yasuss/agent-safe-mcp-for-product-analytics) —
   an MCP action layer for product analytics with project/region scoping,
   execution-boundary authorization, retry-safe writes and budgets.

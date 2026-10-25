@@ -12,11 +12,77 @@ from scripts.verify_release import (
     WEB_VERSION,
     check,
     scenario_digest,
+    validate_current_release_tag_state,
 )
 
 
 def test_release_contract_is_green() -> None:
     assert check() == []
+    assert check(require_unreleased=True) == []
+
+
+def test_current_release_tag_absent_pre_release() -> None:
+    assert (
+        validate_current_release_tag_state(
+            tag_sha=None,
+            candidate_sha="candidate",
+            tag_is_ancestor=None,
+            tag_version=None,
+            release_notes_present=None,
+            require_unreleased=True,
+        )
+        == []
+    )
+
+
+def test_current_release_tag_present_pre_release_is_rejected() -> None:
+    errors = validate_current_release_tag_state(
+        tag_sha="tag",
+        candidate_sha="candidate",
+        tag_is_ancestor=True,
+        tag_version="2.1.0",
+        release_notes_present=True,
+        require_unreleased=True,
+    )
+    assert any("tag exists before release" in error for error in errors)
+
+
+def test_current_release_tag_valid_after_release() -> None:
+    assert (
+        validate_current_release_tag_state(
+            tag_sha="tag",
+            candidate_sha="candidate",
+            tag_is_ancestor=True,
+            tag_version="2.1.0",
+            release_notes_present=True,
+            require_unreleased=False,
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    ("tag_is_ancestor", "tag_version", "release_notes_present"),
+    [
+        (False, "2.1.0", True),
+        (True, "2.0.0", True),
+        (True, "2.1.0", False),
+    ],
+)
+def test_current_release_tag_inconsistent_after_release_fails(
+    tag_is_ancestor: bool,
+    tag_version: str,
+    release_notes_present: bool,
+) -> None:
+    errors = validate_current_release_tag_state(
+        tag_sha="tag",
+        candidate_sha="candidate",
+        tag_is_ancestor=tag_is_ancestor,
+        tag_version=tag_version,
+        release_notes_present=release_notes_present,
+        require_unreleased=False,
+    )
+    assert errors
 
 
 def test_release_contract_rejects_unreviewed_npm_delta(

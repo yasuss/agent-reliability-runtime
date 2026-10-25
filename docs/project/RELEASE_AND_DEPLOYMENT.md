@@ -9,6 +9,16 @@ security state, verify the predecessor tags, tag the exact verified main SHA as
 `release/RELEASE_NOTES_2.1.0.md`. There is no `web/**` change and no production
 Vercel redeploy is required.
 
+Before creating the tag, run the one-time pre-tag gate:
+
+```text
+uv run python scripts/verify_release.py --require-unreleased
+```
+
+Normal CI uses `verify_release.py` without `--require-unreleased`; after publication
+it accepts the immutable current-version tag only when that tag is consistent with
+repository ancestry and the tagged release contract.
+
 ## Historical v2.0.0 release
 
 Version 2.0.0 is immutable at `77574ee445e97fe282a62c2528b2c250e6998ddb`. It

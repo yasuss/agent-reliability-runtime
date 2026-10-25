@@ -26,9 +26,10 @@ ports have no implementation or runtime wiring.
 
 ## Verification
 
-The final full verification run recorded **363 unit** and **96 integration**
+The final full verification run recorded **369 unit** and **96 integration**
 tests, plus strict mypy, documentation, historical v1, release, provenance,
-web and secret-scan gates. Four exact-SHA probes are required on the final head.
+web and secret-scan gates. Release acceptance additionally runs four exact-SHA
+behavior probes on the final pre-merge head.
 
 ## Not included
 
