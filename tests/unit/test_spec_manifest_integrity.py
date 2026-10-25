@@ -12,6 +12,9 @@ from types import ModuleType
 
 import pytest
 
+from scripts import verify_v1_spec
+from scripts.verify_v1_spec import historical_paths
+
 
 def _validator() -> ModuleType:
     root = Path(__file__).resolve().parents[2]
@@ -112,8 +115,24 @@ def _trace_fixture() -> tuple[dict[str, object], dict[str, object], set[str]]:
     catalog = json.loads(
         (directory / "VERIFICATION_CATALOG.json").read_text(encoding="utf-8")
     )
-    paths = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
+    paths = historical_paths()
     return requirements, catalog, paths
+
+
+def test_historical_v1_wrapper_and_immutable_tag() -> None:
+    assert (
+        verify_v1_spec.HISTORICAL_V1_SHA == "e9fd3d29a969d66ad907ff5f7d0ea0055ed7ae2a"
+    )
+    assert "src/agent_reliability_runtime/evals/campaign.py" in historical_paths()
+    assert verify_v1_spec.main() == 0
+
+
+def test_historical_wrapper_rejects_tag_drift(
+    git_fixture: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _git(git_fixture, "tag", "v1.0.0")
+    monkeypatch.setattr(verify_v1_spec, "ROOT", git_fixture)
+    assert verify_v1_spec.main() == 1
 
 
 def test_traceability_good_and_independent_valid_alternate() -> None:

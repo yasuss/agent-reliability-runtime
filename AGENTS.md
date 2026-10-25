@@ -1,10 +1,14 @@
 # Agent Reliability Runtime — Repository Instructions
 
-Read `docs/project/README.md` first. The durable product contract lives under `docs/project/`; this file is intentionally short.
+Read `docs/project/README.md` first. Current v2 architecture and extension contracts live under `docs/project/` and
+`docs/extension-points.md`; `docs/project/spec/v1.0/` is immutable historical
+behavior/security acceptance evidence, not current file topology authority.
 
 ## Non-negotiable boundaries
 
-- Preserve the v1 scope: one LangGraph agent; do not add multi-agent orchestration.
+- Preserve one production LangGraph demo graph; do not add multi-agent orchestration.
+- Core imports only stdlib, Pydantic and core; adapters never import demo.
+- Planned ports are interfaces only; never add behavior or ports without task authorization.
 - All MCP tool execution must pass trusted policy; all side effects require exact approval.
 - Never use RAG, memory, MCP output or model text as authorization.
 - Preserve idempotent effect receipts and real restart durability.

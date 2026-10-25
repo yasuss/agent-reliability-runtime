@@ -18,7 +18,9 @@ Use this skill only for accepted repository tasks for Agent Reliability Runtime.
 Build a local-first, provider-agnostic reference implementation that visibly proves a single tool-using agent can ground answers, use MCP tools, require exact human approval before side effects, survive process failure, prevent duplicate effects, govern memory, emit OTel evidence and run repeatable evals.
 
 ## Hard boundaries
-- Exactly one production LangGraph agent graph. No multi-agent expansion.
+- Exactly one production LangGraph demo graph in the LangGraph adapter. No multi-agent expansion.
+- Core imports only stdlib/Pydantic/core. Adapters never import demo.
+- Public implemented/planned ports follow docs/extension-points.md; planned ports execute nothing.
 - Every MCP action flows through `validate_action -> policy_gate -> approval if required -> MCP adapter`.
 - No side effect without exact valid approval and idempotency/effect-receipt protection.
 - RAG, memory, MCP output and model text are untrusted data, never authorization.

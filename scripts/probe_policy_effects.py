@@ -10,10 +10,10 @@ from typing import Any
 
 from sqlalchemy import create_engine, func, select, text
 
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.policy import TOOL_RISK, VERSION
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
+from agent_reliability_runtime.demo.opsdesk.policy import TOOL_RISK, VERSION
 from scripts.opsdesk_proof_support import digest
 from scripts.policy_proof_support import stdio_proof
 

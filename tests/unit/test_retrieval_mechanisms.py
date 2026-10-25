@@ -7,16 +7,22 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agent_reliability_runtime.contracts.domain import chunk_id, document_id
-from agent_reliability_runtime.providers.contracts import EmbeddingResult
-from agent_reliability_runtime.retrieval.contracts import Evidence, validate_citations
-from agent_reliability_runtime.retrieval.evaluation import (
+from agent_reliability_runtime.adapters.postgres.retrieval import (
+    fuse,
+    validated_vectors,
+)
+from agent_reliability_runtime.core.contracts.domain import chunk_id, document_id
+from agent_reliability_runtime.core.contracts.model import EmbeddingResult
+from agent_reliability_runtime.core.contracts.retrieval import (
+    Evidence,
+    validate_citations,
+)
+from agent_reliability_runtime.core.source_text import plan_source, read_source
+from agent_reliability_runtime.demo.evals.retrieval import (
     calibrate_checkers,
     require_gates,
     score_query,
 )
-from agent_reliability_runtime.retrieval.service import fuse, validated_vectors
-from agent_reliability_runtime.retrieval.text import plan_source, read_source
 
 
 def evidence(number: int) -> Evidence:

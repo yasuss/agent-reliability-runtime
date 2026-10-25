@@ -8,19 +8,19 @@ from typing import Any
 
 from sqlalchemy import create_engine
 
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.evals.contracts import ScenarioDefinition
-from agent_reliability_runtime.evals.execution import (
-    execute_scenario,
-    prepare_knowledge,
-)
-from agent_reliability_runtime.providers.contracts import ModelSettings
-from agent_reliability_runtime.providers.http import (
+from agent_reliability_runtime.adapters.langgraph.checkpoints import run_async
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.providers.http import (
     HTTPProviderConfig,
     OllamaEmbeddingProvider,
     OpenAICompatibleChatProvider,
 )
-from agent_reliability_runtime.runtime.checkpoints import run_async
+from agent_reliability_runtime.core.contracts.model import ModelSettings
+from agent_reliability_runtime.demo.evals.contracts import ScenarioDefinition
+from agent_reliability_runtime.demo.evals.execution import (
+    execute_scenario,
+    prepare_knowledge,
+)
 
 BASE_SHA = "df9afa71ece85c52642086dbc165bf6e1bbd92db"
 SEEDS = (411, 522, 633)

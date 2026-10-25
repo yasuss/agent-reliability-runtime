@@ -4,8 +4,8 @@ import argparse
 
 from sqlalchemy import create_engine
 
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.demo_state.reset import reset_demo
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
 
 
 def main() -> int:

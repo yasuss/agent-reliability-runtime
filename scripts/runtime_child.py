@@ -13,12 +13,13 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from sqlalchemy import create_engine
 
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.observability import AuditTrail, Telemetry
-from agent_reliability_runtime.runtime.checkpoints import run_async
-from agent_reliability_runtime.runtime.graph import State
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.adapters.langgraph.checkpoints import run_async
+from agent_reliability_runtime.adapters.langgraph.graph import State
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.otel.telemetry import Telemetry
+from agent_reliability_runtime.adapters.postgres.audit import AuditTrail
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
 from scripts.runtime_proof_support import context_for, primitive
 
 

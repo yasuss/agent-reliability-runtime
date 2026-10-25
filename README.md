@@ -2,10 +2,20 @@
 
 ## What it is
 
-Agent Reliability Runtime is a local-first reference implementation for one
-durable, tool-using LangGraph agent. It combines fictional OpsDesk state,
-retrieval, governed memory, trusted policy, exact approval, idempotent effects,
-postcondition verification, OTel/audit evidence and deterministic evaluation.
+Agent Reliability Runtime (ARR) is a local-first reference runtime for tool-using
+AI agents whose actions have real side effects. It provides a framework-neutral
+reliability core — trusted policy, exact approval, idempotent effect receipts and
+postcondition verification — with replaceable adapters for LangGraph, PostgreSQL,
+model providers, MCP and OpenTelemetry. A fictional OpsDesk demo shows one durable
+agent end to end, and every accepted capability is tied to machine-checkable proof.
+
+## Why it exists
+
+An agent that calls tools can retry a payment, act on a stale approval or report
+success that never happened. ARR treats model output as untrusted input and puts
+deterministic checks between the model and every side effect: the model proposes,
+policy decides, a human approves the exact action, the effect runs once, and the
+outcome is verified before the run completes.
 
 ## Reliability properties
 
@@ -30,12 +40,35 @@ duplicate delivery. The accepted capability map is tied to the machine-readable
 | Adversarial scenarios | `adversarial-scenarios` |
 | Static Evidence Demo | `static-evidence-demo` |
 
+## Repository layout
+
+```mermaid
+flowchart LR
+    demo["demo/<br/>OpsDesk policy, evals, replay, API"] --> adapters
+    demo --> core
+    adapters["adapters/<br/>LangGraph, PostgreSQL, providers, MCP, OTel"] --> core
+    core["core/<br/>contracts, policy, approval, effects,<br/>verification, ports<br/>(stdlib + Pydantic only)"]
+```
+
+Dependencies point inward only; `tests/unit/test_core_boundary.py` enforces it.
+
 ## Architecture at a glance
 
 The current flow is memory scope -> retrieval -> model -> typed actions ->
 trusted policy -> approval -> idempotent effect -> postcondition verification ->
 result -> audit/OTel/evaluation. See the [architecture](docs/project/ARCHITECTURE.md)
-for ownership and data-flow details.
+for ownership and data-flow details. The [extension points](docs/extension-points.md)
+describe implemented ports and explicitly planned interfaces. `core/` depends only
+on Python stdlib and Pydantic; `adapters/` contains LangGraph, PostgreSQL, provider,
+MCP session and OTel integrations; `demo/` owns OpsDesk policy and composition.
+
+## Building on ARR
+
+Implement the structural ports in `agent_reliability_runtime.core.ports` to plug
+ARR's reliability semantics into another orchestrator, store or domain.
+[Extension points](docs/extension-points.md) lists implemented and planned ports,
+their current limits and the 1.x migration table. Implementing a port alone does
+not automatically reproduce every composed reliability invariant.
 
 ## Quickstart
 
@@ -93,12 +126,15 @@ deployed.
 
 ## License and public API
 
-Agent Reliability Runtime 1.0.0 is published under the
-[Apache License 2.0](LICENSE). [SECURITY.md](SECURITY.md) describes responsible
-disclosure. The documented runtime, configuration, tool and evidence contracts
-form the public v1 interface; arbitrary internal Python symbols are not
-guaranteed API. The v1.0.0 release is tied to the verified release commit and the
-Static Evidence Demo is deployed as a backend-free recorded-replay viewer.
+Agent Reliability Runtime uses the [Apache License 2.0](LICENSE).
+[SECURITY.md](SECURITY.md) describes responsible disclosure. Agent Reliability
+Runtime v2 exposes the typed contracts in `agent_reliability_runtime.core.ports`
+documented in [Extension points](docs/extension-points.md). Internal Python
+imports moved and may break; the existing CLI command, MCP server launch and
+Quickstart scripts remain supported. Dependency extras are not part of 2.0.0; a
+core-only installation is not claimed.
+
+The historical v1.0.0 tag and static recorded-replay deployment remain unchanged.
 
 ## Documentation map
 
@@ -110,4 +146,8 @@ Static Evidence Demo is deployed as a backend-free recorded-replay viewer.
 - [Evidence & Proof](docs/project/EVIDENCE_AND_PROOF.md)
 - [Project truth map](docs/project/README.md)
 - [Release and deployment operations](docs/project/RELEASE_AND_DEPLOYMENT.md)
+- [Extension points](docs/extension-points.md)
+- [Changelog](CHANGELOG.md)
+- [ADR-0001](docs/project/decisions/ADR-0001-initialization-revalidation.md)
+- [ADR-0002](docs/project/decisions/ADR-0002-core-adapters-demo.md)
 - [Security policy](SECURITY.md)

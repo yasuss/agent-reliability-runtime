@@ -1,9 +1,10 @@
 # Source of truth
-Priority for project work:
-1. current Architect task package and validated pre-action receipt;
-2. `docs/project/spec/v1.0/` locked product/context package;
-3. repo `AGENTS.md` hierarchy and navigational `docs/project/*.md`;
-4. this compiled skill;
-5. live repository implementation and accepted tests/evidence.
+1. Current accepted Architect task package and validated pre-action receipt.
+2. Current v2 topology/extension contracts in `docs/project/ARCHITECTURE.md` and `docs/extension-points.md`.
+3. Immutable historical `docs/project/spec/v1.0/` behavior/security acceptance baseline and preserved tests.
+4. Repository AGENTS hierarchy, current navigational docs and this compiled skill.
+5. Live implementation and accepted evidence.
 
-Material conflict => stop with `CONTRACT_CONTRADICTION` or `ARCHITECT_DECISION_REQUIRED`; do not guess.
+The historical v1 file layout is not current topology authority. Core uses only
+stdlib/Pydantic/core; adapters never import demo. Planned ports execute nothing.
+Material contradictions outside authorized fallbacks return to Architect.

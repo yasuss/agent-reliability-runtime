@@ -14,26 +14,22 @@ from pydantic import ValidationError
 from sqlalchemy import Engine, event, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from agent_reliability_runtime.contracts.domain import ApprovalStatus, Record
-from agent_reliability_runtime.mcp.client import (
+from agent_reliability_runtime.adapters.postgres.execution import Approvals, Gateway
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    set_approval_status,
+)
+from agent_reliability_runtime.core.approval import ApprovalStatus
+from agent_reliability_runtime.core.contracts.domain import Record
+from agent_reliability_runtime.core.effects import ReceiptEnvelope
+from agent_reliability_runtime.core.policy import Action, PolicyError
+from agent_reliability_runtime.demo.opsdesk.contracts import DIGEST_META, RUN_META
+from agent_reliability_runtime.demo.opsdesk.mcp import (
     OpsDeskMCPClient,
     catalog,
     validated_result,
 )
-from agent_reliability_runtime.mcp.contracts import (
-    DIGEST_META,
-    RUN_META,
-    ReceiptEnvelope,
-)
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import set_approval_status
-from agent_reliability_runtime.policy import (
-    Action,
-    Approvals,
-    Gateway,
-    PolicyError,
-    propose,
-)
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine, propose
 from mcp_server.opsdesk.server import create_server
 from scripts.opsdesk_proof_support import DEMO, NON_DEMO, NOW, snapshot
 from scripts.policy_proof_support import prepare, stdio_proof
@@ -96,7 +92,9 @@ def test_gate_negatives_zero_dispatch(
     async def exercise() -> None:
         async with Client(create_server(engine, clock=lambda: NOW)) as client:
             transport = InProcess(client)
-            gateway = Gateway(engine, transport, lambda: NOW)
+            gateway = Gateway(
+                engine, transport, lambda: NOW, policy=OpsDeskPolicyEngine()
+            )
             approvals = gateway.approvals
             action = propose(
                 "b50",
@@ -173,7 +171,7 @@ def test_material_argument_drift(
     async def exercise() -> None:
         async with Client(create_server(engine)) as client:
             t = InProcess(client)
-            g = Gateway(engine, t, lambda: NOW)
+            g = Gateway(engine, t, lambda: NOW, policy=OpsDeskPolicyEngine())
             a = propose("b50", tool, args)
             p = g.approvals.create(a)
             g.approvals.decide(p.approval_id, approved=True)
@@ -201,7 +199,7 @@ def test_read_exact_approval_and_ambiguous_reconciliation(
                     tool.annotations.idempotent_hint = True
             catalog(tools)
             t = InProcess(client)
-            g = Gateway(engine, t, lambda: NOW)
+            g = Gateway(engine, t, lambda: NOW, policy=OpsDeskPolicyEngine())
             read = await g.execute(
                 propose("b50", "get_service_status", {"service_id": "checkout-api"})
             )
@@ -374,7 +372,9 @@ def test_atomic_server_protocol(isolated_db: tuple[Engine, Config], kind: str) -
                     await call({RUN_META: "sentinel", DIGEST_META: a.action_digest})
                 ).is_error
                 if kind == "consumed_conflict":
-                    approvals = Approvals(engine, lambda: NOW)
+                    approvals = Approvals(
+                        engine, lambda: NOW, policy=OpsDeskPolicyEngine()
+                    )
                     p = approvals.create(a)
                     approvals.decide(p.approval_id, approved=True)
                     with engine.begin() as con:
@@ -388,7 +388,9 @@ def test_atomic_server_protocol(isolated_db: tuple[Engine, Config], kind: str) -
                         )
                     t = InProcess(client)
                     with pytest.raises(PolicyError, match="conflict"):
-                        await Gateway(engine, t, lambda: NOW).execute(a, p.approval_id)
+                        await Gateway(
+                            engine, t, lambda: NOW, policy=OpsDeskPolicyEngine()
+                        ).execute(a, p.approval_id)
                     assert t.calls == 0
                 assert (
                     len(snapshot(engine, {"demo_notifications"})["demo_notifications"])
@@ -419,7 +421,7 @@ def test_concurrent_gateways_and_approval_decisions(
 
     engine, _ = isolated_db
     prepare(engine)
-    approvals = Approvals(engine, lambda: NOW)
+    approvals = Approvals(engine, lambda: NOW, policy=OpsDeskPolicyEngine())
     a = propose(
         "b50", "send_notification", {"channel": "demo", "message": "concurrent"}
     )
@@ -443,7 +445,7 @@ def test_concurrent_gateways_and_approval_decisions(
     async def exercise() -> None:
         async with Client(create_server(engine)) as client:
             t = InProcess(client)
-            g = Gateway(engine, t, lambda: NOW)
+            g = Gateway(engine, t, lambda: NOW, policy=OpsDeskPolicyEngine())
             results = await asyncio.wait_for(
                 asyncio.gather(
                     g.execute(a, p.approval_id), g.execute(a, p.approval_id)
@@ -464,7 +466,7 @@ def test_result_digest_and_bad_reply_reconciliation(
     import hashlib
     import json
 
-    from agent_reliability_runtime.mcp.contracts import Notification
+    from agent_reliability_runtime.demo.opsdesk.contracts import Notification
 
     engine, _ = isolated_db
     prepare(engine)
@@ -478,7 +480,7 @@ def test_result_digest_and_bad_reply_reconciliation(
                     return result.model_copy(update={"result_digest": "d" * 64})
 
             t = Spoofed(client)
-            g = Gateway(engine, t, lambda: NOW)
+            g = Gateway(engine, t, lambda: NOW, policy=OpsDeskPolicyEngine())
             a = propose(
                 "b50",
                 "send_notification",

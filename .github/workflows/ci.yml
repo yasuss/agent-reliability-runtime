@@ -73,5 +73,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - run: uv run python scripts/verify_docs.py
-      - run: uv run python docs/project/spec/v1.0/scripts/validate_spec.py
+      - run: uv run python scripts/verify_v1_spec.py
       - run: uv run python scripts/secret_scan.py

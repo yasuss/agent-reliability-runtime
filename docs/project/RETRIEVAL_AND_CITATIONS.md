@@ -47,7 +47,7 @@ bounded correction and cannot manufacture evidence. Retrieval does not authorize
 tools or change policy.
 
 For live acceptance, create a unique disposable Compose project/volume, migrate,
-and run from a clean exact candidate:
+and run from a clean exact commit:
 
 ```text
 uv run python scripts/probe_retrieval.py --output ABSOLUTE_EXTERNAL_EVIDENCE_PATH.json

@@ -4,17 +4,22 @@ from typing import Any
 
 from sqlalchemy import Engine, select
 
-from agent_reliability_runtime.contracts.domain import ApprovalStatus, Run, RunStatus
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.mcp.client import OpsDeskError, OpsDeskMCPClient
-from agent_reliability_runtime.mcp.contracts import (
-    DIGEST_META,
-    RUN_META,
-    ReceiptEnvelope,
+from agent_reliability_runtime.adapters.postgres.execution import Approvals, Gateway
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    insert_snapshot,
 )
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import insert_snapshot
-from agent_reliability_runtime.policy import VERSION, Approvals, Gateway, propose
+from agent_reliability_runtime.core.approval import ApprovalStatus
+from agent_reliability_runtime.core.contracts.domain import Run, RunStatus
+from agent_reliability_runtime.core.effects import ReceiptEnvelope
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.opsdesk.contracts import DIGEST_META, RUN_META
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskError, OpsDeskMCPClient
+from agent_reliability_runtime.demo.opsdesk.policy import (
+    VERSION,
+    OpsDeskPolicyEngine,
+    propose,
+)
 from scripts.opsdesk_proof_support import (
     NON_DEMO,
     NOW,
@@ -48,7 +53,7 @@ def prepare(engine: Engine) -> None:
 async def stdio_proof(engine: Engine, client: OpsDeskMCPClient) -> dict[str, Any]:
     prepare(engine)
     before = snapshot(engine, NON_DEMO)
-    approvals = Approvals(engine, lambda: NOW)
+    approvals = Approvals(engine, lambda: NOW, policy=OpsDeskPolicyEngine())
     action = propose(
         "b50",
         "send_notification",
@@ -61,7 +66,7 @@ async def stdio_proof(engine: Engine, client: OpsDeskMCPClient) -> dict[str, Any
     assert set(properties) == {"channel", "message"}
     approval = approvals.create(action)
     approved = approvals.decide(approval.approval_id, approved=True)
-    gateway = Gateway(engine, client, lambda: NOW)
+    gateway = Gateway(engine, client, lambda: NOW, policy=OpsDeskPolicyEngine())
     result = ReceiptEnvelope.model_validate(
         (await gateway.execute(action, approval.approval_id)).model_dump()
     )

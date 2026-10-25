@@ -17,31 +17,37 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from sqlalchemy import Engine, create_engine, select, text
 
-from agent_reliability_runtime.api import create_app
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.evals.receipts import GATES
-from agent_reliability_runtime.evals.scenarios import load_scenarios, lockfile_digests
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.memory import MemoryStore
-from agent_reliability_runtime.observability import (
-    REQUIRED_SPANS,
-    AuditTrail,
-    Telemetry,
-    canonical,
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
 )
-from agent_reliability_runtime.persistence import schema
-from agent_reliability_runtime.persistence.records import insert_snapshot
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.otel.telemetry import REQUIRED_SPANS, Telemetry
+from agent_reliability_runtime.adapters.postgres.audit import AuditTrail
+from agent_reliability_runtime.adapters.postgres.memory import MemoryStore
+from agent_reliability_runtime.adapters.postgres.persistence import schema
+from agent_reliability_runtime.adapters.postgres.persistence.records import (
+    insert_snapshot,
+)
+from agent_reliability_runtime.adapters.postgres.retrieval import ingest
+from agent_reliability_runtime.core.contracts.model import (
     ChatRequest,
     ChatResult,
     ToolCall,
     Usage,
 )
-from agent_reliability_runtime.replay import export_replay, locked_validate
-from agent_reliability_runtime.retrieval.service import ingest
-from agent_reliability_runtime.retrieval.text import plan_source
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.core.evidence import canonical
+from agent_reliability_runtime.core.source_text import plan_source
+from agent_reliability_runtime.demo.api import create_app
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.evals.receipts import GATES
+from agent_reliability_runtime.demo.evals.scenarios import (
+    load_scenarios,
+    lockfile_digests,
+)
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
+from agent_reliability_runtime.demo.replay import export_replay, locked_validate
 from scripts.runtime_proof_support import (
     Embeddings,
     ScriptedProvider,
@@ -95,7 +101,7 @@ def test_memory_anchor_delete_rollback_and_api(
     isolated_db: tuple[Engine, Config], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     engine, _ = isolated_db
-    store = MemoryStore(engine)
+    store = MemoryStore(engine, policy=OpsDeskPolicyEngine())
     memory = store.user_explicit("w", "u", "DO_NOT_AUDIT_DELETED_CONTENT")
     with engine.connect() as con:
         anchors = con.execute(select(schema.runs)).mappings().all()
@@ -281,9 +287,9 @@ def test_exact_spans_audit_correlation_and_replay(
                 b"# PRIVATE_SPAN_SENTINEL\nretrieval data sentinel",
             ),
         )
-        MemoryStore(engine, telemetry=telemetry).user_explicit(
-            "local", "test", "PRIVATE_SPAN_SENTINEL"
-        )
+        MemoryStore(
+            engine, telemetry=telemetry, policy=OpsDeskPolicyEngine()
+        ).user_explicit("local", "test", "PRIVATE_SPAN_SENTINEL")
         async with OpsDeskMCPClient(
             ROOT, engine.url.render_as_string(hide_password=False)
         ) as client:

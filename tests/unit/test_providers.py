@@ -10,17 +10,8 @@ import httpx
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from agent_reliability_runtime.providers.contracts import (
-    ChatMessage,
-    ChatProvider,
-    ChatRequest,
-    EmbeddingProvider,
-    EmbeddingRequest,
-    ModelSettings,
-    ToolCall,
-    ToolDefinition,
-)
-from agent_reliability_runtime.providers.http import (
+from agent_reliability_runtime.adapters.providers.contracts import EmbeddingProvider
+from agent_reliability_runtime.adapters.providers.http import (
     HTTPProviderConfig,
     OllamaEmbeddingProvider,
     OpenAICompatibleChatProvider,
@@ -29,6 +20,15 @@ from agent_reliability_runtime.providers.http import (
     ProviderProtocolError,
     ProviderTransportError,
 )
+from agent_reliability_runtime.core.contracts.model import (
+    ChatMessage,
+    ChatRequest,
+    EmbeddingRequest,
+    ModelSettings,
+    ToolCall,
+    ToolDefinition,
+)
+from agent_reliability_runtime.core.ports import ModelProvider as ChatProvider
 
 KEY = "fictional-provider-credential"
 CHAT: dict[str, Any] = {

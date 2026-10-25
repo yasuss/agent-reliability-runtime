@@ -2,16 +2,17 @@
 
 ## Supported versions
 
-The 1.x line is supported after the repository is publicly released. Pre-release
-private history receives no support claim; use the release candidate only for
-review and local verification.
+| Version | Supported |
+| --- | --- |
+| 2.x | Yes |
+| 1.x | No — upgrade to 2.x |
 
 ## Reporting a vulnerability
 
-Please do not publish exploit details or credentials in a normal issue. Once the
-repository is public, use GitHub private vulnerability reporting when available.
-If that channel is unavailable, open a minimal issue that contains no sensitive
-details and asks the maintainers to provide a private reporting channel.
+Please do not publish exploit details or credentials in a normal issue. Use GitHub
+private vulnerability reporting when available. If that channel is unavailable,
+open a minimal issue that contains no sensitive details and asks the maintainers
+to provide a private reporting channel.
 
 Use fictional demo data only. Development Compose credentials are fixtures, not
 security secrets, and must never be reused in a deployment. Never commit API

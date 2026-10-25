@@ -1,7 +1,11 @@
 # Project Documentation & Operational Guidance
 
-This directory is the navigation layer for the current implementation. The
-locked v1 contract under `spec/v1.0/` remains authoritative for exact semantics.
+This directory describes the current v2 implementation. Current topology and
+extension contracts live in [Architecture](ARCHITECTURE.md) and
+[Extension points](../extension-points.md). `spec/v1.0/` is immutable historical
+behavior/security acceptance evidence; it does not define the v2 file topology.
+An accepted current task contract governs scoped changes; preserved semantics
+remain constrained by the historical acceptance baseline and executable tests.
 
 ## Canonical entry points
 
@@ -14,6 +18,8 @@ locked v1 contract under `spec/v1.0/` remains authoritative for exact semantics.
 - [Limitations](LIMITATIONS.md) — explicit non-goals and evidence limits.
 - [Evidence & Proof](EVIDENCE_AND_PROOF.md) — readable capability map.
 - [Machine-readable PROOF_INDEX](PROOF_INDEX.json) — claim-to-proof paths.
+- [ADR-0001](decisions/ADR-0001-initialization-revalidation.md) — initialization and revalidation decisions.
+- [ADR-0002](decisions/ADR-0002-core-adapters-demo.md) — core, adapters and demo boundary.
 
 ## Deeper references
 
@@ -29,9 +35,10 @@ locked v1 contract under `spec/v1.0/` remains authoritative for exact semantics.
 - [Reliability Acceptance](RELIABILITY_ACCEPTANCE.md)
 - [Static Evidence Demo](STATIC_EVIDENCE_DEMO.md)
 - [Release and Deployment Operations](RELEASE_AND_DEPLOYMENT.md)
-- [Public Release Checklist](PUBLIC_RELEASE_CHECKLIST.md)
 - [Requirement traceability](spec/v1.0/requirements/REQUIREMENTS.json)
 - [Verification catalog](spec/v1.0/requirements/VERIFICATION_CATALOG.json)
 
-The component pages explain the current implementation; the catalog connects
-each locked requirement to a named verification method and tracked proof.
+The component pages explain the current implementation. The historical v1
+requirements and verification catalog remain evidence for the immutable
+`v1.0.0` tree; current v2 capability-to-proof paths are defined by
+`PROOF_INDEX.json`.

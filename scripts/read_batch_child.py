@@ -8,18 +8,27 @@ from pathlib import Path
 
 from sqlalchemy import create_engine
 
-from agent_reliability_runtime.contracts.domain import Record
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.policy import Action, Gateway
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.langgraph.checkpoints import run_async
+from agent_reliability_runtime.adapters.langgraph.graph import Context
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.postgres.execution import Gateway
+from agent_reliability_runtime.adapters.postgres.retrieval import (
+    PostgresHybridRetriever,
+)
+from agent_reliability_runtime.core.contracts.domain import Record
+from agent_reliability_runtime.core.contracts.model import (
     ChatRequest,
     ChatResult,
     ToolCall,
 )
-from agent_reliability_runtime.runtime.checkpoints import run_async
-from agent_reliability_runtime.runtime.graph import Context
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.core.policy import Action
+from agent_reliability_runtime.demo.opsdesk.mcp import (
+    OpsDeskMCPClient,
+    validate_model_view,
+)
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
+from agent_reliability_runtime.demo.opsdesk.postconditions import opsdesk_verifier
 from scripts.runtime_proof_support import Embeddings, primitive, run_record
 
 
@@ -88,9 +97,12 @@ async def work(args: argparse.Namespace) -> None:
             context = Context(
                 engine=engine,
                 provider=Provider(),
-                embeddings=Embeddings(),
+                retriever=PostgresHybridRetriever(engine, Embeddings()),
                 tools=client.model_tools,
-                gateway=PausingGateway(engine, client),
+                gateway=PausingGateway(engine, client, policy=OpsDeskPolicyEngine()),
+                policy=OpsDeskPolicyEngine(),
+                verifier=opsdesk_verifier(),
+                tool_validator=validate_model_view,
             )
             async with open_runtime(context, engine.url) as runtime:
                 before = (

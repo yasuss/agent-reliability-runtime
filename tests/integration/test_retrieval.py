@@ -9,24 +9,26 @@ from alembic.config import Config
 from sqlalchemy import Engine, event, func, inspect, select, text
 from sqlalchemy.exc import DBAPIError
 
-from agent_reliability_runtime.persistence.schema import knowledge_chunks as chunks
-from agent_reliability_runtime.persistence.schema import (
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
+    knowledge_chunks as chunks,
+)
+from agent_reliability_runtime.adapters.postgres.persistence.schema import (
     knowledge_documents as documents,
 )
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.postgres.retrieval import ingest, retrieve
+from agent_reliability_runtime.core.contracts.model import (
     EmbeddingRequest,
     EmbeddingResult,
 )
-from agent_reliability_runtime.retrieval.contracts import (
+from agent_reliability_runtime.core.contracts.retrieval import (
     validate_citations,
     validate_current_digest,
 )
-from agent_reliability_runtime.retrieval.evaluation import (
+from agent_reliability_runtime.core.source_text import plan_source
+from agent_reliability_runtime.demo.evals.retrieval import (
     calibrate_checkers,
     score_query,
 )
-from agent_reliability_runtime.retrieval.service import ingest, retrieve
-from agent_reliability_runtime.retrieval.text import plan_source
 
 pytestmark = pytest.mark.integration
 

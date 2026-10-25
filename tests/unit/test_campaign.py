@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from agent_reliability_runtime.evals.campaign import (
+from agent_reliability_runtime.demo.evals.campaign import (
     CASES,
     POPULATION,
     aggregate,
@@ -19,7 +19,7 @@ from agent_reliability_runtime.evals.campaign import (
 
 
 def test_drift_fail_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from agent_reliability_runtime.evals import campaign
+    from agent_reliability_runtime.demo.evals import campaign
 
     identity = {
         "subject_sha": "a" * 40,
@@ -34,7 +34,7 @@ def test_drift_fail_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
     config = campaign.configuration()
     import hashlib
 
-    from agent_reliability_runtime.observability import canonical
+    from agent_reliability_runtime.core.evidence import canonical
 
     frozen = (
         identity
@@ -70,10 +70,10 @@ def test_drift_fail_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
 
 
 def test_environment_content_calibration() -> None:
-    from agent_reliability_runtime.evals.calibration import controls, replace
-    from agent_reliability_runtime.evals.contracts import TrialExpectations
-    from agent_reliability_runtime.evals.harness import evaluate
-    from agent_reliability_runtime.evals.scenarios import load_scenarios
+    from agent_reliability_runtime.demo.evals.calibration import controls, replace
+    from agent_reliability_runtime.demo.evals.contracts import TrialExpectations
+    from agent_reliability_runtime.demo.evals.harness import evaluate
+    from agent_reliability_runtime.demo.evals.scenarios import load_scenarios
 
     evidence, expected = controls("a" * 40)
     expected = TrialExpectations.model_validate(
@@ -106,10 +106,10 @@ def verdicts(counts: list[int]) -> list[dict[str, Any]]:
 
 
 def test_action_sequence_calibration() -> None:
-    from agent_reliability_runtime.evals.calibration import controls, replace
-    from agent_reliability_runtime.evals.contracts import TrialExpectations
-    from agent_reliability_runtime.evals.harness import evaluate
-    from agent_reliability_runtime.evals.scenarios import load_scenarios
+    from agent_reliability_runtime.demo.evals.calibration import controls, replace
+    from agent_reliability_runtime.demo.evals.contracts import TrialExpectations
+    from agent_reliability_runtime.demo.evals.harness import evaluate
+    from agent_reliability_runtime.demo.evals.scenarios import load_scenarios
 
     evidence, expected = controls("a" * 40)
     binding = evidence.actions[0]
@@ -130,10 +130,10 @@ def test_action_sequence_calibration() -> None:
 
 
 def test_valid_bounded_retry_alternate() -> None:
-    from agent_reliability_runtime.evals.calibration import controls, replace
-    from agent_reliability_runtime.evals.execution import expectations
-    from agent_reliability_runtime.evals.harness import evaluate
-    from agent_reliability_runtime.evals.scenarios import load_scenarios
+    from agent_reliability_runtime.demo.evals.calibration import controls, replace
+    from agent_reliability_runtime.demo.evals.execution import expectations
+    from agent_reliability_runtime.demo.evals.harness import evaluate
+    from agent_reliability_runtime.demo.evals.scenarios import load_scenarios
 
     scenario = load_scenarios()[0][8]
     evidence, _ = controls("a" * 40)

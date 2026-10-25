@@ -18,10 +18,15 @@ The following boundaries are deliberate:
 - OTel defaults exclude raw prompt/tool secret content; explicit local opt-ins are
   the developer's responsibility.
 - Development Compose credentials and configuration must not be deployed.
-- The release candidate records Apache-2.0 licensing, but publication, repository
-  visibility, tags and deployment remain separate authorized actions.
-- The documented runtime/configuration/tool/evidence contracts are the public v1
-  interface; arbitrary internal Python symbols are not guaranteed API.
+- Apache-2.0 licensing applies. The historical v1 release remains immutable.
+  Version 2.0.0 is a code/docs/runtime packaging release; its reviewed Vite patch
+  affects development/build tooling and does not require replacing the unchanged
+  static evidence deployment.
+- The v2 public Python extension boundary is `core.ports` and its neutral value
+  contracts. Internal import paths changed; the CLI/MCP/script entry points remain.
+- Reconciler, TimerStore, SourceRevisionReader and CapabilityRegistry are planned
+  interfaces only. PARTIAL is a verification value, not new OpsDesk behavior.
+- Dependency extras and a generic control plane are deferred.
 - The unauthenticated v1 API is supported only on loopback by default. Do not bind
   it to `0.0.0.0`, a LAN interface, or a public interface without an external
   trust/authentication boundary.
@@ -29,7 +34,7 @@ The following boundaries are deliberate:
 Supported local startup is:
 
 ```text
-uv run uvicorn agent_reliability_runtime.api:app --host 127.0.0.1 --port 8000
+uv run uvicorn agent_reliability_runtime.demo.api:app --host 127.0.0.1 --port 8000
 ```
 
 The v1 API has no authentication boundary. Do not bind it to `0.0.0.0`, a LAN interface, or a public interface without an external trust/authentication boundary.

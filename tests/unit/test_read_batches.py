@@ -8,24 +8,26 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from agent_reliability_runtime.mcp.contracts import Service
-from agent_reliability_runtime.providers.contracts import (
-    ChatResult,
-    ModelSettings,
-    ToolCall,
-)
-from agent_reliability_runtime.runtime.graph import (
+from agent_reliability_runtime.adapters.langgraph.graph import (
     decide,
     execute_tool,
     observe_result,
     policy_gate,
     validate_model_action,
 )
-from agent_reliability_runtime.runtime.prompt_context import (
+from agent_reliability_runtime.adapters.langgraph.prompt_context import (
     UnknownCitationAlias,
     normalize_citation_aliases,
 )
-from agent_reliability_runtime.runtime.protocol import repair_reason
+from agent_reliability_runtime.adapters.langgraph.protocol import repair_reason
+from agent_reliability_runtime.core.contracts.model import (
+    ChatResult,
+    ModelSettings,
+    ToolCall,
+)
+from agent_reliability_runtime.demo.opsdesk.contracts import Service
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
+from agent_reliability_runtime.demo.opsdesk.postconditions import opsdesk_verifier
 
 
 def read(identity: str = "r1", target: str = "synthetic") -> ToolCall:
@@ -89,6 +91,8 @@ def context(calls: tuple[ToolCall, ...]) -> Any:
         key_factory=lambda: "unused",
         fault_hook=None,
         telemetry=SimpleNamespace(span=lambda *a, **kw: nullcontext(Mock())),
+        policy=OpsDeskPolicyEngine(),
+        verifier=opsdesk_verifier(),
         gateway=SimpleNamespace(
             execute=AsyncMock(
                 return_value=Service(service_id="synthetic", status="healthy")
@@ -101,11 +105,13 @@ def context(calls: tuple[ToolCall, ...]) -> Any:
 def boundaries() -> Any:
     with (
         patch(
-            "agent_reliability_runtime.runtime.graph.memory_scope",
+            "agent_reliability_runtime.adapters.langgraph.graph.memory_scope",
             return_value=("local", "fixture"),
         ),
-        patch("agent_reliability_runtime.runtime.graph.MemoryStore") as memory,
-        patch("agent_reliability_runtime.runtime.graph.audit"),
+        patch(
+            "agent_reliability_runtime.adapters.langgraph.graph.MemoryStore"
+        ) as memory,
+        patch("agent_reliability_runtime.adapters.langgraph.graph.audit"),
     ):
         memory.return_value.resolve.return_value = []
         yield
@@ -129,7 +135,7 @@ def test_all_read_results_before_next_model_call(
             s.update(await policy_gate(cast(Any, s), rt))
             assert s["route"] == "execute_tool"
             s.update(await execute_tool(cast(Any, s), rt))
-            s.update(observe_result(cast(Any, s)))
+            s.update(observe_result(cast(Any, s), rt))
             assert c.provider.complete.await_count == 1
         assert s["tool_steps"] == len(calls) and s["pending_calls"] == []
         observations = [m for m in s["messages"] if m["role"] == "tool"]

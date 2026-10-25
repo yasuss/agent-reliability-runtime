@@ -1,5 +1,9 @@
 # Project architecture / runtime invariants
-Canonical stack and boundaries are locked by `docs/project/spec/v1.0/`:
+Current topology is defined by `docs/project/ARCHITECTURE.md` and
+`docs/extension-points.md`. The immutable v1 spec records historical
+behavior/security acceptance. V2 separates framework-neutral core, adapters and
+OpsDesk demo; core imports only stdlib/Pydantic/core, and adapters never import demo.
+Planned ports are interface-only. Preserved stack and invariants:
 - Python 3.12, FastAPI/Pydantic, LangGraph durable orchestration;
 - PostgreSQL + pgvector, PostgreSQL-backed LangGraph checkpointer;
 - official MCP Python SDK and exactly five fictional OpsDesk tools;

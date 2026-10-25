@@ -9,20 +9,31 @@ import pytest
 from alembic.config import Config
 from sqlalchemy import Engine
 
-from agent_reliability_runtime.api import create_app
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.evals.execution import (
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.adapters.langgraph.graph import Context
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.postgres.execution import Gateway
+from agent_reliability_runtime.adapters.postgres.retrieval import (
+    PostgresHybridRetriever,
+)
+from agent_reliability_runtime.core.contracts.model import ChatRequest, ChatResult
+from agent_reliability_runtime.demo.api import create_app
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.evals.execution import (
     FixtureEmbeddings,
     ScriptedScenarioProvider,
     prepare_knowledge,
 )
-from agent_reliability_runtime.evals.scenarios import ROOT, load_scenarios
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.policy import Gateway
-from agent_reliability_runtime.providers.contracts import ChatRequest, ChatResult
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.graph import Context
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.demo.evals.scenarios import ROOT, load_scenarios
+from agent_reliability_runtime.demo.opsdesk.mcp import (
+    OpsDeskMCPClient,
+    validate_model_view,
+)
+from agent_reliability_runtime.demo.opsdesk.policy import OpsDeskPolicyEngine
+from agent_reliability_runtime.demo.opsdesk.postconditions import opsdesk_verifier
 
 pytestmark = pytest.mark.integration
 
@@ -51,7 +62,7 @@ def test_graph_foreign_citation_fails_closed(
             )
 
     async def exercise() -> None:
-        from agent_reliability_runtime.runtime.local import RunRequest
+        from agent_reliability_runtime.demo.local import RunRequest
 
         await setup_checkpoints(engine.url)
         await prepare_knowledge(engine, FixtureEmbeddings())
@@ -65,9 +76,12 @@ def test_graph_foreign_citation_fails_closed(
             context = Context(
                 engine=engine,
                 provider=ForeignProvider(definition),
-                embeddings=FixtureEmbeddings(),
+                retriever=PostgresHybridRetriever(engine, FixtureEmbeddings()),
                 tools=client.model_tools,
-                gateway=Gateway(engine, client),
+                gateway=Gateway(engine, client, policy=OpsDeskPolicyEngine()),
+                policy=OpsDeskPolicyEngine(),
+                verifier=opsdesk_verifier(),
+                tool_validator=validate_model_view,
             )
             async with open_runtime(context, engine.url) as runtime:
                 state = await runtime.start(run)
@@ -81,11 +95,11 @@ def test_graph_foreign_citation_fails_closed(
 def test_ambiguous_write_reconciles_without_retry(
     isolated_db: tuple[Engine, Config],
 ) -> None:
-    from agent_reliability_runtime.evals.execution import MeasuredTransport
-    from agent_reliability_runtime.mcp.client import OpsDeskError
-    from agent_reliability_runtime.mcp.contracts import ReceiptEnvelope
-    from agent_reliability_runtime.policy import Action
-    from agent_reliability_runtime.runtime.local import RunRequest
+    from agent_reliability_runtime.core.effects import ReceiptEnvelope
+    from agent_reliability_runtime.core.policy import Action
+    from agent_reliability_runtime.demo.evals.execution import MeasuredTransport
+    from agent_reliability_runtime.demo.local import RunRequest
+    from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskError
 
     engine, _ = isolated_db
 
@@ -109,9 +123,12 @@ def test_ambiguous_write_reconciles_without_retry(
             ctx = Context(
                 engine=engine,
                 provider=APIProvider(definition),
-                embeddings=FixtureEmbeddings(),
+                retriever=PostgresHybridRetriever(engine, FixtureEmbeddings()),
                 tools=client.model_tools,
-                gateway=Gateway(engine, transport),
+                gateway=Gateway(engine, transport, policy=OpsDeskPolicyEngine()),
+                policy=OpsDeskPolicyEngine(),
+                verifier=opsdesk_verifier(),
+                tool_validator=validate_model_view,
             )
             async with open_runtime(ctx, engine.url) as runtime:
                 state = await runtime.start(run)
@@ -151,9 +168,12 @@ def test_post_run_approval_and_cli(
             ctx = Context(
                 engine=selected,
                 provider=APIProvider(definition),
-                embeddings=FixtureEmbeddings(),
+                retriever=PostgresHybridRetriever(selected, FixtureEmbeddings()),
                 tools=client.model_tools,
-                gateway=Gateway(selected, client),
+                gateway=Gateway(selected, client, policy=OpsDeskPolicyEngine()),
+                policy=OpsDeskPolicyEngine(),
+                verifier=opsdesk_verifier(),
+                tool_validator=validate_model_view,
             )
             async with open_runtime(ctx, selected.url) as runtime:
                 yield runtime
@@ -252,12 +272,10 @@ def test_post_run_approval_and_cli(
         )
 
     run_async(exercise())
-    from agent_reliability_runtime import cli
+    from agent_reliability_runtime.demo import cli
 
     monkeypatch.setattr(cli, "create_engine", lambda *a: engine)
-    monkeypatch.setattr(
-        "agent_reliability_runtime.runtime.local.local_runtime", factory
-    )
+    monkeypatch.setattr("agent_reliability_runtime.demo.local.local_runtime", factory)
     monkeypatch.setattr(
         "sys.argv",
         [

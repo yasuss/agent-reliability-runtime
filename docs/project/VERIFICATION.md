@@ -8,7 +8,7 @@ claims to tracked proof paths.
 
 ```text
 uv run python scripts/verify_docs.py
-uv run python docs/project/spec/v1.0/scripts/validate_spec.py
+uv run python scripts/verify_v1_spec.py
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy src mcp_server tests
@@ -25,16 +25,24 @@ uv run python scripts/secret_scan.py
 set. The documentation verifier checks relative links in every current public
 `docs/project/**/*.md`, required component files, proof paths, claim IDs, support
 vocabulary, quickstart order, naming neutrality and known stale wording.
-The spec validator binds the complete payload manifest to committed HEAD Git
-blobs and validates bidirectional ARR/VC traceability. Calibration covers broken
-links, stale descriptions, missing proofs and CRLF/worktree manifest corruption.
+The external v1 wrapper checks out the exact historical v1.0.0 tree
+`e9fd3d29a969d66ad907ff5f7d0ea0055ed7ae2a` locally and runs its unchanged
+validator. The complete payload manifest and bidirectional ARR/VC traceability
+are bound to historical HEAD Git blobs, including historical proof paths.
+Current v2 proofs continue to use current paths through PROOF_INDEX.
+Calibration covers broken links, stale descriptions, missing proofs and CRLF/worktree manifest corruption.
 
-To update the spec manifest, format and stage every intended spec payload first,
-then run `python docs/project/spec/v1.0/scripts/update_manifest.py`. Stage the two
-manifest files and run `python docs/project/spec/v1.0/scripts/validate_spec.py
---source index` before commit. Generation reads staged Git blobs, never worktree
-bytes. Default validation reads HEAD blobs, so local newline conversion cannot
-change the accepted payload. A dirty worktree is not an alternate CI authority.
+The v1 spec and manifests are historical and immutable in v2. Do not regenerate
+them. The core architecture test calibrates an AST import allowlist with forbidden
+SQLAlchemy and demo imports before checking every core source. It also checks
+that adapters do not import demo. The behavior provenance verifier preserves
+accepted-source ancestry, protects immutable inputs against the refactor baseline,
+rejects all external/Python dependency drift, and allowlists only the reviewed Vite
+development/build transition `8.3.2 -> 8.3.3` in the two web manifests. All other
+web package/lock drift and unauthorized changed paths remain rejected. Static
+output equivalence is verified during release acceptance. It checks the working
+tree before commit and the exact commit on clean CI.
+Moved source is not claimed byte-equivalent; the full behavior suite is required.
 
 ## Database scope
 
@@ -100,6 +108,6 @@ the stable Playwright 1.63.0 lockfile.
 
 `scripts/verify.py --scope all` is the CI entry point. Required exact-head CI
 evidence is static-unit on Ubuntu, Windows and macOS, PostgreSQL integration on
-Ubuntu and web-e2e on Ubuntu. A queued or cancelled GitHub-hosted job is an
-infrastructure limitation until it executes; it must not be represented as a
+Ubuntu, web-e2e on Ubuntu and release-audit on Ubuntu. A queued or cancelled
+GitHub-hosted job is an infrastructure limitation until it executes; it must not be represented as a
 test assertion failure. Product changes are never made to mask a runner issue.

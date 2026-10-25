@@ -1,5 +1,5 @@
 # Verification contract
-Use cheap -> expensive evidence and bind release claims to the exact candidate.
+Use cheap -> expensive evidence and bind release claims to the exact commit.
 
 For B00, the current task package is authoritative. Later release gates remain G0-G14 in `docs/project/spec/v1.0/11_ACCEPTANCE_GATES.md`.
 

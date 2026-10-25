@@ -5,7 +5,7 @@ import sys
 
 from sqlalchemy import create_engine
 
-from agent_reliability_runtime.database import database_url
+from agent_reliability_runtime.adapters.postgres.database import database_url
 from mcp_server.opsdesk.server import create_server
 
 

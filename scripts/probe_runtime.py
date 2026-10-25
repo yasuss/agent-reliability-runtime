@@ -15,13 +15,16 @@ from typing import Any
 
 from sqlalchemy import Engine, create_engine
 
-from agent_reliability_runtime.database import database_url
-from agent_reliability_runtime.demo_state.reset import reset_demo
-from agent_reliability_runtime.mcp.client import OpsDeskMCPClient
-from agent_reliability_runtime.retrieval.service import ingest
-from agent_reliability_runtime.retrieval.text import plan_source
-from agent_reliability_runtime.runtime.checkpoints import run_async, setup_checkpoints
-from agent_reliability_runtime.runtime.service import open_runtime
+from agent_reliability_runtime.adapters.langgraph.checkpoints import (
+    run_async,
+    setup_checkpoints,
+)
+from agent_reliability_runtime.adapters.langgraph.service import open_runtime
+from agent_reliability_runtime.adapters.postgres.database import database_url
+from agent_reliability_runtime.adapters.postgres.retrieval import ingest
+from agent_reliability_runtime.core.source_text import plan_source
+from agent_reliability_runtime.demo.demo_state.reset import reset_demo
+from agent_reliability_runtime.demo.opsdesk.mcp import OpsDeskMCPClient
 from scripts.opsdesk_proof_support import NON_DEMO, digest, seed_sentinels, snapshot
 from scripts.runtime_proof_support import (
     Embeddings,

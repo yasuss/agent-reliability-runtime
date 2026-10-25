@@ -9,16 +9,16 @@ import subprocess
 import httpx
 from pydantic import SecretStr
 
-from agent_reliability_runtime.providers.contracts import (
+from agent_reliability_runtime.adapters.providers.http import (
+    HTTPProviderConfig,
+    OllamaEmbeddingProvider,
+    OpenAICompatibleChatProvider,
+)
+from agent_reliability_runtime.core.contracts.model import (
     ChatMessage,
     ChatRequest,
     EmbeddingRequest,
     ModelSettings,
-)
-from agent_reliability_runtime.providers.http import (
-    HTTPProviderConfig,
-    OllamaEmbeddingProvider,
-    OpenAICompatibleChatProvider,
 )
 
 

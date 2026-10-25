@@ -7,16 +7,16 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from agent_reliability_runtime.contracts.domain import (
+from agent_reliability_runtime.core.approval import (
     Approval,
     ApprovalStatus,
-    action_digest,
     transition_approval,
 )
-from agent_reliability_runtime.policy import (
+from agent_reliability_runtime.core.contracts.domain import action_digest
+from agent_reliability_runtime.core.policy import PolicyError
+from agent_reliability_runtime.demo.opsdesk.policy import (
     TOOL_RISK,
     VERSION,
-    PolicyError,
     evaluate,
     propose,
     validate_action,
@@ -134,7 +134,10 @@ def test_exact_approval_state_machine(old: ApprovalStatus, new: ApprovalStatus) 
 def test_receipt_envelope_calibration() -> None:
     from mcp.types import CallToolResult
 
-    from agent_reliability_runtime.mcp.client import OpsDeskError, validated_result
+    from agent_reliability_runtime.demo.opsdesk.mcp import (
+        OpsDeskError,
+        validated_result,
+    )
 
     values = {
         "receipt_id": "receipt",
